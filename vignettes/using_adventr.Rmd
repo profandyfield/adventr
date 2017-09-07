@@ -1,0 +1,43 @@
+---
+title: "A guide to the Adventr package"
+author: "Andy Field"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{A guide to the Adventr packag}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Overview
+
+The adventr package contains a series of tutorials that accompany my books [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) and [Discovering statistics using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/). These tutorials contain abridged sections from my books so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use it for teaching and non-profit activities but not meddle with it or claim it as your own work.]
+
+* Who is the package aimed at?
+    - Anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering statistics using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) might find them useful.
+* What is covered?
+    - The tutorials *do not* teach the background theory (the books do): it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
+    - The aim of this tutorial is to augment the theory that you already know by guiding you through fitting linear models using **R** and **RStudio** and asking you questions to test your knowledge along the way.
+
+
+## Running tutorials
+
+To run a tutorial execute:
+
+```{r, eval = F, include = T}
+learnr::run_tutorial("name_of_tutorial", package = "adventr")
+```
+
+For example, to run the tutorial on data basics execute:
+
+```{r, eval = F, include = T}
+
+learnr::run_tutorial("r_data_basics", package = "adventr")
+
+```
+
+## A list of tutorials
+
+1. **r_setup**: This tutorial looks at how to download, install, and setup **R** and **RStudio**, although if you're reading this then presumably you've already downloaded, installed and setup **R** amd **RStudio**!
+2. **r_data_basics**: This tutorial looks at the basic concepts in **R**, such as installing packages, setting the working directory, getting help, getting data into **R**, creating variables, creating data frames and tibbles, reading in data files, manipulating variables within a tibble/data frame.
+

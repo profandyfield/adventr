@@ -1,0 +1,286 @@
+---
+title: "AAiR: Setting up R and RStudio"
+author: "Andy Field"
+output:
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+bibliography: r_setup.bib
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(RefManageR)
+library(tidyverse)
+knitr::opts_chunk$set(echo = FALSE)
+
+cbBlack<-"#000000"
+cbGrey<-"#999999"
+cbOrange<-"#E69F00"
+cbBlue<-"#56B4E9"
+cbGreen<-"#009E73"
+cbYellow<-"#F0E442"
+cbBlueDark<-"#0072B2"
+cbOrangeDark<-"#D55E00"
+cbPink<-"#CC79A7"
+cbRed<-"#DF4738"
+
+andy.theme <- function(base_size = 12, base_family = "") {
+  # Starts with theme_grey and then modify some parts
+  theme_grey(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.2)),
+      axis.title.y        = element_text(margin = margin(0, 10, 0, 0), angle = 90),
+      axis.title.x        = element_text(margin = margin(10, 0, 0, 0)),
+      axis.text           = element_text(size = rel(0.75), colour = "grey35"),
+      axis.text.x         = element_text(margin = margin(2, 0, 0, 0)),
+      axis.text.y         = element_text(margin = margin(0, 2, 0, 0)),
+      axis.ticks        = element_line(colour = "grey35"),
+      legend.key        = element_rect(colour = "white"),
+      panel.background  = element_rect(fill = "white", colour = NA),
+      panel.border      = element_rect(fill = NA, colour = "grey50"),
+      panel.grid.major  = element_line(colour = "grey90", size = 0.2),
+      panel.grid.minor  = element_line(colour = "grey98", size = 0.5),
+      strip.background  = element_rect(fill = "grey80", colour = "grey50"),
+      strip.text  = element_text(size = rel(1.4))
+    )
+}
+
+andy.dsus <- function(base_size = 12, base_family = "") {
+  andy.theme(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.6)),
+      axis.text           = element_text(size = rel(1.3), colour = "grey35"),
+      strip.background = element_rect(fill = cbBlueDark, colour = "white"),
+      strip.text  = element_text(size = rel(1.3), colour = "white")
+    )
+}
+
+```
+
+# An Adventure in R: Setting up **R** and **RStudio**
+
+## Overview
+
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+
+* Who is the tutorial aimed at?
+    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+* What is covered?
+    - This tutorial looks at how to download, install, and setup **R** and **RStudio**. It would be a useful tutorial to run at the start of a module, or alongside teaching based on Chapter 1 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
+    - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
+    - The aim of this tutorial is to augment the theory that you already know by guiding you through fitting linear models using **R** and **RStudio** and asking you questions to test your knowledge along the way.
+
+## About **R** and **RStudio**
+
+### Packages and the CRAN
+
+[R](https://www.r-project.org/) is a free software environment for statistical analysis and graphics. **R** exists as a base package with a reasonable amount of functionality. However, the beauty of **R** is that it can be expanded by downloading **packages** that add specific functionality to the program. Anyone with a big enough brain and a bit of time and dedication can write a package for other people to use. These packages, as well as the software itself, are stored in a central location known as the **CRAN** (Comprehensive **R** Archive Network). Once a package is stored in the CRAN, anyone with an internet connection can download it from the CRAN and install it to use within their own copy of **R**. **R** is basically a big global family of fluffy altruistic people contributing to the goal of producing a versatile data analysis tool that is free for everyone to use. It’s a statistical embodiment of The Beatles’ utopian vision of peace, love and humanity: a sort of ‘give ps a chance’.
+
+The CRAN is central to using **R**: it is the place from where you download the software and any packages that you want to install. It would be a shame, therefore, if the CRAN were one day to explode or be eaten by cyber-lizards. The statistical world might collapse. Even assuming the cyber-lizards don’t rise up and overthrow the Internet, it is still a busy place. Therefore, rather than have a single CRAN location that everyone accesses, the CRAN is ‘mirrored’ at different places across the globe. ‘Mirrored’ means that there are identical versions of the CRAN scattered across the world. As a resident of the UK, I might access one of the UK CRAN mirrors (it's likely to be the fastest connection). In general access a mirror of the CRAN close to you. Figure 1 shows schematically what we have just learnt. At the centre of the diagram is the CRAN: a repository of the base **R** software and hundreds of packages. People with big brains from all over the world write new packages and upload them into the CRAN for others to use. The CRAN itself is mirrored at different places across the globe (which means there are multiple copies of it). As a user of **R** you download the software, and install any packages that you want to use via your nearest CRAN.
+
+![Figure 1](./images/r_00_fig_01.png)
+
+You can use **R** as a standalone piece of software but it doesn't have the most pleasant user interface. This is where **RStudio** comes in. **RStudio** is a free integrated development environment (IDE) for **R**. In plain English, this means that it is a user interface through which to use **R**. So, you can use **R** without **RStudio** but you can't use **RStudio** without **R**. **RStudio** has functionality that make working with **R** easier, more efficient, and generally more pleasant than working in **R** alone. That's why I base my teaching within **RStudio**.
+
+```{r cran_quiz}
+quiz(
+  question("What is the CRAN?",
+    answer("A repository from which you download **R** and install packages", correct = TRUE),
+    answer("The part of **R** that processes commands"),
+    answer("The place from where you download **RStudio**"),
+    answer("The institutions where people develop packages for **R**"),
+    correct = "Correct - well done!",
+    incorrect = "Sorry, that's incorrect. Try again.",
+    random_answer_order = TRUE,
+    allow_retry = T
+  ),
+  question("What is a package?",
+    answer("A bunch of code that when installed and loaded into **R** provides additional functionality", correct = TRUE),
+    answer("An exact copy of the CRAN at a specific location on the planet", message = "This answer describes a 'mirror'."),
+    answer("A repository from which you download **R** and install packages", message = "This answer describes the CRAN"),
+    correct = "Correct - well done!",
+    random_answer_order = TRUE,
+    allow_retry = T
+  )
+)
+
+```
+
+
+## Installing **R** and **RStudio**
+
+### Overview
+
+The process for setting up your computer to use **R** within **RStudio** is:
+
+1. Install **R**
+2. Install **RStudio**
+3. Set up **RStudio** to suit your personality!
+
+The first step is to install **R**. We'll look at installing on MacOS first so ignore the next section if you use Windows.
+
+### Quick **R** install for Mac OS 
+
+* Click [here](https://cloud.r-project.org/bin/macosx/)
+* Click on the link to R-x.x.x.pkg (where x.x.x is the latest version of **R**) as shown in Figure 2 to download the install file.
+* Double-click the downloaded file and proceed through the install process (which will be similar to other software that you have installed)
+
+![Figure 2](./images/r_00_fig_02_mac.png)
+
+
+### Quick **R** install for Windows
+
+* Click [here](https://cloud.r-project.org/bin/windows/base/)
+* Click on the link to *Download R x.x.x for Windows* (where x.x.x is the latest version of **R**) as shown in Figure 3 to download the install file.
+* Double-click the downloaded file and proceed through the install process (which will be similar to other software that you have installed)
+
+![Figure 3](./images/r_00_fig_03_win.png)
+
+
+### Slow **R** install
+
+The previous instructions rely on direct links. In case these fail, this section details a less direct method which is displayed visually in Figure 4. Hopefully the quick install worked and you can ignore this section.
+
+* Go to the [R project website](https://www.r-project.org)
+* In the left-hand menu click on the link labelled *CRAN*
+* This takes you to a list of *CRAN Mirrors* which are locations that host copies of the central **R** repository (see above). Scroll down and click on a link for a CRAN close to you.
+* On the next page either click the link to *Download R for MacOS X* or *Download R for Windows*
+* If you chose MacOS, on the resulting page click on the link to R-x.x.x.pkg (where x.x.x is the latest version of **R** - see Figure 2). This will download the install file.
+* If you chose Windows, click on *base* on the resulting page, and then click the link to *Download R x.x.x for Windows* (where x.x.x is the latest version of **R** - see Figure 3). This will download the install file.
+* Once you have downloaded the install file, double-click it and proceed through the install process (which will be similar to other software that you have installed).
+
+![Figure 4](./images/r_00_fig_04.png)
+
+
+## Working with *RStudio*
+
+There are three main ways to work in *RStudio*:
+
+* **Console**: This is the worst way (in my view). In the console you can type commands to get **R** to do things and view the output of those 'things'. The disadvantage of working in the console is that the instructions that you give to **R** run in real time after you hit the return key. So, you can't save what you have done or re-run blocks of commands. You also can't share what you have done with other people.
+* **Script**: An alternative to the console is to work on a script file. You type your commands into that file, edit them, play about with them, then when you want to execute them you select the bit you want to execute and click ![](./images/run.png) or (faster) press **ctrl** + **↩︎** (**⌘** + **↩︎** on a mac). The results of the executed code will appear in the console.
+    - *Advantages*: You can save the script file, which means you can reproduce your analyses at a later date, and you can share your files so that others can reproduce your analysis. You will tend to do similar sorts of things with data and having a repository of scripts helps with creating new scripts. For example, imagine you want to produce an error bar chart of some data, and you recall doing a similar graph for a different project, rather than trying to remember how to create the graph from scratch, just find your old script and copy the code. This will be very useful in the early stages of learning **R**, but after a while certain things that you do frequently will begin to stick in your head.
+    - *Disadvantages*: You can't output the script file to a document containing both your code and the output.
+* **R Markdown**: another option is to create an **R** Markdown document rather than a script file. [R Markdown](http://rmarkdown.rstudio.com/) is a version of the [markdown](https://en.wikipedia.org/wiki/Markdown) language which enables you to use symbols to specify the formatting of your document (this tutorial was written using **R** Markdown). I'll give you a flavour below. An **R** Markdown document is basically a flashy script file in which you can write text and embed blocks of **R** code that execute interactively displaying the outcome within the markdown document itself (rather than the console)
+    - *Advantages*: The main advantage is that you can 'knit' the markdown file into a PDF, word or html file. This means you can create an entire report that includes formatted text (like in a word file), your **R** code (which you can choose to include or not) and the results of your output. In theory (although it'd take a bit of effort learning the necessary skills) you could write an entire journal article that generates tables and graphs directly from your data 'on the fly'. I use **R** Markdown a lot when working on other people's data to produce reports from them. This means that if something gets added to the report, or some error is spotted in the data, I can re-generate the entire report by simply clicking a button - all the analyses will be recreated automatically using the corrected datafile. Some people also like being able to view their output in the same window as their **R** code.
+    - *Disadvantages*: You need to learn **R** markdown! Large documents can become quite unwieldy because of the integration of code, output and text.
+    
+    
+```{r script_quiz}
+quiz(
+  question("Which of these is **not** an advantage of working with script files?",
+    answer("You can generate a word file of your code and output.", correct = TRUE, message = "This is an advantage of using **R** markdown, not a script file, so this is the answer that is *not* an advantage of script files."),
+    answer("You can easily reproduce your analyses."),
+    answer("You can use past code to speed up writing new code."),
+    answer("It is easy for others to see how you fit your models and processed your data."),
+    correct = "Correct - well done!",
+    incorrect = "Sorry, that's incorrect. Try again.",
+    random_answer_order = TRUE,
+    allow_retry = T
+  )
+)
+
+```
+    
+    
+## Customizing **RStudio**
+
+### Panes
+
+The **RStudio** environment is shown in Figure 5. By default there are four panes that show different types of information:
+
+* **Source**: This pane is where you'll view and edit script (or **R** Markdown) files. It is where you write instructions that tell *R* what you'd like to do (see previous section).
+* **Console**: This is where you can type commands to get **R** to do things and view the output of those 'things'. However, as mentioned in the previous section, I  encourage you to use scripts rather than the console so treat this window as where you view the output of your scripts. (If you decide to work with **R** Markdown this pane becomes much less important)
+* **Workspace**: This pane displays information related to your workspace. The *Environment* tab lists of all the data files and objects (e.g., variables, functions etc.) that you have created in your workspace. You Can use this tab to load external data files by clicking on ![](./images/import_dataset.png). The *History* tab contains a searchable history of all the code you have typed. You can use this to locate code that you want to re-run, selecting it and clicking ![](./images/to_console.png) (to run it) or ![](./images/to_source.png) to add it to your current script.
+* **Files etc.**: This pane has several tabs.
+    - The *Files* tab lists the files and directories in your home directory and allows you to navigate them. Click ![](./images/more.png) to move or copy a selected item, or to set a selected directory as the working directory.
+    - The *Plots* tab displays plots generated by your code. Use ![](./images/arrow_l.png) and ![](./images/arrow_r.png) to move forwards and backwards through plots created during your session, and ![](./images/export_plot.png) to export a plot as and image file, PDF or copy it to the clipboard.
+    - The *Packages* tab list all the packages currently loaded.
+    - The *Help* tab displays help files. You can search for a topic by typing a phrase into ![](./images/search.png), or use the `?` function in the console (more on that later)
+    
+![Figure 5: The **RStudio** environment](./images/r_00_fig_05.png)
+
+
+```{r pane_quiz}
+quiz(
+  question("In what pane do you view, edit and execute script (or **R** Markdown) files?",
+    answer("Source", correct = TRUE),
+    answer("Console"),
+    answer("Workspace"),
+    answer("Files"),
+    correct = "Correct - well done!",
+    incorrect = "Sorry, that's incorrect. Try again.",
+    random_answer_order = TRUE,
+    allow_retry = T
+  ),
+  question("In what pane do you view the output of commands executed from a script file?",
+    answer("Source"),
+    answer("Console", correct = TRUE),
+    answer("Workspace"),
+    answer("Files"),
+    correct = "Correct - well done!",
+    incorrect = "Sorry, that's incorrect. Try again.",
+    random_answer_order = TRUE,
+    allow_retry = T
+  ),
+ question("In what pane do you view plots of data?",
+    answer("Source"),
+    answer("Console"),
+    answer("Workspace"),
+    answer("Files", correct = TRUE),
+    correct = "Correct - well done!",
+    incorrect = "Sorry, that's incorrect. Try again.",
+    random_answer_order = TRUE,
+    allow_retry = T
+  ),
+question("In what pane do you view the objects that you have created in **R**?",
+    answer("Source"),
+    answer("Console"),
+    answer("Workspace", correct = TRUE),
+    answer("Files"),
+    correct = "Correct - well done!",
+    incorrect = "Sorry, that's incorrect. Try again.",
+    random_answer_order = TRUE,
+    allow_retry = T
+  )
+)
+```
+
+### Options
+
+**RStudio** options are accessible from the *Tools > Options* menu (Windows) or *RStudio > Preferences* (MacOS). This opens the dialogue box in Figure 6. There is a full guide to the preferences [here](https://support.rstudio.com/hc/en-us/articles/200549016-Customizing-RStudio), but here's a summary.
+
+* **General**: You can set aspects of workspace behaviour. For example, you can set a default working directory (the directory where **RStudio** looks for files) but I'd recommend doing that from within your source code anyway.
+* **Code**: This section is for changing the behaviour of the source pane (i.e. whether line numbers are displayed, how text is wrapped and so on). The default options are all fine.
+* **Appearance**: Specify aspects of the visual theme for the console and source editor (e.g., font, colours etc.). Again, the defaults are fine. The main thing to change (if you like) is to select a different theme from the list of 'Editor themes'. This will apply one of the list of pre-defined themes for **RStudio**. So, for example, if you prefer to work with light text on a dark background (rather than the default of dark text on a light background) you could select one of the dark themes such as *Solarized Dark* (Figure 6). 
+* **Pane Layout**: Here you can change the layout of the four panes described in the previous section. You'll see a grid of four blocks each with a drop down menu allowing you to select one of the four options that we've already discussed (Source, Console, Workspace/Environment, Files). By default **RStudio** arranges these panes as source top-left, console bottom-left, workspace top-right, files bottom-right (Figure 7, left). You might like this configuration but personally I prefer source top-left, console top-right, workspace bottom-left, files bottom-right (Figure 7, right). This configuration works for me because I don't tend to use the workspace pane very much so I can make the source pane (where I'm doing most of my work) large by dragging the pane divider down in the main **RStudio** window (see Figure 5) and have the workspace pane as a small strip underneath. Then I can have my 'output' panes to the right with the top half showing text output and the bottom half showing plots (see Figure 5 for how I typically arrange my **RStudio** environment). However, that's just my preference and you might prefer a different configuration.
+* **Packages**: here you can set default CRAN repository and specify options relevant to developing your own packages (which we won't do so you can leave these options alone).
+* **Spelling**: these options relate to spell checking (for example whether you ignore upper case words and words containing numbers). The main thing you might want to change here is the default dictionary which is *English (United States)*. I, for example, would change this to *English (United Kingdom)* (Figure 8).
+* **Sweave**, **Git/SVN** and **Publishing**: these options relate to things that we won't do (i.e. use GitHub, publish documents or apps online) and the default options are fine anyway.
+
+![Figure 6: The *Solarized Dark* theme](./images/r_00_fig_06.png)
+
+![Figure 7: Customizing the panes](./images/r_00_fig_07.png)
+
+
+![Figure 8: Spelling options](./images/r_00_fig_08.png)
+
+## Other resources
+
+### Statistics
+
+* The tutorials typically follow examples described in detail in @RN10163, so for most of them there's a thorough account in there. You might also find @RN4832 useful for the **R** stuff.
+* There are free lectures and screencasts on my [YouTube channel](https://www.youtube.com/user/ProfAndyField/)
+* There are free statistical resources on my website [www.discoveringstatistics.com](http://www.discoveringstatistics.com)
+
+### R
+
+* [R for data science](http://r4ds.had.co.nz/index.html) is an open-access book by the creator of the tidyverse (Hadley Wickham). It covers the *tidyverse* and data management.
+* [ModernDive](http://moderndive.com/index.html) is an open-access textbook on **R** and **RStudio**
+* [RStudio cheat sheets](https://www.rstudio.com/resources/cheatsheets/)
+* [RStudio list of online resources](https://www.rstudio.com/online-learning/)
+* [SwirlStats](http://swirlstats.com/students.html) is a package for *R* that launches a bunch of interactive tutorials.
+
+## References
+
+

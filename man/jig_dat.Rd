@@ -11,7 +11,7 @@
   \item{job_type}{Categories of employee}
   \item{footspeed}{Footspeed of the individual, miles per hour}
   \item{strength}{Maximal push force of the individual, Newtons}
-  \item{vision}{Visual accuity, Newtons}
+  \item{vision}{Visual accuity}
   \item{sex}{Biological sex of the individual}
 }}
 \source{

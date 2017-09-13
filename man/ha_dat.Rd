@@ -10,7 +10,7 @@
   \item{age}{Age of the participant, years}
   \item{Sex}{Biological sex of the individual}
   \item{hi_salary}{Rating (out of 10) of the importance of a high salary in a potential romantic partner}
-  \item{hi_salary}{Rating (out of 10) of the importance of a potential romantic partner having finished their education}
+  \item{fin_ed}{Rating (out of 10) of the importance of a potential romantic partner having finished their education}
   \item{kind}{Rating (out of 10) of the importance of a potential romantic partner being kind}
   \item{humour}{Rating (out of 10) of the importance of a potential romantic partner having a sense of humour}
   \item{ambitious}{Rating (out of 10) of the importance of a potential romantic partner being ambitious}

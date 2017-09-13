@@ -12,7 +12,8 @@ LazyData: true
 Imports:
     tidyverse,
     learnr,
-    RefManageR
+    RefManageR,
+    gmodels
 RoxygenNote: 6.0.1
 Suggests: knitr,
     rmarkdown

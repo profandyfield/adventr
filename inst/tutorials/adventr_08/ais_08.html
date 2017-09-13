@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Andy Field" />
+
+
+<meta name="progressive" content="true" />
+<meta name="allow-skip" content="false" />
+
+<title>AAiR: Inferential statistics</title>
+
+
+<!-- highlightjs -->
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+</head>
+
+<body>
+
+
+
+<div class="pageContent band">
+<div class="bandContent page">
+
+<div class="topics">
+
+<div id="section-an-adventure-in-r-inferential-statistics" class="section level1">
+<h1>An Adventure in R: Inferential statistics</h1>
+<div id="section-overview" class="section level2">
+<h2>Overview</h2>
+<p>This tutorial is one of a series that accompanies <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> <span class="citation">(A. P. Field 2016)</span> and <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(A. P. Field, Miles, and Field 2012)</span> by <a href="https://en.wikipedia.org/wiki/Andy_Field_(academic)">me</a>. These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>,<a href="#section-fn1" class="footnoteRef" id="section-fnref1"><sup>1</sup></a></p>
+<ul>
+<li>Who is the tutorial aimed at?
+<ul>
+<li>Primarily students enrolled on my <em>Linear models in statistics</em> module at the University of Sussex, but anyone teaching from or reading <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> or <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(A. P. Field, Miles, and Field 2012)</span> may find them useful.</li>
+</ul></li>
+<li>What is covered?
+<ul>
+<li>This tutorial looks at how to get (and plot) inferential statistics such as confidence intervals for the mean. We also look at robust confidence intervals. It would be a useful tutorial to run alongside teaching based on Chapters 8 and 9 of <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a>.</li>
+<li>This tutorial <em>does not</em> teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else’s)</li>
+<li>The aim of this tutorial is to augment the theory that you already know by guiding you through fitting linear models using <strong>R</strong> and <strong>RStudio</strong> and asking you questions to test your knowledge along the way.</li>
+</ul></li>
+</ul>
+</div>
+<div id="section-story-precis" class="section level2">
+<h2>Story précis</h2>
+<div id="section-why-a-precis" class="section level3">
+<h3>Why a précis?</h3>
+<p>Because these tutorials accompany my book <em>An adventure in statistics</em>, which uses a fictional narrative to teach the statistics, some of the examples might not make sense unless you know something about the story. For those of you who don’t have the book I begin each tutorial with a précis of the story. If you’re not interested then fair enough - click past this section.</p>
+</div>
+<div id="section-general-context-for-the-story" class="section level3">
+<h3>General context for the story</h3>
+<p>It is the future. Zach, a rock musician and Alice, a geneticist, who have been together since high school live together in Elpis, the ‘City of Hope’.</p>
+<p>Zach and Alice were born in the wake of the Reality Revolution which occurred after a Professor Milton Gray invented the Reality Prism – a transparent pyramid worn on the head – that brought honesty to the world. Propaganda and media spin became unsustainable, religions collapsed, advertising failed. Society could no longer be lied to. Everyone could know the truth about anything that they could look at. A gift, some said, to a previously self-interested, self-obsessed society in which the collective good had been eroded.</p>
+<p>But also a curse. For, it soon became apparent that through this Reality Prism, people could no longer kid themselves about their own puffed-up selves as they could see what they were really like – by and large, pretty ordinary. And this caused mass depression. People lost faith in themselves. Artists abandoned their pursuits, believing they were untalented and worthless.</p>
+<p>Zach and Alice have never worn a Reality Prism and have no concept of their limitations. They were born after the World Governance Agency (WGA) destroyed all Reality Prisms, along with many other pre-revolution technologies, with the aim of restoring community and well-being. However, this has not been straightforward and in this post-Prism world, society has split into pretty much two factions</p>
+<ul>
+<li>The Chippers who have had WiFi-enabled chips implanted into their brains, enabling them to record and broadcast what they see and think in real time; upload memories for future generations into a newly-created memoryBank and live-stream music and films directly into their brains.</li>
+<li>The Clocktarians, followers of the old pre-Prism ways who use steam punk style technologies, who have elected not to have chips in their brains, regarded by the Chippers as backward-looking stuck in a ‘clockwork, Victorian society’.</li>
+</ul>
+<p>Everyone has a star, a limitless space on which to store their digital world.</p>
+<p>Zach and Alice are Clocktarians. Their technology consists mainly of:</p>
+<ul>
+<li>A Proteus, a device made from programmable matter that can transform shape and function simply by the owners’ wishes. Zach calls his a diePad, in the shape of a tombstone in an ironic reference to an over-reliance on technology at the expense of memory.</li>
+<li>A Reality Checker, a clockwork mechanism that, at the point of critical velocity, projects an opaque human head that is linked to everything and can tell you anything. Every head has a personality and Zach’s is a handsome, laid back ‘dude’ who is like an electronic friend, who answers questions if he feels like it and often winds Zach up by giving him false information. And he often flirts with Alice.</li>
+</ul>
+</div>
+<div id="section-main-protagonists" class="section level3">
+<h3>Main Protagonists</h3>
+<ul>
+<li>Zach
+<ul>
+<li>Rock musician in band called The Reality Enigma.</li>
+<li>Spellbinding performer, has huge fan-base.</li>
+<li>Only people living in Elpis get to see The Reality Enigma in the flesh. Otherwise all performances are done via an oculus riff, a multisensory headset for experiencing virtual gigs.</li>
+<li>Zach’s music has influenced and changed thousands of lives.</li>
+<li>Wishes he had lived pre-Revolutionary times, the turn of the 21st Century, a golden age for music when bands performed in reality at festivals.</li>
+<li>Kind, gentle and self-doubting.</li>
+<li>Believes science and maths are dull and uninspiring. Creates a problem between him and Alice as she thinks that because he isn’t interested in science, he isn’t interested in her. Leads to lots of misunderstandings between them.</li>
+</ul></li>
+<li>Alice
+<ul>
+<li>Shy, lonely, academically-gifted – estranged from the social world until she met Zach in the college library.</li>
+<li>Serious scientist, works at the Beimeni Centre of Genetics.</li>
+<li>At 21, won the World Science Federation’s Einstein Medal for her genetics research</li>
+<li>Desperately wants Zach to get over his fear of science so he can open his mind to the beauty of it.</li>
+</ul></li>
+</ul>
+</div>
+<div id="section-how-zachs-adventure-begins" class="section level3">
+<h3>How Zach’s adventure begins</h3>
+<p>Alice has been acting strangely, on edge for weeks, disconnected and uncommunicative, as if she is hiding something and Zach can’t get through to her. Arriving home from band practice, unusually, she already home and listening to an old album that the two of them enjoyed together, back in a simpler, less complicated time in their relationship. During an increasingly testy evening, that involves a discussion with the Head about whether or not a Proteus causes brain cancer, Alice is interrupted by an urgent call which she takes in private. She returns looking worried and is once again, distracted. She tells Zach that she has ‘a big decision to make’. Before going to bed, Zach asks her if he can help with the decision but she says he ‘already has’, thanking him for making ‘everything easier.’ He has no idea what she means and goes to sleep, uneasy.</p>
+<p>On waking, Zach senses that something is wrong. And he is right. Alice has disappeared. Her clothes, her possessions and every photo of them together have gone. He can’t get hold of any of her family or friends as their contact information is stored on her Proteus, not on his diePad. He manages to contact the Beimeni Centre but is told that no one by the name of Alice Nightingale has ever worked there. He logs into their constellation but her star has gone. He calls her but finds that her number never existed. She has, thinks Zach, been ‘wiped from the planet.’ He summons The Head but he can’t find her either. He tells Zach that there are three possibilities: Alice has doesn’t want to be found, someone else doesn’t want her to be found or she never existed.</p>
+<p>Zach calls his friend Nick, fellow band member and fan of the WGA-installed Repositories, vast underground repositories of actual film, books, art and music. Nick is a Chipper – solely for the purpose of promoting the band using memoryBank – and he puts the word out to their fans about Alice missing.</p>
+<p>Thinking as hard as he can, Zach recalls the lyrics of the song she’d been playing the previous evening. Maybe they are significant? It may well be a farewell message and the Head is right. In searching for clues, he comes across a ‘memory stone’ which tells him to read what’s on there. File 1 is a research paper that Zach can’t fathom. It’s written in the ‘language of science’ and the Head offers to help Zach translate it and tells him that it looks like the results of her current work were ‘gonna blow the world’. Zach resolves to do ‘something sensible’ with the report.</p>
+<p>Zach doesn’t want to believe that Alice has simply just left him. Rather, that someone has taken her and tried to erase her from the world. He decides to find her therapist, Dr Murali Genari and get Alice’s file. As he breaks into his office, Dr Genari comes up behind him and demands to know what he is doing. He is shaking but not with rage – with fear of Zach. Dr Genari turns out to be friendly and invites Zach to talk to him. Together they explore the possibilities of where Alice might have gone and the likelihood, rating her relationship satisfaction, that she has left him. During their discussion Zach is interrupted by a message on his diePad from someone called Milton. Zach is baffled as to who he is and how he knows that he is currently discussing reverse scoring. Out of the corner of his eye, he spots a ginger cat jumping down from the window ledge outside. The counsellor has to go but suggests that Zach and ‘his new friend Milton’ could try and work things out.</p>
+</div>
+</div>
+<div id="section-packages-and-data" class="section level2">
+<h2>Packages and data</h2>
+<div id="section-packages" class="section level3">
+<h3>Packages</h3>
+<p>This tutorial uses the following packages:</p>
+<ul>
+<li><code>boot</code></li>
+<li><code>gmodels</code></li>
+<li><code>tidyverse</code></li>
+</ul>
+<p>These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in <strong>RStudio</strong>) then you need to make sure that the package has been installed by executing <code>install.packages(&quot;package_name&quot;)</code>, where <em>package_name</em> is the name of the package. If the package is already installed, then you need to reference it in your current session by executing <code>library(package_name)</code>, where <em>package_name</em> is the name of the package.</p>
+<p>Note that <code>boot</code> is installed by default in <strong>R</strong>, but you will need to execute <code>library(boot)</code> to use it.</p>
+</div>
+<div id="section-data" class="section level3">
+<h3>Data</h3>
+<p>This tutorial has the data files pre-loaded so you shouldn’t need to do anything to access the data from within the tutorial. However, if you want to play around with what you have learnt in this tutorial outside of the tutorial environment (i.e. in a stand-alone <strong>RStudio</strong> session) you will need to download the data files and then read them into your <strong>R</strong> session. This tutorial uses the following file:</p>
+<ul>
+<li><a href="http://www.discoveringstatistics.com/repository/ais_data/ais_c05_jigsaw.csv">ais_c05_jigsaw.csv</a>.</li>
+</ul>
+<p>You can load the file in several ways:</p>
+<ul>
+<li>Assuming that you save this file into the working directory, you can load it by executing:
+<ul>
+<li><code>jig_dat &lt;- read_csv(&quot;ais_c05_jigsaw.csv&quot;)</code></li>
+<li>If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called <em>adventr_02</em>)</li>
+</ul></li>
+<li>To load the file using a standard dialogue box to navigate your file system, execute:
+<ul>
+<li><code>jig_dat &lt;- read_csv(file.choose())</code></li>
+</ul></li>
+<li>You can load the file direct from the URL (i.e., you don’t need to download it first) by executing:
+<ul>
+<li><code>jig_dat &lt;- read_csv(&quot;http://www.discoveringstatistics.com/repository/ais_data/ais_c05_jigsaw.csv&quot;)</code></li>
+<li>This method relies on an internet connection (and my server having not exploded!)</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="section-confidence-intervals" class="section level2">
+<h2>Confidence intervals</h2>
+<p>After breaking into the JIG:SAW complex and catching a glimpse of Alice, Zach is in shock. Returning home he is desolate: the evidence of his eyes suggests that Alice is not being held hostage at JIG:SAW and the reality kicks in that she may in fact have left him. He feels worthless. He meets up with Nick, the drummer in his band, at the Repository and they discuss what has happened. Nick is utterly convinced that Alice wouldn’t have left Zach out of choice and Zach returns home even more determined to get back into JIG:SAW to speak to her and find out for himself. Milton is reluctant and tries to convince Zach that he would need to step up his understanding of statistics to a level of which he is not capable. Based on data showing that performing under a different name in a maths test can free mental blocks to maths, it is decided that Zach needs to dress up as Florence Nightingale - a ‘gifted statistician’ as well as a nurse. Feel free to do the same.</p>
+<p>Milton goes on to explain confidence intervals to Zach.</p>
+<div class="panel panel-default">
+<div class="panel-heading tutorial-panel-heading">Quiz</div>
+<table class="table quiz-table">
+<tr>
+<td>
+
+<div id="htmlwidget-7228ccb846b85c19e71b" style="width:100%;height:auto;", class = "quiz html-widget">
+<div class="panel panel-default">
+<div class="panel-body quizArea">
+</div>
+</div>
+</div>
+
+<script type="application/json" data-for="htmlwidget-7228ccb846b85c19e71b">{"x":{"question":"If a 95% confidence interval for the mean ranges from 45 to 51, what does this tell us?","answers":[{"option":"If this confidence interval is one of the 95% that contains the population value then the population value of the mean lies between 45 and 51.","correct":true,"message":null},{"option":"There is a 95% chance that the population value of the mean lies between 45 and 51","correct":false,"message":"You cannot make probability statements from a confidence interval. We don&#39;t know whether this particular CI is one of the 95% that contains the population value of the mean."},{"option":"The probability of this confidence interval containing the population mean is 0.95.","correct":false,"message":"The probability of this confidence interval containing the population mean is either 0 (it doesn&#39;t) or 1 (it does) but it&#39;s impossible to know which."},{"option":"I can be 95% confident that the population value of the mean lies between 45 and 51","correct":false,"message":"Confidence intervals do not quantify your subjective confidence."}],"label":"quiz_ci_ex1-1","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"If a 95% confidence interval for the mean ranges from 45 to 51, what does this tell us?","a":[{"option":"If this confidence interval is one of the 95% that contains the population value then the population value of the mean lies between 45 and 51.","correct":true,"message":null},{"option":"There is a 95% chance that the population value of the mean lies between 45 and 51","correct":false,"message":"You cannot make probability statements from a confidence interval. We don&#39;t know whether this particular CI is one of the 95% that contains the population value of the mean."},{"option":"The probability of this confidence interval containing the population mean is 0.95.","correct":false,"message":"The probability of this confidence interval containing the population mean is either 0 (it doesn&#39;t) or 1 (it does) but it&#39;s impossible to know which."},{"option":"I can be 95% confident that the population value of the mean lies between 45 and 51","correct":false,"message":"Confidence intervals do not quantify your subjective confidence."}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+</td>
+</tr>
+</table>
+</div>
+<p>In a previous tutorial we looked at how to summarize data to get summary statistics such as the mean, median, variance and so on. It is often useful to get the confidence interval too. This section looks at how to do that. We’re going to use the data in the tibble called <code>jig_dat</code> again, which contains data about the strength, speed, and visual acuity of JIG:SAW employees and non-employees. Remember that this tibble contains 7 variables:</p>
+<ul>
+<li><strong>id </strong>: employee ID</li>
+<li><strong>employee</strong>: whether or not the employee works for JIG:SAW</li>
+<li><strong>job_type</strong>: Categories of employee</li>
+<li><strong>footspeed</strong>: Footspeed of the individual, in miles per hour</li>
+<li><strong>strength</strong>: Maximal push force of the individual in newtons</li>
+<li><strong>vision</strong>: Visual acuity</li>
+<li><strong>sex</strong>: Biological sex of the individual</li>
+</ul>
+<p>In the previous tutorial we looked at combining <code>group_by()</code> and <code>summarize()</code> in a pipe command to create a tibble containing summary statistics (split by group). For example, we used the following command to create a tibble called <code>speed_sum</code> that contained the mean of the variable <strong>footspeed</strong> grouped by combinations of the variables <strong>employee</strong> and <strong>sex</strong> from the tibble called <code>jig_dat</code>.</p>
+<pre class="r"><code>speed_sum &lt;-
+  jig_dat %&gt;%
+  group_by(employee, sex) %&gt;%
+  summarize(
+    mean_speed = mean(footspeed)
+    )</code></pre>
+<div class="panel panel-default">
+<div class="panel-heading tutorial-panel-heading">Quiz</div>
+<table class="table quiz-table">
+<tr>
+<td>
+
+<div id="htmlwidget-8e2c4b1885bf5e1dd7a9" style="width:100%;height:auto;", class = "quiz html-widget">
+<div class="panel panel-default">
+<div class="panel-body quizArea">
+</div>
+</div>
+</div>
+
+<script type="application/json" data-for="htmlwidget-8e2c4b1885bf5e1dd7a9">{"x":{"question":"In the above command, what does <strong>group_by(employee, sex)<\/strong> do?","answers":[{"option":"Groups the output by all combinations of the variables <strong>employee<\/strong> and <strong>sex<\/strong> (I.e. employee-male, employee-female, non-employee-male, non-employee-female.","correct":true,"message":null},{"option":"Creates one output grouped by <strong>employee<\/strong> (i.e. employee, non-employee), and a separate output grouped by sex (male, female).","correct":false,"message":null}],"label":"quiz_pipe_ex1-1","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"In the above command, what does <strong>group_by(employee, sex)<\/strong> do?","a":[{"option":"Groups the output by all combinations of the variables <strong>employee<\/strong> and <strong>sex<\/strong> (I.e. employee-male, employee-female, non-employee-male, non-employee-female.","correct":true,"message":null},{"option":"Creates one output grouped by <strong>employee<\/strong> (i.e. employee, non-employee), and a separate output grouped by sex (male, female).","correct":false,"message":null}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+</td>
+</tr>
+<tr>
+<td>
+
+<div id="htmlwidget-f9edf9b251e80ed40395" style="width:100%;height:auto;", class = "quiz html-widget">
+<div class="panel panel-default">
+<div class="panel-body quizArea">
+</div>
+</div>
+</div>
+
+<script type="application/json" data-for="htmlwidget-f9edf9b251e80ed40395">{"x":{"question":"What does the pipe operator (%&gt;%) do?","answers":[{"option":"Carries any instruction on the left of the operator forward into any instrucion on the right of the operator","correct":true,"message":null},{"option":"Allows you to chain independent commands without them affecting each other.","correct":false,"message":"Sorry, that&#39;s incorrect. The pipe operator is does the opposite: it allows you to chain commands so that commands on the left are carried forwared in to commands on the right"},{"option":"Multiplies anything on the left of the operator by anything on the right.","correct":false,"message":"Sorry, that&#39;s incorrect. The pipe operator is does the opposite: it allows you to chain commands so that commands on the left are carried forwared in to commands on the right"},{"option":"Pipes statistical wisdom into your brain.","correct":false,"message":"If only ..."}],"label":"quiz_pipe_ex1-2","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"What does the pipe operator (%&gt;%) do?","a":[{"option":"Carries any instruction on the left of the operator forward into any instrucion on the right of the operator","correct":true,"message":null},{"option":"Allows you to chain independent commands without them affecting each other.","correct":false,"message":"Sorry, that&#39;s incorrect. The pipe operator is does the opposite: it allows you to chain commands so that commands on the left are carried forwared in to commands on the right"},{"option":"Multiplies anything on the left of the operator by anything on the right.","correct":false,"message":"Sorry, that&#39;s incorrect. The pipe operator is does the opposite: it allows you to chain commands so that commands on the left are carried forwared in to commands on the right"},{"option":"Pipes statistical wisdom into your brain.","correct":false,"message":"If only ..."}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+</td>
+</tr>
+</table>
+</div>
+<p>To incorporate confidence intervals into this command isn’t entirely straightforward. One way is to use the <code>ci()</code> function from the <code>gmodels</code> package. (Remember that if you’re doing this outside of this tutorial then you’ll need to install this package and then load it whenever you want to use the <code>ci()</code> function in a session.) This function takes any model as its input and returns an object that contains estimates from the model and their confidence intervals. If you input a single variable then it returns the mean of that variable and the associated confidence interval (but you can input more complex objects than a variable). In general it takes the following form:</p>
+<p><code>ci(object, confidence = 0.95, na.rm = F)</code></p>
+<p>To keep things simple, imagine the ‘object’ we put into this function is a variable, like <strong>footspeed</strong>. We’d execute:</p>
+<p><code>ci(jig_dat$footspeed, confidence = 0.95, na.rm = F)</code></p>
+<p>If we just place <code>jig_dat$footspeed</code> into the function we’ll get a 95% confidence interval and missing values will <em>not</em> be removed. To get a different confidence interval specify a proportion in <code>confidence =</code>. For example, <code>ci(jig_dat$footspeed, confidence = 0.9)</code> will give us a 90% confidence interval around the mean of <strong>footspeed</strong>. Similarly if we want to remove missing values we would set <code>na.rm = T</code>. When you put a variable into the function it returns an object containing the mean (labelled <em>Estimate</em> in the object), the lower boundary of the confidence interval (labelled <em>CI Lower</em>), the upper boundary of the confidence interval (labelled <em>CI Upper</em>), and the standard error (labelled <em>Std. Error</em>). To access these values simultaneously we execute the function (or create an object from it and execute that), but if we want to access them individually we can do that by appending their name in square brackets. For example:</p>
+<p><code>ci(jig_dat$footspeed)[&quot;CI lower&quot;]</code> returns the value of the item labelled “CI lower” in the object created by the <code>ci()</code> function. In other words, it will give us the value of the lower boundary of the (by default 95%) confidence interval. If we add this command within the <code>summarize()</code> statement in our pipe, we’ll get the lower boundaries for the confidence intervals around the mean when the data are grouped by <strong>employee</strong> and <strong>sex</strong>. One final point is that we wouldn’t include this line exactly as I’ve written it because we have specified the <code>jig_dat</code> tibble earlier in the pipe, which means it will be carried forward into the summarize statement. This means that we can specify the variable of interest as simply <code>footspeed</code> rather than <code>jig_dat$footspeed</code> because the function will already know to look for <strong>footspeed</strong> within the <code>jig_dat</code> tibble.</p>
+<p>Therefore, to create a tibble with means and confidence intervals grouped by <strong>employee</strong> and <strong>sex</strong> we can adapt the code that we’ve already used in previous tutorials to include the <code>ci()</code> function:</p>
+<pre class="r"><code>speed_sum &lt;-
+  jig_dat %&gt;%
+  group_by(employee, sex) %&gt;%
+  summarize(
+    mean_speed = mean(footspeed),
+    ci_low = ci(footspeed)[&quot;CI lower&quot;],
+    ci_upp = ci(footspeed)[&quot;CI upper&quot;]
+    )</code></pre>
+<p>Note that the code is the same as we used before except that we have added two lines (which should make sense based on the explanation above):</p>
+<ul>
+<li><code>ci_low = ci(footspeed)[&quot;CI lower&quot;]</code> creates a variable called <strong>ci_low</strong> by applying the function <code>ci()</code> to the variable <strong>footspeed</strong> and extracting the value labelled “CI lower”, which is the value of the lower boundary of the 95% confidence interval.<br />
+</li>
+<li><code>ci_upp = ci(footspeed)[&quot;CI upper&quot;]</code> creates a variable called <strong>ci_upp</strong> by applying the function <code>ci()</code> to the variable <strong>footspeed</strong> and extracting the value labelled “CI upper”, which is the value of the upper boundary of the 95% confidence interval.</li>
+</ul>
+<p>Copy the command into the code box and run it. Also, run the name of the <code>speed_sum</code> tibble that you create to see what it contains. Hopefully you’ll see a tibble with the mean and 95% confidence interval boundaries split by <strong>employee</strong> and <strong>sex</strong>. Try to create tibbles called <code>strength_sum</code> and <code>vis_sum</code> that tabulate the mean and confidence intervals for the variables <strong>strength</strong> and <strong>vision</strong> respectively.</p>
+<div class="tutorial-exercise" data-label="gb_ci" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="7">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="gb_ci-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>speed_sum &lt;-
+  jig_dat %&gt;%
+  group_by(employee, sex) %&gt;%
+  summarize(
+    mean_speed = mean(footspeed),
+    ci_low = ci(footspeed)[&quot;CI lower&quot;],
+    ci_upp = ci(footspeed)[&quot;CI upper&quot;]
+    )
+speed_sum</code></pre>
+</div>
+</div>
+<div id="section-plotting-confidence-intervals" class="section level2">
+<h2>Plotting confidence intervals</h2>
+<p>We’ve seen in previous tutorials how to plot means. For example we created a plot of the strength data split by JIG:SAW employees and non-employees. We used this code:</p>
+<pre class="r"><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength))
+strength_plot +
+  stat_summary(fun.y = &quot;mean&quot;, geom = &quot;point&quot;, size = 4) +
+  labs(x = &quot;Employee status&quot;, y = &quot;Maximal push force (n)&quot;) +
+  coord_cartesian(ylim = c(1000, 1800)) +
+  scale_y_continuous(breaks = seq(1000, 1800, 100)) +
+  theme_bw()</code></pre>
+<p>Let’s remind ourselves of what each part of this command is doing:</p>
+<ul>
+<li><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength))</code> creates an object called <code>strength_plot</code> that contains the plot. The <code>ggplot()</code> function is then used to specify that the plot uses the <code>jig_dat</code> tibble and plots the variable <strong>employee</strong> on the <em>x</em>-axis and the variable <strong>strength</strong> on the <em>y</em>-axis.</li>
+<li><code>strength_plot + stat_summary(fun.y = &quot;mean&quot;, geom = &quot;point&quot;, size = 4)</code> takes the object <code>strength_plot</code> and adds a statistics summary to it. The <code>stat_summary()</code> uses <code>fun.y = &quot;mean&quot;</code> to plot the mean using a dot (<code>geom = &quot;point&quot;</code>) of size 4 (<code>size = 4</code>).</li>
+<li><code>labs(x = &quot;Employee status&quot;, y = &quot;Maximal push force (n)&quot;)</code> applies descriptive labels to the <em>x</em> and <em>y</em> axes.</li>
+<li><code>coord_cartesian(ylim = c(1000, 1800))</code> sets the limits of the <em>y</em>-axis</li>
+<li><code>scale_y_continuous(breaks = seq(1000, 1800, 100))</code> sets the breaks along the <em>y</em>-axis</li>
+<li><code>theme_bw()</code> applies a black and white theme to the plot</li>
+</ul>
+<p>If we want to plot confidence intervals around the means all we need to do is to edit the details of <code>stat_summary()</code>. Specifically there are three changes that we need to make:</p>
+<ol style="list-style-type: decimal">
+<li>Change <code>fun.y = &quot;mean&quot;</code> to <code>fun.data = &quot;mean_cl_normal&quot;</code>. This creates the data to be plotted for the mean and confidence intervals.</li>
+<li>Change <code>geom = &quot;point&quot;</code> to <code>geom = &quot;pointrange&quot;</code>. This changes the geom to one that can display a confidence interval.</li>
+<li>Delete <code>size = 4</code> because the default size for the ‘pointrange’ geom will look better than size 4.</li>
+</ol>
+<p>The code box contains the code above and shows the resulting plot (that we created in previous tutorials). Change the two things listed above and run the code to see how the plot changes.</p>
+<div class="tutorial-exercise" data-label="stg_plot_ci" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="7">
+<pre class="text"><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength))
+strength_plot +
+  stat_summary(fun.y = &quot;mean&quot;, geom = &quot;point&quot;, size = 4) +
+  labs(x = &quot;Employee status&quot;, y = &quot;Maximal push force (n)&quot;) +
+  coord_cartesian(ylim = c(1000, 1800)) +
+  scale_y_continuous(breaks = seq(1000, 1800, 100)) +
+  theme_bw()</code></pre>
+<pre><code>Warning in plyr::split_indices(scale_id, n): &#39;.Random.seed&#39; is not an
+integer vector but of type &#39;NULL&#39;, so ignored</code></pre>
+<img src="ais_08_files/figure-html/stg_plot_ci-1.png" width="624" />
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="stg_plot_ci-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength))
+strength_plot +
+  stat_summary(fun.data = &quot;mean_cl_normal&quot;, geom = &quot;pointrange&quot;) +
+  labs(x = &quot;Employee status&quot;, y = &quot;Maximal push force (n)&quot;) +
+  coord_cartesian(ylim = c(1000, 1800)) +
+  scale_y_continuous(breaks = seq(1000, 1800, 100)) +
+  theme_bw()</code></pre>
+</div>
+<p>Hopefully your plot how looks like dots showing the means with vertical lines showing the confidence intervals. (Incidentally, you could layer a <code>stat_summary()</code> function underneath the confidence intervals that uses a bar geom to plot the mean. Something like <code>stat_summary(fun.y = &quot;mean&quot;, geom = &quot;bar&quot;, alpha = 0.6) +</code> placed on the line above the existing stat_summary() function would work. The result would be a bar graph of means with error bars layered on top. However, adding the bars does not add any new information, but does add a lot of unnecessary ink, so I wouldn’t bother.)</p>
+<p>What about more complex plots? In a previous tutorial we also created a similar plot but differentiated males and females by colours. The code box below replicates this code and shows the plot to remind you of how it looks. To add error bars we make exactly the same changes to <code>stat_summary()</code> as we did above:</p>
+<ol style="list-style-type: decimal">
+<li>Change <code>fun.y = &quot;mean&quot;</code> to <code>fun.data = &quot;mean_cl_normal&quot;</code>.</li>
+<li>Change <code>geom = &quot;point&quot;</code> to <code>geom = &quot;pointrange&quot;</code>.</li>
+<li>Delete <code>size = 4</code>.</li>
+</ol>
+<p>Make these changes and run the code. You should see the same plot but with confidence intervals as well as means.</p>
+<div class="tutorial-exercise" data-label="stgth_col1" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength, colour = sex))
+strength_plot +
+  stat_summary(fun.y = &quot;mean&quot;, geom = &quot;point&quot;, size = 4, position = position_dodge(width = 0.9)) +
+  labs(x = &quot;Employee status&quot;, y = &quot;Maximal push force (n)&quot;, colour = &quot;Biological sex&quot;) +
+  coord_cartesian(ylim = c(1000, 1800)) +
+  scale_y_continuous(breaks = seq(1000, 1800, 100)) +
+  scale_colour_manual(values = c(&quot;#56B4E9&quot;, &quot;#E69F00&quot;)) +
+  theme_bw()</code></pre>
+<img src="ais_08_files/figure-html/stgth_col1-1.png" width="624" />
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="stgth_col1-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength, colour = sex))
+strength_plot +
+  stat_summary(fun.data = &quot;mean_cl_normal&quot;, geom = &quot;pointrange&quot;, position = position_dodge(width = 0.9)) +
+  labs(x = &quot;Employee status&quot;, y = &quot;Maximal push force (n)&quot;, colour = &quot;Biological sex&quot;) +
+  coord_cartesian(ylim = c(1000, 1800)) +
+  scale_y_continuous(breaks = seq(1000, 1800, 100)) +
+  scale_colour_manual(values = c(&quot;#56B4E9&quot;, &quot;#E69F00&quot;)) +
+  theme_bw()</code></pre>
+</div>
+<p>In the box below can you create a similar plot of the vision scores split by <strong>job_type</strong> on the <em>x</em>-axis and employees and non-employees in different colours.</p>
+<div class="tutorial-exercise" data-label="stgth_col2" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="stgth_col2-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>vis_plot &lt;- ggplot(jig_dat, aes(job_type, vision, colour = employee))
+vis_plot +
+  stat_summary(fun.data = &quot;mean_cl_normal&quot;, geom = &quot;pointrange&quot;, position = position_dodge(width = 0.9)) +
+  labs(x = &quot;Type of job&quot;, y = &quot;Visual acuity&quot;, colour = &quot;Employee status&quot;) +
+  coord_cartesian(ylim = c(0, 1)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.1)) +
+  scale_colour_manual(values = c(&quot;#56B4E9&quot;, &quot;#E69F00&quot;)) +
+  theme_bw()</code></pre>
+</div>
+</div>
+<div id="section-robust-means" class="section level2">
+<h2>Robust means</h2>
+<p>In Chapter 9, Zach steals the data we have been analysing that relates to JIG:SAW employees. Milton teaches him how the mean and confidence intervals can be biased by skew, kurtosis and outliers. Milton introduces the idea of the trimmed mean.</p>
+<p>To get the trimmed mean for a variable we can adapt the code we have already used. For example, to get the mean <strong>footspeed</strong> split by <strong>employee</strong> and <strong>sex</strong> we used the code below. We discovered before that the mean has an option to specify a trim (<code>trim = 0</code>), so to produce a summary of trimmed means we can simply add this option to the command that gets the mean. For example, to get a 20% trimmed mean we might replace <code>mean_speed = mean(footspeed)</code> with:</p>
+<p><code>tr_mean_speed = mean(footspeed, trim = 0.2)</code></p>
+<p>Try adding this line to the <code>summarize()</code> function in the code box so that we store both the mean and the 20% trimmed mean (don’t forget to include a comma after the first command within <code>summarize()</code>)</p>
+<div class="tutorial-exercise" data-label="trim_mean" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>speed_sum &lt;-
+  jig_dat %&gt;%
+  group_by(employee, sex) %&gt;%
+  summarize(
+    mean_speed = mean(footspeed)
+    )
+speed_sum</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="trim_mean-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>speed_sum &lt;-
+  jig_dat %&gt;%
+  group_by(employee, sex) %&gt;%
+  summarize(
+    mean_speed = mean(footspeed),
+    tr_mean_speed = mean(footspeed, trim = 0.2)
+    )
+speed_sum</code></pre>
+</div>
+<p>Try this for <strong>strength</strong> as well:</p>
+<div class="tutorial-exercise" data-label="trim_mean2" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="8">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="trim_mean2-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>strength_sum &lt;-
+  jig_dat %&gt;%
+  group_by(employee, sex) %&gt;%
+  summarize(
+    mean_strength = mean(strength),
+    tr_mean_strength = mean(strength, trim = 0.2)
+    )
+strength_sum</code></pre>
+</div>
+</div>
+<div id="section-robust-confidence-intervals" class="section level2">
+<h2>Robust confidence intervals</h2>
+<p>Milton also introduces Zach to the idea of bootstrapping as a way to create robust confidence intervals.</p>
+<div class="panel panel-default">
+<div class="panel-heading tutorial-panel-heading">Quiz</div>
+<table class="table quiz-table">
+<tr>
+<td>
+
+<div id="htmlwidget-87724714204d92c6f2d8" style="width:100%;height:auto;", class = "quiz html-widget">
+<div class="panel panel-default">
+<div class="panel-body quizArea">
+</div>
+</div>
+</div>
+
+<script type="application/json" data-for="htmlwidget-87724714204d92c6f2d8">{"x":{"question":"Bootstrapping is a technique from which the sampling distribution of a statistic is estimated by ...","answers":[{"option":"Taking repeated samples (with replacement) from the data set.","correct":true,"message":null},{"option":"Taking repeated samples from the population.","correct":false,"message":"Samples are not taken from the population because we don&#39;t have access to it."},{"option":"Adjusting the standard error to compensate for heteroscedasticity.","correct":false,"message":"Bootstrapping is a <em>sampling<\/em> process."},{"option":"Tying my shoelaces together so that I fall over.","correct":false,"message":"Now you&#39;re just being silly."}],"label":"quiz_ci_ex2-1","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"Bootstrapping is a technique from which the sampling distribution of a statistic is estimated by ...","a":[{"option":"Taking repeated samples (with replacement) from the data set.","correct":true,"message":null},{"option":"Taking repeated samples from the population.","correct":false,"message":"Samples are not taken from the population because we don&#39;t have access to it."},{"option":"Adjusting the standard error to compensate for heteroscedasticity.","correct":false,"message":"Bootstrapping is a <em>sampling<\/em> process."},{"option":"Tying my shoelaces together so that I fall over.","correct":false,"message":"Now you&#39;re just being silly."}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+</td>
+</tr>
+<tr>
+<td>
+
+<div id="htmlwidget-400b64c92ca2da4adbe8" style="width:100%;height:auto;", class = "quiz html-widget">
+<div class="panel panel-default">
+<div class="panel-body quizArea">
+</div>
+</div>
+</div>
+
+<script type="application/json" data-for="htmlwidget-400b64c92ca2da4adbe8">{"x":{"question":"Which of these statements about bootstrap confidence intervals is <strong>not<\/strong> true?","answers":[{"option":"Bootstrap confidence intervals have the same values each time you compute them.","correct":true,"message":"This stament <em>is<\/em> false. Because bootstrapping relies on repeated sampling, the results can vary slighty each time you impliment the process."},{"option":"Bootstrap confidence intervals are robust to violations of homoscedasticity.","correct":false,"message":"This statement is true."},{"option":"Bootstrap confidence intervals do not assume a normal sampling distribution.","correct":false,"message":"This statement is true: bootstrapping is a technique from which the sampling distribution of a statistic is estimated <em>empirically<\/em> from the data so no assumptions about its shape are made."},{"option":"Bootstrap confidence intervals are most useful in small samples.","correct":false,"message":"Technically this statement is true because bootstrapping was designed for small sample situations (where the central limit theorem can&#39;t be invoked). However, there is evidence that the central limit theorem may not hold up in samples that are quite large so there is a case to be made that bootstrapping is still useful in larger samples."}],"label":"quiz_ci_ex2-2","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"Which of these statements about bootstrap confidence intervals is <strong>not<\/strong> true?","a":[{"option":"Bootstrap confidence intervals have the same values each time you compute them.","correct":true,"message":"This stament <em>is<\/em> false. Because bootstrapping relies on repeated sampling, the results can vary slighty each time you impliment the process."},{"option":"Bootstrap confidence intervals are robust to violations of homoscedasticity.","correct":false,"message":"This statement is true."},{"option":"Bootstrap confidence intervals do not assume a normal sampling distribution.","correct":false,"message":"This statement is true: bootstrapping is a technique from which the sampling distribution of a statistic is estimated <em>empirically<\/em> from the data so no assumptions about its shape are made."},{"option":"Bootstrap confidence intervals are most useful in small samples.","correct":false,"message":"Technically this statement is true because bootstrapping was designed for small sample situations (where the central limit theorem can&#39;t be invoked). However, there is evidence that the central limit theorem may not hold up in samples that are quite large so there is a case to be made that bootstrapping is still useful in larger samples."}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+</td>
+</tr>
+</table>
+</div>
+<p>We can get bootstrap confidence intervals in <strong>R</strong> by using the <code>boot</code> package, which is installed by default. However, you do need to load it before using it if you are working outside of this tutorial environment. The process of getting the bootstrap intervals is - and I’m not going to lie - complicated. You should not feel bad if this section makes no sense whatsoever (but by all means feel a sense of pride if you get through it in one piece).</p>
+<p>The <code>boot()</code> function works in the following way: it takes a bootstrap sample from the data you specify, sends it out to a function (that the user defines) that returns the statistic of interest (in this case the mean), it stores this information and the repeats the process lots of times. The general format of the <code>boot()</code> function is:</p>
+<p><code>boot(data, statistic, R)</code></p>
+<p>It has other options too, but the three key ones are <code>data</code> which specifies the data from which to take bootstrap samples, <code>statistic</code> which specifies a function that computes the information you want (e.g., the mean), and <code>R</code> which is the number of times you want to repeat the process. So, to get bootstrap samples of the strength data we could specify something like this:</p>
+<p><code>boot(jig_dat$strength, statistic, R = 1000)</code></p>
+<p>This specifies that the data from which to take bootstrap samples is <code>jig_dat$strength</code> and that we want to repeat the process 1000 times (i.e. use 1000 bootstrap samples). The question is what do we replace <code>statstic</code> with. Given we’re interested in the mean, you might reasonably think we can replace <code>statistic</code> with <code>mean()</code> or something. However, we can’t do this because the function <code>mean()</code> will not return information about <em>which</em> bootstrap sample was used. Instead we need to write out own function that will include information about the particular bootstrap sample that is being used to compute the mean. We do this by executing:</p>
+<p><code>mean_boot &lt;- function(data, index) mean(data[index], na.rm = TRUE)</code></p>
+<p>This creates a new function called <code>mean_boot()</code>. This function takes data and an index value as input <code>function(data, index)</code> and it returns the mean of the data with a particular index value after removing missing values <code>mean(data[index], na.rm = TRUE)</code>. In the main <code>boot()</code> function we would replace <code>statistic</code> with this function that we have created:</p>
+<p><code>boot(jig_dat$strength, mean_boot, R = 1000)</code></p>
+<p>To sum up, the <code>boot()</code> function is going to send data (the bootstrap samples) with an associated index value (from 1 to 1000) to the function called <code>mean_boot</code>. For each data set with each index value <code>mean_boot</code> will return the mean.</p>
+<p>The code box contains these commands. Run the code.</p>
+<div class="tutorial-exercise" data-label="boot_eg" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>mean_boot &lt;- function(data, index) mean(data[index], na.rm = TRUE)
+boot(jig_dat$strength, mean_boot, R = 1000)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<p>The output doesn’t give us the confidence intervals. Instead we’re told the original mean and an estimate of bias. To get the confidence intervals there is one more step, which is to use the <code>boot.ci()</code> function, which takes the general form:</p>
+<p><code>boot.ci(boot.object, conf = 0.95, type = &quot;all&quot;)</code></p>
+<p>There are other options but these ones are the main ones. First you input an object created with the <code>boot()</code> function, then specify the width of confidence interval that you want (the default is 0.95 so can leave this option out if that’s what you want), and the type that you want. By default it will compute 5 different types of interval. For most purposes you don’t need five different intervals so it would be best to change this option to specify a particular type. There’s much to recommend Bias Corrected and Accelerated intervals (<code>type = &quot;bca&quot;</code>) or if those fail then a percentile interval (<code>type  = &quot;perc&quot;</code>).</p>
+<p>The code box below combines what we have learnt. First it creates the function to get the mean. The second line inserts our <code>boot()</code> function into the <code>boot.ci()</code> function and asked for BCa confidence intervals. Run the code.</p>
+<div class="tutorial-exercise" data-label="boot_ci" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="6">
+<pre class="text"><code>mean_boot &lt;- function(data, index) mean(data[index], na.rm = TRUE)
+boot.ci(boot(jig_dat$strength, mean_boot, R = 1000), type = &quot;bca&quot;)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<p>There is too much output to embed into a summarize function. We want to discard everything except for the numeric values that represent the lower and upper bound of the confidence interval. These values are stored in a variable called <em>bca</em> within the <code>boot.ci()</code> object. (Obviously if you chose a type of interval other than bca, the variable name will be different; for example, if you opted for <code>type = &quot;Perc&quot;</code> then the variable will be called <strong>perc</strong>). Like any variable, we can access it using <code>$</code>. For example, to see the information relating to the BCa confidence intervals we could execute:</p>
+<p><code>boot.ci(boot(jig_dat$strength, mean_boot, R = 1000), type = &quot;bca&quot;)$bca</code></p>
+<p>Try it in the code box above and you’ll see 5 values appear.Values 4 and 5 are the lower and upper limits of the interval. We can access these specific values using:</p>
+<p><code>boot.ci(boot(jig_dat$strength, mean_boot, R = 1000), type = &quot;bca&quot;)$bca[4]</code> <code>boot.ci(boot(jig_dat$strength, mean_boot, R = 1000), type = &quot;bca&quot;)$bca[5]</code></p>
+<p>Try these commands in the code box above. We can include these lines in the summarize function of the pipe that we used at the start of the tutorial. Remember that we can drop the <code>jig_dat$</code> from the command because that tibble is specified earlier in the pipe. The code box below shows the commands.</p>
+<div class="tutorial-exercise" data-label="boot_ci_sum" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>mean_boot &lt;- function(data, index) mean(data[index], na.rm = TRUE)
+strength_mean &lt;-
+  jig_dat %&gt;%
+  group_by(employee, sex) %&gt;%
+  summarize(
+    mean_strength = mean(strength),
+    ci_low_boot = boot.ci(boot(strength, mean_boot, R = 1000), type = &quot;bca&quot;)$bca[4],
+    ci_upp_boot = boot.ci(boot(strength, mean_boot, R = 1000), type = &quot;bca&quot;)$bca[5]
+    )
+strength_mean</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<p>Run this code and you should see that it creates a tibble with the means, the lower limit of the 95% bootstrap confidence interval for the mean (<code>ci_low_boot</code>) and the upper limit of the 95% bootstrap confidence interval for the mean (<code>ci_upp_boot</code>) split b all combinations of <strong>employee</strong> and <strong>sex</strong>.</p>
+</div>
+<div id="section-plotting-bootstrap-confidence-intervals" class="section level2">
+<h2>Plotting bootstrap confidence intervals</h2>
+<p>The last section was, I imagine, not the most fun that you have ever had. I expect you are dreading the added complexity of plotting these bootstrap intervals. Well, fear not. Earlier on we plotted this graph:</p>
+<div class="tutorial-exercise" data-label="plot_boot" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength, colour = sex))
+strength_plot +
+  stat_summary(fun.data = &quot;mean_cl_normal&quot;, geom = &quot;pointrange&quot;, position = position_dodge(width = 0.9)) +
+  labs(x = &quot;Employee status&quot;, y = &quot;Maximal push force (n)&quot;, colour = &quot;Biological sex&quot;) +
+  coord_cartesian(ylim = c(1000, 1800)) +
+  scale_y_continuous(breaks = seq(1000, 1800, 100)) +
+  scale_colour_manual(values = c(&quot;#56B4E9&quot;, &quot;#E69F00&quot;)) +
+  theme_bw()</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<p>To convert these confidence intervals to bootstrap confidence intervals requires only one change to the command:</p>
+<ul>
+<li>In the <code>stat_summary()</code> function change <code>mean_cl_normal</code> to <code>mean_cl_boot</code>.</li>
+</ul>
+<p>It’s a simple as that. Make the change in the code box above and re-run the code to observe the change on the plot.</p>
+</div>
+<div id="section-other-resources" class="section level2">
+<h2>Other resources</h2>
+<div id="section-statistics" class="section level3">
+<h3>Statistics</h3>
+<ul>
+<li>The tutorials typically follow examples described in detail in <span class="citation">A. P. Field (2016)</span>, so for most of them there’s a thorough account in there. You might also find <span class="citation">A. P. Field, Miles, and Field (2012)</span> useful for the <strong>R</strong> stuff.</li>
+<li>There are free lectures and screen casts on my <a href="https://www.youtube.com/user/ProfAndyField/">YouTube channel</a></li>
+<li>There are free statistical resources on my website <a href="http://www.discoveringstatistics.com">www.discoveringstatistics.com</a></li>
+</ul>
+</div>
+<div id="section-r" class="section level3">
+<h3>R</h3>
+<ul>
+<li>Information on using <a href="http://ggplot2.tidyverse.org/">ggplot2</a></li>
+<li><a href="http://r4ds.had.co.nz/index.html">R for data science</a> is the open-access version of the book by tidyverse creator Hadley Wickham <span class="citation">(<span class="citeproc-not-found" data-reference-id="RN11404"><strong>???</strong></span>)</span>. It covers the <em>tidyverse</em> and data management.</li>
+<li><a href="http://moderndive.com/index.html">ModernDive</a> is an open-access textbook on <strong>R</strong> and <strong>RStudio</strong></li>
+<li><a href="https://www.rstudio.com/resources/cheatsheets/">RStudio cheat sheets</a></li>
+<li><a href="https://www.rstudio.com/online-learning/">RStudio list of online resources</a></li>
+<li><a href="http://swirlstats.com/students.html">SwirlStats</a> is a package for <em>R</em> that launches a bunch of interactive tutorials.</li>
+</ul>
+</div>
+</div>
+<div id="section-references" class="section level2">
+<h2>References</h2>
+
+<script type="application/shiny-prerendered" data-context="server-start">
+library(learnr)
+library(RefManageR)
+library(tidyverse)
+library(gmodels)
+library(boot)
+
+knitr::opts_chunk$set(echo = FALSE)
+tutorial_options(exercise.cap = "Exercise")
+
+cbBlack<-"#000000"
+cbGrey<-"#999999"
+cbOrange<-"#E69F00"
+cbBlue<-"#56B4E9"
+cbGreen<-"#009E73"
+cbYellow<-"#F0E442"
+cbBlueDark<-"#0072B2"
+cbOrangeDark<-"#D55E00"
+cbPink<-"#CC79A7"
+cbRed<-"#DF4738"
+
+andy.theme <- function(base_size = 12, base_family = "") {
+  # Starts with theme_grey and then modify some parts
+  theme_grey(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.2)),
+      axis.title.y        = element_text(margin = margin(0, 10, 0, 0), angle = 90),
+      axis.title.x        = element_text(margin = margin(10, 0, 0, 0)),
+      axis.text           = element_text(size = rel(0.75), colour = "grey35"),
+      axis.text.x         = element_text(margin = margin(2, 0, 0, 0)),
+      axis.text.y         = element_text(margin = margin(0, 2, 0, 0)),
+      axis.ticks        = element_line(colour = "grey35"),
+      legend.key        = element_rect(colour = "white"),
+      panel.background  = element_rect(fill = "white", colour = NA),
+      panel.border      = element_rect(fill = NA, colour = "grey50"),
+      panel.grid.major  = element_line(colour = "grey90", size = 0.2),
+      panel.grid.minor  = element_line(colour = "grey98", size = 0.5),
+      strip.background  = element_rect(fill = "grey80", colour = "grey50"),
+      strip.text  = element_text(size = rel(1.4))
+    )
+}
+
+andy.dsus <- function(base_size = 12, base_family = "") {
+  andy.theme(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.6)),
+      axis.text           = element_text(size = rel(1.3), colour = "grey35"),
+      strip.background = element_rect(fill = cbBlueDark, colour = "white"),
+      strip.text  = element_text(size = rel(1.3), colour = "white")
+    )
+}
+
+colFmt = function(x,color){
+  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
+  if(outputFormat == 'latex')
+    paste("\\textcolor{",color,"}{",x,"}",sep="")
+  else if(outputFormat == 'html')
+    paste("<font color='",color,"'>",x,"<\u002ffont>",sep="")
+  else
+    x
+}
+
+#Read dat files needed for the tutorial
+
+#If command tries to work out whether the code is running online (rather than a package). If online it loads the data from external source, otherwise it'll have the data anyway from the package
+
+if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
+    jig_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_c05_jigsaw.csv")
+    } else {
+    jig_dat <- adventr::jig_dat
+    }
+
+#setup objects for code blocks
+
+
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+learnr:::register_http_handlers(session, metadata = NULL)
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-gb_ci-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-gb_ci-code-editor`)), session)
+output$`tutorial-exercise-gb_ci-output` <- renderUI({
+  `tutorial-exercise-gb_ci-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-stg_plot_ci-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-stg_plot_ci-code-editor`)), session)
+output$`tutorial-exercise-stg_plot_ci-output` <- renderUI({
+  `tutorial-exercise-stg_plot_ci-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-stgth_col1-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-stgth_col1-code-editor`)), session)
+output$`tutorial-exercise-stgth_col1-output` <- renderUI({
+  `tutorial-exercise-stgth_col1-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-stgth_col2-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-stgth_col2-code-editor`)), session)
+output$`tutorial-exercise-stgth_col2-output` <- renderUI({
+  `tutorial-exercise-stgth_col2-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-trim_mean-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-trim_mean-code-editor`)), session)
+output$`tutorial-exercise-trim_mean-output` <- renderUI({
+  `tutorial-exercise-trim_mean-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-trim_mean2-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-trim_mean2-code-editor`)), session)
+output$`tutorial-exercise-trim_mean2-output` <- renderUI({
+  `tutorial-exercise-trim_mean2-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-boot_eg-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-boot_eg-code-editor`)), session)
+output$`tutorial-exercise-boot_eg-output` <- renderUI({
+  `tutorial-exercise-boot_eg-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-boot_ci-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-boot_ci-code-editor`)), session)
+output$`tutorial-exercise-boot_ci-output` <- renderUI({
+  `tutorial-exercise-boot_ci-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-boot_ci_sum-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-boot_ci_sum-code-editor`)), session)
+output$`tutorial-exercise-boot_ci_sum-output` <- renderUI({
+  `tutorial-exercise-boot_ci_sum-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-plot_boot-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-plot_boot-code-editor`)), session)
+output$`tutorial-exercise-plot_boot-output` <- renderUI({
+  `tutorial-exercise-plot_boot-result`()
+})
+</script>
+ <!--html_preserve-->
+<script type="application/shiny-prerendered" data-context="dependencies">
+{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery-1.11.3"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap-3.3.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/cerulean.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["pagedtable"]},{"type":"character","attributes":{},"value":["1.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/pagedtable-1.1"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/pagedtable.js"]},{"type":"character","attributes":{},"value":["css/pagedtable.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["highlightjs"]},{"type":"character","attributes":{},"value":["1.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/highlightjs-1.1"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["highlight.js"]},{"type":"character","attributes":{},"value":["textmate.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-format"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmarkdown/templates/tutorial/resources"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-format.js"]},{"type":"character","attributes":{},"value":["tutorial-format.css","rstudio-theme.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery-1.11.3"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["font-awesome"]},{"type":"character","attributes":{},"value":["4.5.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/font-awesome-4.5.0"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/font-awesome.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootbox"]},{"type":"character","attributes":{},"value":["4.4.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/bootbox"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["bootbox.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["localforage"]},{"type":"character","attributes":{},"value":["1.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/localforage"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["localforage.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["0.8"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["quiz-binding"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["quiz.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[false]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery-1.11.3"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap-3.3.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/bootstrap.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootbox"]},{"type":"character","attributes":{},"value":["4.4.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/bootbox"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["bootbox.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["localforage"]},{"type":"character","attributes":{},"value":["1.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/localforage"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["localforage.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["slickquiz"]},{"type":"character","attributes":{},"value":["1.5.20"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/slickquiz"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/slickQuiz.js"]},{"type":"character","attributes":{},"value":["css/slickQuiz.css","css/slickQuizTutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["0.8"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["quiz-binding"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["quiz.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[false]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery-1.11.3"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap-3.3.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/bootstrap.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootbox"]},{"type":"character","attributes":{},"value":["4.4.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/bootbox"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["bootbox.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["localforage"]},{"type":"character","attributes":{},"value":["1.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/localforage"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["localforage.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["slickquiz"]},{"type":"character","attributes":{},"value":["1.5.20"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/slickquiz"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/slickQuiz.js"]},{"type":"character","attributes":{},"value":["css/slickQuiz.css","css/slickQuizTutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["0.8"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["quiz-binding"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["quiz.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[false]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery-1.11.3"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap-3.3.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/bootstrap.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootbox"]},{"type":"character","attributes":{},"value":["4.4.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/bootbox"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["bootbox.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["localforage"]},{"type":"character","attributes":{},"value":["1.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/localforage"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["localforage.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["slickquiz"]},{"type":"character","attributes":{},"value":["1.5.20"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/slickquiz"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/slickQuiz.js"]},{"type":"character","attributes":{},"value":["css/slickQuiz.css","css/slickQuizTutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]}]}
+</script>
+<!--/html_preserve-->
+<div id="section-refs" class="references">
+<div id="section-ref-RN10163">
+<p>Field, Andy P. 2016. <em>An Adventure in Statistics: The Reality Enigma</em>. Book. London: Sage.</p>
+</div>
+<div id="section-ref-RN4832">
+<p>Field, Andy P., Jeremy N. V. Miles, and Zoe C. Field. 2012. <em>Discovering Statistics Using R: And Sex and Drugs and Rock ’N’ Roll</em>. Book. London: Sage.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="section-fn1"><p>Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.<a href="#section-fnref1">↩</a></p></li>
+</ol>
+</div>
+
+</div> <!-- topics -->
+
+<div class="topicsContainer">
+<div class="topicsPositioner">
+<div class="band">
+<div class="bandContent topicsListContainer">
+
+<!-- begin doc-metadata -->
+<div id="doc-metadata">
+<h2 class="title toc-ignore" style="display:none;">AAiR: Inferential statistics</h2>
+<h4 class="author"><em>Andy Field</em></h4>
+</div>
+<!-- end doc-metadata -->
+
+</div> <!-- bandContent.topicsListContainer -->
+</div> <!-- band -->
+</div> <!-- topicsPositioner -->
+</div> <!-- topicsContainer -->
+
+
+</div> <!-- bandContent page -->
+</div> <!-- pageContent band -->
+
+
+
+
+<script>
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+</script>
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+
+</html>

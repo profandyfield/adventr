@@ -1,5 +1,5 @@
 ---
-title: "AAiR: ggplot2 basics"
+title: "AAiR: Summarizing data"
 author: "Andy Field"
 output:
   learnr::tutorial:
@@ -80,7 +80,7 @@ if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
   
 ```
 
-# An Adventure in R: Describing data
+# An Adventure in R: Summarizing data (introducing ggplot2)
 
 ## Overview
 

@@ -85,7 +85,7 @@ if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
 
 ```
 
-# An Adventure in R: Inferential statistics
+# An Adventure in R: Inferential statistics and robust estimation
 
 ## Overview
 

@@ -1,5 +1,5 @@
 ---
-title: "AAiR: Describing groups"
+title: "AAiR: Presenting data"
 author: "Andy Field"
 output:
   learnr::tutorial:
@@ -104,7 +104,7 @@ strength_sum <-
   
 ```
 
-# An Adventure in R: Describing groups
+# An Adventure in R: Presenting data (summarizing groups and more ggplot2)
 
 ## Overview
 

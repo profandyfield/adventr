@@ -1,5 +1,5 @@
 ---
-title: "AAiR: Describing data"
+title: "AAiR: Fitting models"
 author: "Andy Field"
 output:
   learnr::tutorial:
@@ -84,7 +84,7 @@ ras_no_outlier <- ras_dat %>% filter(rating > 11)
   
 ```
 
-# An Adventure in R: Describing data
+# An Adventure in R: Fitting models (central tendency)
 
 ## Overview
 

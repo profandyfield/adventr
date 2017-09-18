@@ -62,5 +62,18 @@
 
 "jig_dat"
 
+#' Teddy therapy data.
+#'
+#' A dataset based on two ficticious studies looking at whether cuddling a teddy bear (compared to the cardboard box that the teddy was packaged in) affects self-reported self-esteem.
+#'
+#' @format A data frame with 220 rows and 4 variables:
+#' \describe{
+#'   \item{id}{Participant ID}
+#'   \item{group}{whether the participant cuddled a teddy bear or the cardboard box that contained the teddy bear}
+#'   \item{study_n}{Factor that distinguishes the two studies in the data set. The first was based on a total N of 20 and the second was based on a total N of 200}
+#'   \item{slef_esteem}{Self-reported self-esteem scores}
+#' }
+#' @source \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 
+"teddy_dat"
 

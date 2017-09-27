@@ -5,7 +5,7 @@ output:
   learnr::tutorial:
     progressive: true
 runtime: shiny_prerendered
-bibliography: r_setup.bib
+bibliography: adventr_bib.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -152,6 +152,14 @@ The previous instructions rely on direct links. In case these fail, this section
 
 ![Figure 4](./images/r_00_fig_04.png)
 
+### **RStudio** install 
+
+* Go to [www.rstudio.com](https://www.rstudio.com)
+* Figure 5 shows the screens to get to the install file. On the opening page under **RStudio** click on the download link. On the page that subsequently opens either click the download button under *RStudio Desktop* or scroll to the bottom of the screen (clicking the download button jumps you to the bottom of the page). Under the heading *Installers for Supported Platforms* there are links to the install file for Windows, MacOS and various Linux installs. Click on the link for the operating system you use. The install file will download.
+* Double-click the downloaded file and proceed through the install process (which will be similar to other software that you have installed)
+
+![Figure 5](./images/r_00_fig_05.png)
+
 
 ## Working with *RStudio*
 
@@ -187,7 +195,7 @@ quiz(
 
 ### Panes
 
-The **RStudio** environment is shown in Figure 5. By default there are four panes that show different types of information:
+The **RStudio** environment is shown in Figure 6. By default there are four panes that show different types of information:
 
 * **Source**: This pane is where you'll view and edit script (or **R** Markdown) files. It is where you write instructions that tell *R* what you'd like to do (see previous section).
 * **Console**: This is where you can type commands to get **R** to do things and view the output of those 'things'. However, as mentioned in the previous section, I  encourage you to use scripts rather than the console so treat this window as where you view the output of your scripts. (If you decide to work with **R** Markdown this pane becomes much less important)
@@ -198,7 +206,7 @@ The **RStudio** environment is shown in Figure 5. By default there are four pane
     - The *Packages* tab list all the packages currently loaded.
     - The *Help* tab displays help files. You can search for a topic by typing a phrase into ![](./images/search.png), or use the `?` function in the console (more on that later)
     
-![Figure 5: The **RStudio** environment](./images/r_00_fig_05.png)
+![Figure 6: The **RStudio** environment](./images/r_00_fig_06.png)
 
 
 ```{r pane_quiz}
@@ -252,18 +260,18 @@ question("In what pane do you view the objects that you have created in **R**?",
 
 * **General**: You can set aspects of workspace behaviour. For example, you can set a default working directory (the directory where **RStudio** looks for files) but I'd recommend doing that from within your source code anyway.
 * **Code**: This section is for changing the behaviour of the source pane (i.e. whether line numbers are displayed, how text is wrapped and so on). The default options are all fine.
-* **Appearance**: Specify aspects of the visual theme for the console and source editor (e.g., font, colours etc.). Again, the defaults are fine. The main thing to change (if you like) is to select a different theme from the list of 'Editor themes'. This will apply one of the list of pre-defined themes for **RStudio**. So, for example, if you prefer to work with light text on a dark background (rather than the default of dark text on a light background) you could select one of the dark themes such as *Solarized Dark* (Figure 6). 
-* **Pane Layout**: Here you can change the layout of the four panes described in the previous section. You'll see a grid of four blocks each with a drop down menu allowing you to select one of the four options that we've already discussed (Source, Console, Workspace/Environment, Files). By default **RStudio** arranges these panes as source top-left, console bottom-left, workspace top-right, files bottom-right (Figure 7, left). You might like this configuration but personally I prefer source top-left, console top-right, workspace bottom-left, files bottom-right (Figure 7, right). This configuration works for me because I don't tend to use the workspace pane very much so I can make the source pane (where I'm doing most of my work) large by dragging the pane divider down in the main **RStudio** window (see Figure 5) and have the workspace pane as a small strip underneath. Then I can have my 'output' panes to the right with the top half showing text output and the bottom half showing plots (see Figure 5 for how I typically arrange my **RStudio** environment). However, that's just my preference and you might prefer a different configuration.
+* **Appearance**: Specify aspects of the visual theme for the console and source editor (e.g., font, colours etc.). Again, the defaults are fine. The main thing to change (if you like) is to select a different theme from the list of 'Editor themes'. This will apply one of the list of pre-defined themes for **RStudio**. So, for example, if you prefer to work with light text on a dark background (rather than the default of dark text on a light background) you could select one of the dark themes such as *Solarized Dark* (Figure 7). 
+* **Pane Layout**: Here you can change the layout of the four panes described in the previous section. You'll see a grid of four blocks each with a drop down menu allowing you to select one of the four options that we've already discussed (Source, Console, Workspace/Environment, Files). By default **RStudio** arranges these panes as source top-left, console bottom-left, workspace top-right, files bottom-right (Figure 8, left). You might like this configuration but personally I prefer source top-left, console top-right, workspace bottom-left, files bottom-right (Figure 8, right). This configuration works for me because I don't tend to use the workspace pane very much so I can make the source pane (where I'm doing most of my work) large by dragging the pane divider down in the main **RStudio** window (see Figure 6) and have the workspace pane as a small strip underneath. Then I can have my 'output' panes to the right with the top half showing text output and the bottom half showing plots (see Figure 6 for how I typically arrange my **RStudio** environment). However, that's just my preference and you might prefer a different configuration.
 * **Packages**: here you can set default CRAN repository and specify options relevant to developing your own packages (which we won't do so you can leave these options alone).
-* **Spelling**: these options relate to spell checking (for example whether you ignore upper case words and words containing numbers). The main thing you might want to change here is the default dictionary which is *English (United States)*. I, for example, would change this to *English (United Kingdom)* (Figure 8).
+* **Spelling**: these options relate to spell checking (for example whether you ignore upper case words and words containing numbers). The main thing you might want to change here is the default dictionary which is *English (United States)*. I, for example, would change this to *English (United Kingdom)* (Figure 9).
 * **Sweave**, **Git/SVN** and **Publishing**: these options relate to things that we won't do (i.e. use GitHub, publish documents or apps online) and the default options are fine anyway.
 
-![Figure 6: The *Solarized Dark* theme](./images/r_00_fig_06.png)
+![Figure 7: The *Solarized Dark* theme](./images/r_00_fig_07.png)
 
-![Figure 7: Customizing the panes](./images/r_00_fig_07.png)
+![Figure 8: Customizing the panes](./images/r_00_fig_08.png)
 
 
-![Figure 8: Spelling options](./images/r_00_fig_08.png)
+![Figure 9: Spelling options](./images/r_00_fig_09.png)
 
 ## Other resources
 

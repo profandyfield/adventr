@@ -5,7 +5,7 @@ output:
   learnr::tutorial:
     progressive: true
 runtime: shiny_prerendered
-bibliography: ais_08.bib
+bibliography: adventr_bib.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -158,9 +158,9 @@ Zach doesn’t want to believe that Alice has simply just left him. Rather, that
 
 This tutorial uses the following packages:
 
-* `boot`
-* `gmodels`
-* `tidyverse`
+* `boot` to conduct bootstrapping [@RN11409]
+* `gmodels` to obtain confidence intervals[@RN11408]
+* `tidyverse` for general data processing [@RN11407]
 
 These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in **RStudio**) then you need to make sure that the package has been installed by executing `install.packages("package_name")`, where *package_name* is the name of the package. If the package is already installed, then you need to reference it in your current session by executing `library(package_name)`, where *package_name* is the name of the package.
 

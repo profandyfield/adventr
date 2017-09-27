@@ -5,7 +5,7 @@ output:
   learnr::tutorial:
     progressive: true
 runtime: shiny_prerendered
-bibliography: r_data_basics.bib
+bibliography: adventr_bib.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -153,7 +153,7 @@ Zach calls up The Head to track down who this Milton might be. Even though Profe
 
 This tutorial uses the following packages:
 
-* `tidyverse`
+* `tidyverse` [@RN11407]
 
 This package is automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in **RStudio**) then you need to make sure that the package has been installed and loaded (see the section on *Installing and loading packages*).
 
@@ -161,7 +161,7 @@ This package is automatically loaded within this tutorial. If you are working ou
 
 ### The tidyverse
 
-Superficially, the [tidyverse](http://www.tidyverse.org/) is a set of packages for **R** created by Hadley Wickham and his team at **RStudio** that are collated in a single package called `tidyverse`. However, it is much more than that. The packages within `tidyverse` (e.g., *ggplot2*, *dplyr*, *readr*, *tidyr*, and *tibble*) are built upon a common philosophy. This philosophy extend not just to how the packages and their functions work, but beyond that to a general philosophy of data science as outlined in Hadley's books [@RN11403; @RN11404], both of which are free on-line (see resources section). Throughout these tutorials we follow this `tidyverse` philosophy where possible. What this means in practical terms is this: in **R** there are always several ways to do the same thing, where one of those ways is the `tidyverse` way, that's the method we'll use.
+Superficially, the [tidyverse](http://www.tidyverse.org/) is a set of packages for **R** created by Hadley Wickham and his team at **RStudio** that are collated in a single package called `tidyverse` [@RN11407]. However, it is much more than that. The packages within `tidyverse` (e.g., *ggplot2*, *dplyr*, *readr*, *tidyr*, and *tibble*) are built upon a common philosophy. This philosophy extend not just to how the packages and their functions work, but beyond that to a general philosophy of data science as outlined in Hadley's books [@RN11403; @RN11404], both of which are free on-line (see resources section). Throughout these tutorials we follow this `tidyverse` philosophy where possible. What this means in practical terms is this: in **R** there are always several ways to do the same thing, where one of those ways is the `tidyverse` way, that's the method we'll use.
 
 
 

@@ -122,7 +122,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <h2>Packages used in this tutorial</h2>
 <p>This tutorial uses the following packages:</p>
 <ul>
-<li><code>tidyverse</code></li>
+<li><code>tidyverse</code> <span class="citation">(Wickham 2017)</span></li>
 </ul>
 <p>This package is automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in <strong>RStudio</strong>) then you need to make sure that the package has been installed and loaded (see the section on <em>Installing and loading packages</em>).</p>
 </div>
@@ -130,7 +130,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <h2>Getting started in <strong>RStudio</strong></h2>
 <div id="section-the-tidyverse" class="section level3">
 <h3>The tidyverse</h3>
-<p>Superficially, the <a href="http://www.tidyverse.org/">tidyverse</a> is a set of packages for <strong>R</strong> created by Hadley Wickham and his team at <strong>RStudio</strong> that are collated in a single package called <code>tidyverse</code>. However, it is much more than that. The packages within <code>tidyverse</code> (e.g., <em>ggplot2</em>, <em>dplyr</em>, <em>readr</em>, <em>tidyr</em>, and <em>tibble</em>) are built upon a common philosophy. This philosophy extend not just to how the packages and their functions work, but beyond that to a general philosophy of data science as outlined in Hadley’s books <span class="citation">(Wickham 2015; Wickham and Grolemund 2017)</span>, both of which are free on-line (see resources section). Throughout these tutorials we follow this <code>tidyverse</code> philosophy where possible. What this means in practical terms is this: in <strong>R</strong> there are always several ways to do the same thing, where one of those ways is the <code>tidyverse</code> way, that’s the method we’ll use.</p>
+<p>Superficially, the <a href="http://www.tidyverse.org/">tidyverse</a> is a set of packages for <strong>R</strong> created by Hadley Wickham and his team at <strong>RStudio</strong> that are collated in a single package called <code>tidyverse</code> <span class="citation">(Wickham 2017)</span>. However, it is much more than that. The packages within <code>tidyverse</code> (e.g., <em>ggplot2</em>, <em>dplyr</em>, <em>readr</em>, <em>tidyr</em>, and <em>tibble</em>) are built upon a common philosophy. This philosophy extend not just to how the packages and their functions work, but beyond that to a general philosophy of data science as outlined in Hadley’s books <span class="citation">(Wickham 2015; Wickham and Grolemund 2017)</span>, both of which are free on-line (see resources section). Throughout these tutorials we follow this <code>tidyverse</code> philosophy where possible. What this means in practical terms is this: in <strong>R</strong> there are always several ways to do the same thing, where one of those ways is the <code>tidyverse</code> way, that’s the method we’ll use.</p>
 </div>
 <div id="section-keyboard-shortcuts" class="section level3">
 <h3>Keyboard shortcuts</h3>
@@ -244,14 +244,14 @@ name &lt;- c(&quot;Zach&quot;, &quot;Nick&quot;, &quot;Joel&quot;, &quot;Jessika
 <pre class="r"><code>First_names_of_The_Reality_Enigma.members&lt;-c(&quot;Zach&quot;, &quot;Nick&quot;, &quot;Joel&quot;, &quot;Jessika&quot;)</code></pre>
 <p>This example shows bad practice. Note that I have not annotated what I am doing, there are no spaces around the assignment operator (&lt;-) or after commas, I have some capital letters in my object name, have not been consistent with how I separate words in the object name, and have a name that is unnecessarily long.</p>
 
-<div id="htmlwidget-2479deadd05c2679001b" style="width:100%;height:auto;", class = "quiz html-widget">
+<div id="htmlwidget-be699ec78d20080a584d" style="width:100%;height:auto;", class = "quiz html-widget">
 <div class="panel panel-default">
 <div class="panel-body quizArea">
 </div>
 </div>
 </div>
 
-<script type="application/json" data-for="htmlwidget-2479deadd05c2679001b">{"x":{"question":"Which of these is <strong>not<\/strong> an example of good style?","answers":[{"option":"Use upper case letters for important words when naming objects.","correct":true,"message":"This is poor style because capital letters increase the chance of making errors when later referring to objects that you have created. Use lower case throughout when naming objects."},{"option":"Avoid long names when naming objects.","correct":false,"message":null},{"option":"Place spaces around operators such as &#39;+&#39;, &#39;&lt;-&#39;, &#39;-&#39; etc..","correct":false,"message":null},{"option":"Use comments to remind yourself of what your code is doing.","correct":false,"message":null}],"label":"style_quiz","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"Which of these is <strong>not<\/strong> an example of good style?","a":[{"option":"Use upper case letters for important words when naming objects.","correct":true,"message":"This is poor style because capital letters increase the chance of making errors when later referring to objects that you have created. Use lower case throughout when naming objects."},{"option":"Avoid long names when naming objects.","correct":false,"message":null},{"option":"Place spaces around operators such as &#39;+&#39;, &#39;&lt;-&#39;, &#39;-&#39; etc..","correct":false,"message":null},{"option":"Use comments to remind yourself of what your code is doing.","correct":false,"message":null}],"correct":"Correct - well done!","incorrect":"Sorry, that&#39;s incorrect. Try again."}]}},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-be699ec78d20080a584d">{"x":{"question":"Which of these is <strong>not<\/strong> an example of good style?","answers":[{"option":"Use upper case letters for important words when naming objects.","correct":true,"message":"This is poor style because capital letters increase the chance of making errors when later referring to objects that you have created. Use lower case throughout when naming objects."},{"option":"Avoid long names when naming objects.","correct":false,"message":null},{"option":"Place spaces around operators such as &#39;+&#39;, &#39;&lt;-&#39;, &#39;-&#39; etc..","correct":false,"message":null},{"option":"Use comments to remind yourself of what your code is doing.","correct":false,"message":null}],"label":"style_quiz","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"Which of these is <strong>not<\/strong> an example of good style?","a":[{"option":"Use upper case letters for important words when naming objects.","correct":true,"message":"This is poor style because capital letters increase the chance of making errors when later referring to objects that you have created. Use lower case throughout when naming objects."},{"option":"Avoid long names when naming objects.","correct":false,"message":null},{"option":"Place spaces around operators such as &#39;+&#39;, &#39;&lt;-&#39;, &#39;-&#39; etc..","correct":false,"message":null},{"option":"Use comments to remind yourself of what your code is doing.","correct":false,"message":null}],"correct":"Correct - well done!","incorrect":"Sorry, that&#39;s incorrect. Try again."}]}},"evals":[],"jsHooks":[]}</script>
 </div>
 </div>
 <div id="section-creating-variables" class="section level2">
@@ -876,10 +876,13 @@ output$`tutorial-exercise-ha_5-output` <- renderUI({
 <p>Ha, Thao, Geertjan Overbeek, and Rutger C. M. E. Engels. 2010. “Effects of Attractiveness and Social Status on Dating Desire in Heterosexual Adolescents: An Experimental Study.” Journal Article. <em>Archives of Sexual Behavior</em> 39 (5): 1063–71. doi:<a href="https://doi.org/10.1007/s10508-009-9561-z">10.1007/s10508-009-9561-z</a>.</p>
 </div>
 <div id="section-ref-RN11403">
-<p>Wickham, H. 2015. <em>Ggplot2: Elegant Graphics for Data Analysis</em>. Book. 2nd ed. New York, NY: Springer.</p>
+<p>Wickham, Hadley. 2015. <em>Ggplot2: Elegant Graphics for Data Analysis</em>. Book. 2nd ed. New York, NY: Springer.</p>
+</div>
+<div id="section-ref-RN11407">
+<p>———. 2017. “Tidyverse: Easily Install and Load ’Tidyverse’ Packages.” Journal Article. <em>R Package Version 1.1.1.</em> <a href="https://CRAN.R-project.org/package=tidyverse" class="uri">https://CRAN.R-project.org/package=tidyverse</a>.</p>
 </div>
 <div id="section-ref-RN11404">
-<p>Wickham, H., and G. Grolemund. 2017. <em>R for Data Science</em>. Book. Sebastopol, CA: O’Reilly.</p>
+<p>Wickham, Hadley, and G. Grolemund. 2017. <em>R for Data Science</em>. Book. Sebastopol, CA: O’Reilly.</p>
 </div>
 </div>
 </div>

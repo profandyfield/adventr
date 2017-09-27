@@ -1,19 +1,21 @@
 ---
-title: "AAiR: Inferential statistics"
+title: "AAiR: Hypothesis testing"
 author: "Andy Field"
 output:
   learnr::tutorial:
     progressive: true
 runtime: shiny_prerendered
-bibliography: ais_08.bib
+bibliography: adventr_bib.bib
 ---
 
 ```{r setup, include=FALSE}
 library(learnr)
 library(RefManageR)
 library(tidyverse)
+library(BayesFactor)
+library(effsize)
 library(gmodels)
-library(boot)
+
 
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
@@ -75,17 +77,25 @@ colFmt = function(x,color){
 #If command tries to work out whether the code is running online (rather than a package). If online it loads the data from external source, otherwise it'll have the data anyway from the package
 
 if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
-    jig_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_c05_jigsaw.csv")
+    teddy_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_c10_teddy_therapy.csv");
+    zhang_female_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_15_puzz_zhang_female.csv")
     } else {
-    jig_dat <- adventr::jig_dat
+    teddy_dat <- adventr::teddy_dat;
+    zhang_female_dat <- adventr::zhang_female_dat
     }
 
 #setup objects for code blocks
 
+teddy_sum <- teddy_dat %>% group_by(study_n, group) %>% summarize(
+  mean = mean(self_esteem),
+  sd = sd(self_esteem),
+  ci_low = ci(self_esteem)["CI lower"],
+  ci_upp = ci(self_esteem)["CI upper"]
+)
 
 ```
 
-# An Adventure in R: Inferential statistics and robust estimation
+# An Adventure in R: Hypothesis testing
 
 ## Overview
 
@@ -94,7 +104,7 @@ This tutorial is one of a series that accompanies [An Adventure in Statistics](h
 * Who is the tutorial aimed at?
     - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
 * What is covered?
-    - This tutorial looks at how to get (and plot) inferential statistics such as confidence intervals for the mean. We also look at robust confidence intervals.  It would be a useful tutorial to run alongside teaching based on Chapters 8 and 9 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
+    - This tutorial looks at how to compute effect sizes and Bayes factors for a basic research design that compares two groups.  It would be a useful tutorial to run alongside teaching based on Chapter 11 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
     - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
     - The aim of this tutorial is to augment the theory that you already know by guiding you through fitting linear models using **R** and **RStudio** and asking you questions to test your knowledge along the way.
     
@@ -158,410 +168,446 @@ Zach doesn’t want to believe that Alice has simply just left him. Rather, that
 
 This tutorial uses the following packages:
 
-* `boot`
-* `gmodels`
-* `tidyverse`
+* `BayesFactor` [@RN9444] to compute Bayes factors
+* `effsize` [@RN11406] to compute Cohen's *d*
+* `gmodels` [@RN11408] to compute confidence intervals
+* `tidyverse` [@RN11407] for general data processing
 
 These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in **RStudio**) then you need to make sure that the package has been installed by executing `install.packages("package_name")`, where *package_name* is the name of the package. If the package is already installed, then you need to reference it in your current session by executing `library(package_name)`, where *package_name* is the name of the package.
-
-Note that `boot` is installed by default in **R**, but you will need to execute `library(boot)` to use it.
 
 ### Data
 
 This tutorial has the data files pre-loaded so you shouldn't need to do anything to access the data from within the tutorial. However, if you want to play around with what you have learnt in this tutorial outside of the tutorial environment (i.e. in a stand-alone **RStudio** session) you will need to download the data files and then read them into your **R** session. This tutorial uses the following file:
 
-* [ais_c05_jigsaw.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_c05_jigsaw.csv).
+* [ais_c10_teddy_therapy.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_c10_teddy_therapy.csv).
+* [ais_15_puzz_zhang_female.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_15_puzz_zhang_female.csv).
 
-You can load the file in several ways:
+You can load the files in several way (using the first file as an example):
 
 * Assuming that you save this file into the working directory, you can load it by executing:
-    - `jig_dat <- read_csv("ais_c05_jigsaw.csv")`
+    - `teddy_dat <- read_csv("ais_c10_teddy_therapy.csv")`
     - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
 * To load the file using a standard dialogue box to navigate your file system, execute:
-    - `jig_dat <- read_csv(file.choose())`
+    - `teddy_dat <- read_csv(file.choose())`
 * You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
-    - `jig_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_c05_jigsaw.csv")`
+    - `teddy_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_c10_teddy_therapy.csv")`
     - This method relies on an internet connection (and my server having not exploded!)
 
 
-## Confidence intervals
+## A cuddly example
 
-After breaking into the JIG:SAW complex and catching a glimpse of Alice, Zach is in shock. Returning home he is desolate: the evidence of his eyes suggests that Alice is not being held hostage at JIG:SAW and the reality kicks in that she may in fact have left him. He feels worthless. He meets up with Nick, the drummer in his band, at the Repository and they discuss what has happened. Nick is utterly convinced that Alice wouldn’t have left Zach out of choice and Zach returns home even more determined to get back into JIG:SAW to speak to her and find out for himself. Milton is reluctant and tries to convince Zach that he would need to step up his understanding of statistics to a level of which he is not capable. Based on data showing that performing under a different name in a maths test can free mental blocks to maths, it is decided that Zach needs to dress up as Florence Nightingale - a ‘gifted statistician’ as well as a nurse. Feel free to do the same.
+Zach has just escaped from the Secret Philanthropic Society, who seem to do bizarre rituals that involve their members shoving their hands into boxes that may or may not contain a lethal gernal worm. They use probability to determine whether the box will be empty. He meets Emily, the member whose ritual he witnessed. She is riddled with doubts about the societies methods, but is powerless to escape. With Zach's help she does, and they are led by a strange moon-faced druid into a tombstone. It's never a good idea idea to follow moon-faced druids into tombstones. Nevertheless they do. He encounters the Doctrine of Chance led by Sister Price. They explain alternative methods to test evidence: specifically effect sizes and Bayes factors.
 
-Milton goes on to explain confidence intervals to Zach.
+We're going to use the data in the tibble called `teddy_dat`, which contains data from two studies looking at whether cuddling a teddy bear (compared to the cardboard box that the teddy was packaged in) affects self-reported self-esteem. This tibble contains 4 variables:
 
+* **id**: Participant ID
+* **group**: whether the participant cuddled a teddy bear or the cardboard box that contained the teddy bear
+* **study_n**: Factor that distinguishes the two studies in the data set. The first was based on a total *N* of 20 and the second was based on a total *N* of 200
+* **self_esteem**: Self-reported self-esteem scores
 
-```{r quiz_ci_ex1}
-quiz(
-  question("If a 95% confidence interval for the mean ranges from 45 to 51, what does this tell us?",
-    answer("If this confidence interval is one of the 95% that contains the population value then the population value of the mean lies between 45 and 51.", correct = TRUE),
-    answer("There is a 95% chance that the population value of the mean lies between 45 and 51", message = "You cannot make probability statements from a confidence interval. We don't know whether this particular CI is one of the 95% that contains the population value of the mean."),
-    answer("The probability of this confidence interval containing the population mean is 0.95.", message = "The probability of this confidence interval containing the population mean is either 0 (it doesn't) or 1 (it does) but it's impossible to know which."),
-    answer("I can be 95% confident that the population value of the mean lies between 45 and 51", message = "Confidence intervals do not quantify your subjective confidence."),
-    correct = "Correct - well done!",
-    random_answer_order = TRUE,
-    allow_retry = T
-  )
+Using what you have learnt to date, can you create a tibble called `teddy_sum` containing the means, standard deviations and confidence intervals for each group across the two studies. (If you're doing this outside of the tutorial remember to load *tidyverse* [@RN11407] and *gmodels* [@RN11408])
+
+```{r teddy_means, exercise = TRUE, exercise.lines = 6}
+
+```
+
+```{r teddy_means-solution}
+teddy_sum <- teddy_dat %>% group_by(study_n, group) %>% summarize(
+  mean = mean(self_esteem),
+  sd = sd(self_esteem),
+  ci_low = ci(self_esteem)["CI lower"],
+  ci_upp = ci(self_esteem)["CI upper"]
 )
 ```
 
-In a previous tutorial we looked at how to summarize data to get summary statistics such as the mean, median, variance and so on. It is often useful to get the confidence interval too. This section looks at how to do that. We're going to use the data in the tibble called `jig_dat` again, which contains data about the strength, speed, and visual acuity of JIG:SAW employees and non-employees. Remember that this tibble contains 7 variables:
+Now try plotting an error bar graph using `facet_wrap()` to display graphs for the two studies side by side. use `coord_cartesian()` to set the *y*-limits to be 0-20,  `scale_y_continuous()` to set ticks along the axis every two (e.g., 0, 2, 4, 6 ....), and `labs()` to define labels foe the *x*- and *y*-axes.
 
-* **id **: employee ID
-* **employee**: whether or not the employee works for JIG:SAW
-* **job_type**: Categories of employee
-* **footspeed**: Footspeed of the individual, in miles per hour
-* **strength**: Maximal push force of the individual in newtons
-* **vision**: Visual acuity
-* **sex**: Biological sex of the individual
+```{r teddy_mean_plot, exercise = TRUE, exercise.lines = 8}
+
+```
+
+```{r teddy_mean_plot-solution}
+ted_plot <- ggplot(teddy_dat, aes(group, self_esteem))
+ted_plot +
+  stat_summary(fun.data = "mean_cl_normal", size = 1) +
+  facet_wrap(~ study_n) +
+  coord_cartesian(ylim = c(0,20)) + 
+  scale_y_continuous(breaks = seq(0, 20, 2)) +
+  labs(x = "Experimental condition", y = "Self-esteem (0-20)") +
+  theme_bw()
+```
+
+## Effect sizes
+### Cohen's *d*
+
+A useful measure of effect size is Cohen’s *d*, which is the difference between two means divided by some estimate of the standard deviation of those means:
+
+$$
+\hat{d} = \frac{\bar{X_1}-\bar{X_2}}{s}
+$$
+
+I have put a hat on the *d* to remind us that we’re really interested in the effect size in the population, but because we can’t measure that directly, we estimate it from the samples (The hat means ‘estimate of’). By dividing by the standard deviation we are expressing the difference in means in standard deviation units (a bit like a *z*–score). The standard deviation is a measure of ‘error’ or ‘noise’ in the data, so *d* is effectively a signal-to-noise ratio. However, if we’re using two means, then there will be a standard deviation associated with each of them so which one should we use? There are three choices:
+
+1.	If one of the group is a control group it makes sense to use that groups standard deviation to compute *d* (the argument being that the experimental manipulation might affect the standard deviation of the experimental group, so the control group *SD* is a ‘purer’ measure of natural variation in scores)
+2.	Sometimes we assume that group variances (and therefore standard deviations) are equal (homogeneity of variance) and if they are we can pick a standard deviation from either of the groups because it won’t matter.
+3.	We use what’s known as a ‘pooled estimate’, which is the weighted average of the two group variances. This is given by the following equation:
+
+$$
+s_p = \sqrt{\frac{(N_1-1) s_1^2+(N_2-1) s_2^2}{N_1+N_2-2}}
+$$
+
+Say we wanted to estimate *d* for the difference between self-esteem after cuddling the teddy compared to the box (control), assuming you successfully created the tibble (`teddy_sum`) then you should have this information:
+
+```{r, results = 'asis'}
+
+knitr::kable(teddy_sum, caption = "Summary statistics for the teddy and box groups within the two experiments")
+```
 
 
-In the previous tutorial we looked at combining `group_by()` and `summarize()` in a pipe command to create a tibble containing summary statistics (split by group). For example, we used the following command to create a tibble called `speed_sum` that contained the mean of the variable **footspeed** grouped by combinations of the variables **employee** and **sex** from the tibble called `jig_dat`.
+We have a logical control group so *d* is simply:
+
+$$
+\hat{d}_\text{teddy vs box} = \frac{15-10}{5.96} = 0.839
+$$
+
+If we use the pooled *s* then we'd get:
+
+$$
+\begin{aligned}
+  \ s_p &= \sqrt{\frac{(N_1-1) s_1^2+(N_2-1) s_2^2}{N_1+N_2-2}} \\
+  \ &= \sqrt{\frac{(10-1)5.96^2+(10-1)6.02^2}{10+10-2}} \\
+  \ &= \sqrt{\frac{645.86}{18}} \\
+  \ &= 5.99
+\end{aligned}
+$$
+
+Basically, because the group standard deviations are more or less the same (5.96 and 6.02) the pooled estimate is very similar too (it falls between those two values). Consequently, the resulting effect size is not going to change much when we use the pooled estimate:
+
+$$
+\hat{d}_\text{teddy vs box} = \frac{15-10}{5.99} = 0.835
+$$
+
+Let's look at computing Cohen's *d* using the pooled estimate in **R**. We're going to do this separately for the two studies in out tibble (`teddy_dat`). As a brief recap, this tibble contains 4 variables:
+
+* **id**: Participant ID
+* **group**: whether the participant cuddled a teddy bear or the cardboard box that contained the teddy bear
+* **study_n**: Factor that distinguishes the two studies in the data set. The first was based on a total *N* of 20 and the second was based on a total *N* of 200. We're going to use this variable to `filter()` the tibble before we compute *d*.
+* **self_esteem**: Self-reported self-esteem scores
+
+
+Like many things in **R**, there are numerous packages that offer functions to compute effect sizes. We're going to use the `cohen.d()` function from the `effsize` package [@RN11406] primarily because it computes it from the raw data (rather than from summary statistics) and because it has an option to compute it in designs that use repeated measures (i.e. the means across conditions are dependent). The general format of this function is:
+
+`cohen.d(formula = outcome ~ group_variable, pooled = TRUE, paired = FALSE, na.rm = FALSE, hedges.correction = FALSE, conf.level = 0.95)`
+
+The arguments within this function are:
+
+* `formula = outcome ~ group_variable`: this allows us to specify the outcome variable (in this case **self_esteem**) and the variable that defines the two groups (in this case **group**). This format of specifying a model as `outcome ~ predictor` will become very familiar to you as we progress through these tutorials. 
+* `pooled = TRUE`: by default the pooled standard deviation, $s_p$, will be used. If you set this option to FALSE then the standard deviation of the whole sample will be used. Typically you'd leave this option alone (i.e., use the pooled estimate).
+* `paired = FALSE`: by default the function considers scores as coming from different entities (i.e. an independent designs). That's the design our teddy bear experiments use. However, if you have a repeated measures design (i.e. in our example participants cuddle both a teddy and a box at different points in time) then set paired to TRUE.
+* `na.rm = FALSE`: we've seen this option before. By default missing values are not removed and you should set this option to TRUE if you have missing values.
+* `hedges.correction = FALSE`: the option determines whether a correction is applied to *d*. This converts *d* to something called Hedges' *g*. By default the option isn't applied, but it is a good to apply it.
+* `conf.level = 0.95`: by default the confidence interval will be a 95% one, but you can adjust this option to change the width of the confidence interval. The default is fine.
+
+The function returns an object that contains the value of *d*, the confidence interval and some other information. We're going to use a pipe (`%>%`) to link:
+
+* `teddy_dat`: our input will be the tibble of raw data
+* `filter(study_n == "Total N = 20")`: we're going to filter that tibble to extract the experiment based on a sample size of 20
+* `cohen.d()` the function described above will compute the effect size.
 
 ```{r echo = T, eval = F}
-speed_sum <-
-  jig_dat %>%
-  group_by(employee, sex) %>%
-  summarize(
-    mean_speed = mean(footspeed)
-    )
-```   
+teddy_dat %>%
+  filter(study_n == "Total N = 20") %>%
+  cohen.d(formula = self_esteem ~ group, data = .)
+```
 
+This command takes the `teddy_dat` tibble, extracts the study based on 20 participants, then applies the `cohen.d()` function. Within this function we have left the defaults as they are, our formula specifies that we're predicting **self_esteem** from the variable **group** (which defines whether the individual hugs a teddy or a box), and we specify the data within the function with a period (`data = .`). By using a period we're telling the function to use the data coming through from the pipe. Copy this command in the code box below and run the code. Then edit it to apply Hedges' correction, then edit the code again to get the effect size for the experiment that had 200 participants.
 
-```{r quiz_pipe_ex1}
-quiz(
-  question("In the above command, what does **group_by(employee, sex)** do?",
-    answer("Groups the output by all combinations of the variables **employee** and **sex** (I.e. employee-male, employee-female, non-employee-male, non-employee-female.", correct = TRUE),
-    answer("Creates one output grouped by **employee** (i.e. employee, non-employee), and a separate output grouped by sex (male, female)."),
-    correct = "Correct - well done!",
-    random_answer_order = TRUE,
-    allow_retry = T
-  ),
-  question("What does the pipe operator (%>%) do?",
-    answer("Carries any instruction on the left of the operator forward into any instrucion on the right of the operator", correct = TRUE),
-    answer("Allows you to chain independent commands without them affecting each other.", message = "Sorry, that's incorrect. The pipe operator is does the opposite: it allows you to chain commands so that commands on the left are carried forwared in to commands on the right"),
-    answer("Multiplies anything on the left of the operator by anything on the right.", message = "Sorry, that's incorrect. The pipe operator is does the opposite: it allows you to chain commands so that commands on the left are carried forwared in to commands on the right"),
-    answer("Pipes statistical wisdom into your brain.", message = "If only ..."),
+```{r try_d, exercise = TRUE, exercise.lines = 8}
+
+```
+
+```{r try_d-hint}
+# To get the Hedges' correction we'd add hedges.correction = T:
+
+teddy_dat %>%
+  filter(study_n == "Total N = 20") %>%
+  cohen.d(formula = self_esteem ~ group, data = ., hedges.correction = T)
+
+# To get effectsizes we'd change the filter() function to extract the study based on 200 participants:
+
+teddy_dat %>%
+  filter(study_n == "Total N = 200") %>%
+  cohen.d(formula = self_esteem ~ group, data = ., hedges.correction = T)
+
+```
+
+Applying the Hedges' correction to both studies, we'd get these outputs:
+
+```{r echo = F}
+teddy_dat %>% filter(study_n == "Total N = 20") %>% cohen.d(formula = self_esteem ~ group, data = ., hedges.correction = T)
+teddy_dat %>% filter(study_n == "Total N = 200") %>% cohen.d(formula = self_esteem ~ group, data = ., hedges.correction = T)
+```
+
+This shows that for the smaller study, the effect of cuddling a teddy compared to a box on self-esteem was *g* = -0.80 [-1.78, 0.18]. Whether *d* (or *g*) has a positive or negative sign reflects which way around you subtracted the group means. The teddy group had a mean of 15 and and box group a mean of 10. The difference between these means will be 5 if you subtract the box mean from the teddy mean (15 - 10 = 5), but -5 if you subtract the teddy mean from the box mean (10 - 15 = -5). So, to interpret the effect size look at the group means (not the plus of minus sign of *g*). In this case, self-esteem is 0.80 of a standard deviation higher after cuddling a teddy than after cuddling a box. The confidence interval for this effect size suggests (if we assume this sample is one of the 95% that contain the population value) that the population effect could range between -1.78 and 0.18. Crucially this means the effect could be 0, and could reflect higher self-esteem in the box group OR in the teddy group.
+
+```{r ci_quiz}
+  question("In the larger study the confidence interval ranged from -1.13 to -0.54. What does this tell us?",
+    answer("If this confidence interval is one of the 95% that contains the population value then the population value of the difference between group means lies between -1.13 to -0.54.", correct = TRUE),
+    answer("There is a 95% chance that the population value of the difference between group means lies between -1.13 to -0.54.", message = "You cannot make probability statements from a confidence interval. We don't know whether this particular CI is one of the 95% that contains the population value of the difference between means."),
+    answer("The probability of this confidence interval containing the population value is 0.95.", message = "The probability of this confidence interval containing the population value is either 0 (it doesn't) or 1 (it does) but it's impossible to know which."),
+    answer("I can be 95% confident that the population value of the difference between group means lies between -1.13 to -0.54.", message = "Confidence intervals do not quantify your subjective confidence."),
     correct = "Correct - well done!",
     random_answer_order = TRUE,
     allow_retry = T
   )
-)
 ```
 
-To incorporate confidence intervals into this command isn't entirely straightforward. One way is to use the `ci()` function from the `gmodels` package. (Remember that if you're doing this outside of this tutorial then you'll need to install this package and then load it whenever you want to use the `ci()` function in a session.) This function takes any model as its input and returns an object that contains estimates from the model and their confidence intervals. If you input a single variable then it returns the mean of that variable and the associated confidence interval (but you can input more complex objects than a variable). In general it takes the following form:
+### An optional tricky section
 
-`ci(object, confidence = 0.95, na.rm = F)`
+I've struggled to find a function that will automatically calculate *d* using the standard deviation of the control group. However, it is simple enough to get **R** to subtract two values and then divide by another value. For example, to add *x* and *y* and then divide by *z* you could execute `(x + y)/z`. Simple. What's not simple is re-arranging the data so that we have the group means in columns. It can be done but involves restructuring the data in a crazy pipe involving lots of functions that we haven't learnt! I'm going to just plough through how it's done, explain what everything does but not cover the new functions in detail. So, by all means ignore this section if you like.
 
-To keep things simple, imagine the 'object' we put into this function is a variable, like **footspeed**. We'd execute:
+Earlier we created a tibble called `teddy_sum` that includes the means, standard deviations and confidence intervals of those means. The problem is that the means and *sd*s for the box and teddy groups are in different rows and we want them in different columns so that we can subtract them. This is to remind you of what the tibble currently contains:
 
-`ci(jig_dat$footspeed, confidence = 0.95, na.rm = F)`
+```{r, results = 'asis'}
+knitr::kable(teddy_sum, caption = "Summary statistics for the teddy and box groups within the two experiments")
+```
 
-If we just place `jig_dat$footspeed` into the function we'll get a 95% confidence interval and missing values will *not* be removed. To get a different confidence interval specify a proportion in `confidence = `. For example, `ci(jig_dat$footspeed, confidence = 0.9)` will give us a 90% confidence interval around the mean of **footspeed**. Similarly if we want to remove missing values we would set `na.rm = T`. When you put a variable into the function it returns an object containing the mean (labelled *Estimate* in the object), the lower boundary of the confidence interval (labelled *CI Lower*), the upper boundary of the confidence interval (labelled *CI Upper*), and the standard error (labelled *Std. Error*). To access these values simultaneously we execute the function (or create an object from it and execute that), but if we want to access them individually we can do that by appending their name in square brackets. For example:
+I'm going to restructure this tibble so that all of the information from a given experiment is in a single row (that is, create columns contain the means, *sd*s and confidence intervals for each group). That's the hard part. Then I will add a column that compotes *d* (that's the easy part!).
 
-`ci(jig_dat$footspeed)["CI lower"]` returns the value of the item labelled "CI lower" in the object created by the `ci()` function. In other words, it will give us the value of the lower boundary of the (by default 95%) confidence interval. If we add this command within the `summarize()` statement in our pipe, we'll get the lower boundaries for the confidence intervals around the mean when the data are grouped by **employee** and **sex**. One final point is that we wouldn't include this line exactly as I've written it because we have specified the `jig_dat` tibble earlier in the pipe, which means it will be carried forward into the summarize statement. This means that we can specify the variable of interest as simply `footspeed` rather than `jig_dat$footspeed` because the function will already know to look for **footspeed** within the `jig_dat` tibble.
-
-Therefore, to create a tibble with means and confidence intervals grouped by **employee** and **sex** we can adapt the code that we've already used in previous tutorials to include the `ci()` function:
+Restructuring data using the *tidyverse* package *tidyr* is something that I find endlessly confusing, so if you find it confusing too then don't worry - you're in good company! To restructure the data we're going to use this pipe:
 
 ```{r echo = T, eval = F}
-speed_sum <-
-  jig_dat %>%
-  group_by(employee, sex) %>%
-  summarize(
-    mean_speed = mean(footspeed),
-    ci_low = ci(footspeed)["CI lower"],
-    ci_upp = ci(footspeed)["CI upper"]
-    )
-``` 
+teddy_wide <-  teddy_sum %>%
+  gather(measure, value, -c(study_n, group)) %>%
+  unite(gp_measure, group, measure) %>% 
+  spread(gp_measure, value)
+```
 
-Note that the code is the same as we used before except that we have added two lines (which should make sense based on the explanation above):
+It's a pipe that could carry gas across the Atlantic. Let's break it down.
 
-* `ci_low = ci(footspeed)["CI lower"]` creates a variable called **ci_low** by applying the function `ci()` to the variable **footspeed** and extracting the value labelled "CI lower", which is the value of the lower boundary of the 95% confidence interval.  
-* `ci_upp = ci(footspeed)["CI upper"]` creates a variable called **ci_upp** by applying the function `ci()` to the variable **footspeed** and extracting the value labelled "CI upper", which is the value of the upper boundary of the 95% confidence interval.
+* `teddy_sum %>%`: we begin with the `teddy_sum` tibble and carry that into the next function using the pipe operator (`%>%`).
+* `gather(measure, value, -c(study_n, group))`: this takes each variable in `teddy_sum` and places its value in a variable called **value** (you can name it what you like, I chose 'value') and creates a variable called **measure** (again, you can name it differently) in which it identifies to what the value relates. For example, the if the value is from the column **mean** then the value placed in **measure** will be the word 'mean'. Crucially, I have used `-c(study_n, group)` to exclude the variables **study_n** and **group** from this process. These variables retain their existing values. To get a feel for what's happening execute the pipe just to this point in the code box (i.e., execute `teddy_sum %>% gather(measure, value, -c(study_n, group))`). Essentially the variables **mean**, **sd**, **ci_low** and **ci_upp** which were in 4 columns have been replaced by two columns: one (**measure**) contains the name of the original column and the other (**value**) contains the value.
+* `unite(gp_measure, group, measure)` is used to unite the variables **group** and **measure** into a single variable called **gp_measure** (again, choose a different name if you like). It basically combines the values from the columns and separates them with an underscore. For example, if the value of **group** is *Box* and the value of **measure** is *mean* then the resulting value in **gp_measure** will be *Box_mean*. In effect, we're creating a variable to contain column names to use when we transform the data back. Again, if you want to see what's going on use the code box to run the pipe up to this point (`teddy_sum %>% gather(measure, value, -c(study_n, group)) %>% unite(gp_measure, group, measure)`).
+* `spread(gp_measure, value)`: Finally, we spread the data back out into separate columns using **gp_measure** to define the column names and **value** to define the values placed with each column.
 
-Copy the command into the code box and run it. Also, run the name of the `speed_sum` tibble that you create to see what it contains. Hopefully you'll see a tibble with the mean and 95% confidence interval boundaries split by **employee** and **sex**. Try to create tibbles called `strength_sum` and `vis_sum` that tabulate the mean and confidence intervals for the variables **strength** and **vision** respectively.
-
-```{r gb_ci, exercise = TRUE, exercise.lines = 7}
+```{r ted_restruc, exercise = TRUE, exercise.lines = 8}
 
 ```
 
-```{r gb_ci-solution}
-speed_sum <-
-  jig_dat %>%
-  group_by(employee, sex) %>%
-  summarize(
-    mean_speed = mean(footspeed),
-    ci_low = ci(footspeed)["CI lower"],
-    ci_upp = ci(footspeed)["CI upper"]
-    )
-speed_sum
+```{r ted_restruc-solution}
+teddy_wide <-  teddy_sum %>%
+  gather(measure, value, -c(study_n, group)) %>%
+  unite(gp_measure, group, measure) %>% 
+  spread(gp_measure, value)
+teddy_wide
 ```
 
-##Plotting confidence intervals
+Run the full pipe to create this new tibble (which I've called `teddy_wide`). Execute the name of the tibble to look at it. The resulting tibble contains these variables
 
-We've seen in previous tutorials how to plot means. For example we created a plot of the strength data split by JIG:SAW employees and non-employees. We used this code:
+* **study_n**: Factor that distinguishes the two studies in the data set. The first was based on a total *N* of 20 and the second was based on a total *N* of 200.
+* **Box_ci_low**: lower limit of the confidence interval in the box group.
+* **Box_ci_upp**: upper limit of the confidence interval in the box group.
+* **Box_mean**: mean self-esteem in the box group.
+* **Box_sd**: standard deviation of self-esteem in the box group.
+* **\`Teddy Bear_ci_low\`**: lower limit of the confidence interval in the teddy group.
+* **\`Teddy Bear_ci_upp\`**: upper limit of the confidence interval in the teddy group.
+* **\`Teddy Bear_mean\`**: mean self-esteem in the teddy group.
+* **\`Teddy Bear_sd\`**: standard deviation of self-esteem in the teddy group.
 
-```{r echo = TRUE, eval = FALSE}
-strength_plot <- ggplot(jig_dat, aes(employee, strength))
-strength_plot +
-  stat_summary(fun.y = "mean", geom = "point", size = 4) +
-  labs(x = "Employee status", y = "Maximal push force (n)") +
-  coord_cartesian(ylim = c(1000, 1800)) +
-  scale_y_continuous(breaks = seq(1000, 1800, 100)) +
-  theme_bw()
+The variables for the teddy bear group have been named a bit clunkily (because we'd defined the group as 'Teddy Bear'). Let's tidy these names up using the `rename()` function:
+
+```{r echo = T, eval = F}
+teddy_wide <- teddy_wide %>% rename(
+   teddy_ci_low = `Teddy Bear_ci_low`,
+   teddy_ci_upp = `Teddy Bear_ci_upp`,
+   teddy_mean = `Teddy Bear_mean`,
+   teddy_sd = `Teddy Bear_sd`
+  )
 ```
 
-Let's remind ourselves of what each part of this command is doing:
+This code recreates the `teddy_wide` tibble from itself but creates a variable **teddy_ci_low** from the variable currently called **\`Teddy Bear_ci_low\`** and do on. In effect I'm renaming the 'Teddy Bear' variables to omit spaces and remove upper case letters (and be shorter). Try this in the code box and inspect the resulting tibble.
 
-* `strength_plot <- ggplot(jig_dat, aes(employee, strength))` creates an object called `strength_plot` that contains the plot. The `ggplot()` function is then used to specify that the plot uses the `jig_dat` tibble and plots the variable **employee** on the *x*-axis and the variable **strength** on the *y*-axis.
-* `strength_plot + stat_summary(fun.y = "mean", geom = "point", size = 4)` takes the object `strength_plot` and adds a statistics summary to it. The `stat_summary()` uses `fun.y = "mean"` to plot the mean using a dot (`geom = "point"`) of size 4 (`size = 4`).
-* `labs(x = "Employee status", y = "Maximal push force (n)")` applies descriptive labels to the *x* and *y* axes.
-* `coord_cartesian(ylim = c(1000, 1800))` sets the limits of the *y*-axis
-* `scale_y_continuous(breaks = seq(1000, 1800, 100))` sets the breaks along the *y*-axis
-* `theme_bw()` applies a black and white theme to the plot
-
-If we want to plot confidence intervals around the means all we need to do is to edit the details of `stat_summary()`. Specifically there are three changes that we need to make:
-
-1. Change `fun.y = "mean"` to `fun.data = "mean_cl_normal"`. This creates the data to be plotted for the mean and confidence intervals.
-2. Change `geom = "point"` to `geom = "pointrange"`. This changes the geom to one that can display a confidence interval.
-3. Delete `size = 4` because the default size for the 'pointrange' geom will look better than size 4.
-
-The code box contains the code above and shows the resulting plot (that we created in previous tutorials). Change the two things listed above and run the code to see how the plot changes.
-
-```{r stg_plot_ci, exercise = TRUE, exercise.lines = 7, exercise.eval = TRUE}
-strength_plot <- ggplot(jig_dat, aes(employee, strength))
-strength_plot +
-  stat_summary(fun.y = "mean", geom = "point", size = 4) +
-  labs(x = "Employee status", y = "Maximal push force (n)") +
-  coord_cartesian(ylim = c(1000, 1800)) +
-  scale_y_continuous(breaks = seq(1000, 1800, 100)) +
-  theme_bw()
+```{r ted_rename-setup}
+teddy_wide <-  teddy_sum %>% gather(measure, value, -c(study_n, group)) %>% unite(gp_measure, group, measure) %>% spread(gp_measure, value)
 ```
 
-```{r stg_plot_ci-solution}
-strength_plot <- ggplot(jig_dat, aes(employee, strength))
-strength_plot +
-  stat_summary(fun.data = "mean_cl_normal", geom = "pointrange") +
-  labs(x = "Employee status", y = "Maximal push force (n)") +
-  coord_cartesian(ylim = c(1000, 1800)) +
-  scale_y_continuous(breaks = seq(1000, 1800, 100)) +
-  theme_bw()
-```
-
-Hopefully your plot how looks like dots showing the means with vertical lines showing the confidence intervals. (Incidentally, you could layer a `stat_summary()` function underneath the confidence intervals that uses a bar geom to plot the mean. Something like `stat_summary(fun.y = "mean", geom = "bar", alpha = 0.6) +` placed on the line above the existing stat_summary() function would work. The result would be a bar graph of means with error bars layered on top. However, adding the bars does not add any new information, but does add a lot of unnecessary ink, so I wouldn't bother.)
-
-What about more complex plots? In a previous tutorial we also created a similar plot but differentiated males and females by colours. The code box below replicates this code and shows the plot to remind you of how it looks. To add error bars we make exactly the same changes to `stat_summary()` as we did above:
-
-1. Change `fun.y = "mean"` to `fun.data = "mean_cl_normal"`.
-2. Change `geom = "point"` to `geom = "pointrange"`. 
-3. Delete `size = 4`.
-
-Make these changes and run the code. You should see the same plot but with confidence intervals as well as means.
-
-```{r stgth_col1, exercise = TRUE, exercise.eval = TRUE}
-strength_plot <- ggplot(jig_dat, aes(employee, strength, colour = sex))
-strength_plot +
-  stat_summary(fun.y = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9)) +
-  labs(x = "Employee status", y = "Maximal push force (n)", colour = "Biological sex") +
-  coord_cartesian(ylim = c(1000, 1800)) +
-  scale_y_continuous(breaks = seq(1000, 1800, 100)) +
-  scale_colour_manual(values = c("#56B4E9", "#E69F00")) +
-  theme_bw()
-```
-
-```{r stgth_col1-solution}
-strength_plot <- ggplot(jig_dat, aes(employee, strength, colour = sex))
-strength_plot +
-  stat_summary(fun.data = "mean_cl_normal", geom = "pointrange", position = position_dodge(width = 0.9)) +
-  labs(x = "Employee status", y = "Maximal push force (n)", colour = "Biological sex") +
-  coord_cartesian(ylim = c(1000, 1800)) +
-  scale_y_continuous(breaks = seq(1000, 1800, 100)) +
-  scale_colour_manual(values = c("#56B4E9", "#E69F00")) +
-  theme_bw()
-```
-
-In the box below can you create a similar plot of the vision scores split by **job_type** on the *x*-axis and employees and non-employees in different colours.
-
-```{r stgth_col2, exercise = TRUE}
+```{r ted_rename, exercise = TRUE, exercise.lines = 8}
 
 ```
 
-```{r stgth_col2-solution}
-vis_plot <- ggplot(jig_dat, aes(job_type, vision, colour = employee))
-vis_plot +
-  stat_summary(fun.data = "mean_cl_normal", geom = "pointrange", position = position_dodge(width = 0.9)) +
-  labs(x = "Type of job", y = "Visual acuity", colour = "Employee status") +
-  coord_cartesian(ylim = c(0, 1)) +
-  scale_y_continuous(breaks = seq(0, 1, 0.1)) +
-  scale_colour_manual(values = c("#56B4E9", "#E69F00")) +
-  theme_bw()
+```{r ted_rename-solution}
+teddy_wide <- teddy_wide %>% rename(
+   teddy_ci_low = `Teddy Bear_ci_low`,
+   teddy_ci_upp = `Teddy Bear_ci_upp`,
+   teddy_mean = `Teddy Bear_mean`,
+   teddy_sd = `Teddy Bear_sd`
+  )
+teddy_wide
 ```
 
-##Robust means
+Well done if you're still with me! Let's now do the (relatively) easy bit. Now we have the group means in columns, it's relatively straightforward to use `mutate()` to add a column that contains *d*:
 
-In Chapter 9, Zach steals the data we have been analysing that relates to JIG:SAW employees. Milton teaches him how the mean and confidence intervals can be biased by skew, kurtosis and outliers. Milton introduces the idea of the trimmed mean.
-
-To get the trimmed mean for a variable we can adapt the code we have already used. For example, to get the mean **footspeed** split by **employee** and **sex** we used the code below. We discovered before that the mean has an option to specify a trim (`trim = 0`), so to produce a summary of trimmed means we can simply add this option to the command that gets the mean. For example, to get a 20% trimmed mean we might replace `mean_speed = mean(footspeed)` with:
-
-`tr_mean_speed = mean(footspeed, trim = 0.2)`
-
-Try adding this line to the `summarize()` function in the code box so that we store both the mean and the 20% trimmed mean (don't forget to include a comma after the first command within `summarize()`)
-
-```{r trim_mean, exercise = TRUE}
-speed_sum <-
-  jig_dat %>%
-  group_by(employee, sex) %>%
-  summarize(
-    mean_speed = mean(footspeed)
-    )
-speed_sum
-``` 
-
-```{r trim_mean-solution}
-speed_sum <-
-  jig_dat %>%
-  group_by(employee, sex) %>%
-  summarize(
-    mean_speed = mean(footspeed),
-    tr_mean_speed = mean(footspeed, trim = 0.2)
-    )
-speed_sum
+```{r echo = T, eval = F}
+teddy_wide <- teddy_wide %>% mutate(
+  d = (teddy_mean - Box_mean)/Box_sd
+)
 ```
 
+This code re-creates the `teddy_wide` tibble from itself, but then uses `mutate()` to add a variable called **d**, which is defined as `(teddy_mean - Box_mean)/Box_sd`. In other words it subtracts the scores in the column **Box_mean** from the scores in the column **teddy_mean** and divides the result by the scores in the column **Box_sd**. In other words, it takes the difference between the group means and divides by the standard deviation for the control group! Try this below and then view the resulting tibble to see the values of *d*.
 
-Try this for **strength** as well:
 
-```{r trim_mean2, exercise = TRUE, exercise.lines = 8}
+```{r ted_d-setup}
+teddy_wide <-  teddy_sum %>% gather(measure, value, -c(study_n, group)) %>% unite(gp_measure, group, measure) %>% spread(gp_measure, value)
 
-``` 
-
-```{r trim_mean2-solution}
-strength_sum <-
-  jig_dat %>%
-  group_by(employee, sex) %>%
-  summarize(
-    mean_strength = mean(strength),
-    tr_mean_strength = mean(strength, trim = 0.2)
-    )
-strength_sum
+teddy_wide <- teddy_wide %>% rename(
+   teddy_ci_low = `Teddy Bear_ci_low`,
+   teddy_ci_upp = `Teddy Bear_ci_upp`,
+   teddy_mean = `Teddy Bear_mean`,
+   teddy_sd = `Teddy Bear_sd`
+  )
 ```
 
+```{r ted_d, exercise = TRUE, exercise.lines = 8}
 
-##Robust confidence intervals
+```
 
-Milton also introduces Zach to the idea of bootstrapping as a way to create robust confidence intervals.
+```{r ted_d-solution}
+teddy_wide <- teddy_wide %>% mutate(
+  d = (teddy_mean - Box_mean)/Box_sd
+)
+teddy_wide
+```
 
-```{r quiz_ci_ex2}
-quiz(
-  question("Bootstrapping is a technique from which the sampling distribution of a statistic is estimated by ...",
-    answer("Taking repeated samples (with replacement) from the data set.", correct = TRUE),
-    answer("Taking repeated samples from the population.", message = "Samples are not taken from the population because we don't have access to it."),
-    answer("Adjusting the standard error to compensate for heteroscedasticity.", message = "Bootstrapping is a *sampling* process."),
-    answer("Tying my shoelaces together so that I fall over.", message = "Now you're just being silly."),
-    correct = "Correct - well done!",
-    random_answer_order = TRUE,
-    allow_retry = T
-  ),
-  question("Which of these statements about bootstrap confidence intervals is **not** true?",
-    answer("Bootstrap confidence intervals have the same values each time you compute them.", correct = TRUE, message = "This stament *is* false. Because bootstrapping relies on repeated sampling, the results can vary slighty each time you impliment the process."),
-    answer("Bootstrap confidence intervals are robust to violations of homoscedasticity.", message = "This statement is true."),
-    answer("Bootstrap confidence intervals do not assume a normal sampling distribution.", message = "This statement is true: bootstrapping is a technique from which the sampling distribution of a statistic is estimated *empirically* from the data so no assumptions about its shape are made."),
-    answer("Bootstrap confidence intervals are most useful in small samples.", message = "Technically this statement is true because bootstrapping was designed for small sample situations (where the central limit theorem can't be invoked). However, there is evidence that the central limit theorem may not hold up in samples that are quite large so there is a case to be made that bootstrapping is still useful in larger samples."),
+```{r d_quiz}
+question("Which of these statements about Cohen's *d* is **NOT** correct?",
+    answer("The value of *d* cannot exceed 1.", correct = TRUE, message = "This statement is false and so is the coirrect answer."),
+    answer("*d* is the difference between two means expressed in standard deviation units.", message = "This statement is true so is not the correct answer."),
+    answer("A *d* of 0.2 would be considered small", message = "This statement is true so is not the correct answer."),
+    answer("*d* can be computed using a control group standard deviation, the standard deviation of all scores or a pooled standard deviation.", message = "This statement is true so is not the correct answer."),
     correct = "Correct - well done!",
     random_answer_order = TRUE,
     allow_retry = T
   )
+```
+
+## Bayes factors
+
+### Bayes factors and priors
+
+The Bayes factor quantifies the probability of the data given the alternative hypothesis (in this case that self-esteem differs in the teddy and box groups) relative to the probability of the data given the null hypothesis (in this case that self-esteem is the same in the teddy and box groups):
+
+$$
+\text{Bayes factor} = \frac{p(\text{data}|\text{alternative})}{p(\text{data}|\text{null})} \\
+$$
+
+The Bayesian t-test uses a default prior distribution based on a value, *r*, which scales the distribution [@RN9316]. The advantage of this approach is that it enables people to use a Bayesian method without needing to choose a prior from an almost endless set of possibilities. By con straining the decisions, some of the hard thinking is removed. The disadvantage is that defaults can tempt people to use them without any thought, and it’s tricky to understand what’s going on under the hood. To encourage you to give some thought to your prior, let’s look under the hood (just a bit). The prior distribution is constrained to be from a family known as the Cauchy distribution. Members of the Cauchy family look a bit like a normal distributions, but they’re not. Figure 1 shows Cauchy distributions with different scale factors, *r*: that are medium, *r* = 0.5 (left); wide, *r* = 0.7071 (middle), and ultrawide, *r* = 1 (right). Each curve has a shaded region with boundaries from −r to +r and the region under the curve between these boundaries represents 50% of the area. Note that the width of this region gets wider as *r* increases. When you set the value of *r* you are assigning a 50% probability that the effect size (Cohen’s *d*) lies between −*r* and +*r*. Given the distribution is symmetrical, you’re also assigning a 25% prior belief that *d* is greater than *r* and the remaining 25% that *d* is less than −*r*.
+
+If you use the default value of *r* = 0.7071 you are, therefore, saying that your prior belief is that there’s a 50% probability that the effect size (Cohen’s *d*) lies between −0.7071 and +0.7071, a 25% probability that it is greater than +0.7071 and a 25% probability that it is less than −0.7071. Remembering what *d* represents, you’re saying that there’s a 50% probability that the difference between the two means lies between −0.7071 and +0.7071 standard deviations.
+If you set *r* = 0.5 (Figure 1, left) the Cauchy distribution becomes narrower and you are similarly narrowing your prior beliefs to a 50% probability that the difference between the group means lies between −0.5 and +0.5 standard deviations. Setting *r* = 1 (Figure 1, right) widens the distribution, representing wider beliefs. You’d be placing a 50% probability that the difference between the group means lies between −1 and +1 standard deviations. Remembering that *d* = 0.8 is a large effect, you’d be assigning a 50% probability to the difference between means being somewhere between a very large effect in one direction and a very large effect in the opposite direction. This is too wide a belief for most situations (bearing in mind that another 50% of the probability is assigned to the effect being outside those limits).
+
+![Figure 1: Distributions representing the *r* scale](./images/cauchys.png)
+
+
+### Bayes factors in **R**
+
+The `BayesFactor` package contains various functions for computing Bayes factors. We'll use it at various points for other models. For now, we'll use the `ttestBF()` function, which is designed for situations where you want a Bayes factor that quantifies differences between two means. It has a general form of:
+
+`ttestBF(formula = outcome ~ group_variable, mu = 0, paired = FALSE, data = NULL, rscale = "medium")`
+
+It has some other arguments not listed above, but these are the key ones for our purposes:
+
+* `formula = outcome ~ group_variable`: this allows us to specify the outcome variable (in this case **self_esteem**) and the variable that defines the two groups (in this case **group**). This is basically the same as the `cohen.d()` function.
+* `mu = 0`: for this example we can ignore this but if you want to use the function on a one-sample or paired design then you can use this to specify the null value of the mean (or mean difference in a paired design). The default of 0 is usually what you would want.
+* `paired = FALSE`: by default the function considers scores as coming from different entities (i.e. an independent designs). That's the design our teddy bear experiments use. However, if you have a repeated measures design (i.e. in our example participants cuddle both a teddy and a box at different points in time) then set paired to TRUE.
+* `data = Null`: use this option to specify the tibble containing the data.
+* `rscale = "medium"`: This option specifies the prior. You can input a numeric value or use one of three pre-defined default priors. These defaults are "medium", "wide", and "ultrawide", which correspond to values of sqrt(2)/2 (i.e., 0.707), 1, and sqrt(2) respectively. I explained these priors earlier.
+
+Like when we computed an effect size we're going to use a pipe (`%>%`) to link:
+
+* `teddy_dat`: our input will be the tibble of raw data
+* `filter(study_n == "Total N = 20")`: we're going to filter that tibble to extract the experiment based on a sample size of 20
+* `data.frame()`: converts the tibble to a data frame. This step is necessary because (at the time of writing) tibbles confuse the `ttetstBF()` function and you'll get an error.By converting the tibble to a data frame before passing it into `ttetstBF()`, we avoid the error. 
+* `ttestBF()` the function described above will compute the Bayes factor.
+
+```{r echo = T, eval = F}
+teddy_dat %>%
+  filter(study_n == "Total N = 20") %>%
+  data.frame() %>%
+  ttestBF(formula = self_esteem ~ group, data = .)
+```
+
+This command takes the `teddy_dat` tibble, extracts the study based on 20 participants, converts it to a data frame (because `ttestBF` doesn't like tibbles) then applies the `ttestBF()` function. Within this function we have left the defaults as they are (i.e. a 'medium' prior scale value of 0.707), our formula specifies that we're predicting **self_esteem** from the variable **group** (which defines whether the individual hugs a teddy or a box), and we specify the data within the function with a period (`data = .`). By using a period we're telling the function to use the data coming through from the pipe. Copy this command in the code box below and run the code. Then edit it to get the Bayes factor for the experiment that had 200 participants.
+
+```{r try_bf, exercise = TRUE, exercise.lines = 8}
+
+```
+
+```{r try_bf-solution}
+teddy_dat %>%
+  filter(study_n == "Total N = 200") %>%
+  data.frame() %>%
+  ttestBF(formula = self_esteem ~ group, data = .)
+```
+
+The resulting Bayes factor is 1.27 which means that the probability of the data given the alternative hypothesis is about the same as the probability of the data given the null. The value here suggests that we should not change our prior beliefs. By using the default prior we assigned a 50% probability to the effect size (*d*) lying between −0.7071 and +0.7071, and this Bayes factor tells us not to change this belief.
+
+For the larger sample the Bayes factor is 754768.4, which is huge. The probability of the data given the alternative hypothesis is 754768.4 greater than the probability of the data given the null. The value here suggests that we should shift our prior beliefs towards the alternative hypothesis by a factor of 754768.4. In other words, having looked at the data we should hold a very much stronger belief that the means are different.
+
+Remember that the effect sizes in the two studies were basically identical, so it may seem strange that the Bayes factors are so different. However, if you think about it, Bayesian methods update prior beliefs using the data. A small amount of data will have less impact on beliefs than a huge sample (if the priors are the same). Imagine you're asked the probability that a sports team will win their next game. You guess at 33% change that they'll win (you assume win, lose or draw are equally likely). Take two scenarios: you're told  that this team won their last game. This might increase your belief in a win, but probably not by much - perhaps that game was a fluke. The second scenario is that you're told that they have won their last 20 games. You're belief in a  win will probably shift quite strongly towards a win - they have consistently shown a winning mentality. In both cases you're being told that they have won 100% of past games, but in the first case that is based on a tiny amount of data, in the latter case it's based on a lot of date. This illustrates the principle of how (other things being equal) larger data sets have increasing influence.
+
+```{r bf_quiz}
+question("What is a Bayes factor??",
+    answer("The relative probability of the data given the alternative to the data given the null.", correct = TRUE),
+    answer("The ratio of the probability of the alternative hypothesis given the data to the probability of the null hypothesis given the data.", message = "This statement describes the posterior odds."),
+    answer("The ratio of the probability of the alternative hypothesis to the probability of the null hypothesis.", message = "This statement describes the prior odds."),
+    answer("Tell me a terrible and possible inappropriate joke about Bayesians.", message = "Q. Why do Bayesians make good proctologists? A. Because they're always looking at the posterior."),
+    correct = "Correct - well done!",
+    random_answer_order = TRUE,
+    allow_retry = T
+  
 )
 ```
 
-We can get bootstrap confidence intervals in **R** by using the `boot` package, which is installed by default. However, you do need to load it before using it if you are working outside of this tutorial environment. The process of getting the bootstrap intervals is - and I'm not going to lie - complicated. You should not feel bad if this section makes no sense whatsoever (but by all means feel a sense of pride if you get through it in one piece).
+## Concluding task
 
-The `boot()` function works in the following way: it takes a bootstrap sample from the data you specify, sends it out to a function (that the user defines) that returns the statistic of interest (in this case the mean), it stores this information and the repeats the process lots of times. The general format of the `boot()` function is:
+The tibble `zhang_female_dat` contains a small random subsample of females from a study that looked at performance on a maths test when the test is taken under the participant's own name, or a fake name. There are two variables:
 
-`boot(data, statistic, R)`
+* **name**: Specifies whether participants completed the test under their own name or a fake name
+* **accuracy**: Accuracy on the maths test (%)
 
-It has other options too, but the three key ones are `data` which specifies the data from which to take bootstrap samples, `statistic` which specifies a function that computes the information you want (e.g., the mean), and `R` which is the number of times you want to repeat the process. So, to get bootstrap samples of the strength data we could specify something like this:
+In the code box, produce some code to:
 
-`boot(jig_dat$strength, statistic, R = 1000)`
+* Produce an error bar plot of the two group means and their confidence intervals
+* Hedges *g* for the difference between mean accuracy scores in the two groups
 
-This specifies that the data from which to take bootstrap samples is `jig_dat$strength` and that we want to repeat the process 1000 times (i.e. use 1000 bootstrap samples). The question is what do we replace `statstic` with. Given we're interested in the mean, you might reasonably think we can replace `statistic` with `mean()` or something. However, we can't do this because the function `mean()` will not return information about *which* bootstrap sample was used. Instead we need to write out own function that will include information about the particular bootstrap sample that is being used to compute the mean. We do this by executing:
-
-`mean_boot <- function(data, index) mean(data[index], na.rm = TRUE)`
-
-This creates a new function called `mean_boot()`. This function takes data and an index value as input `function(data, index)` and it returns the mean of the data with a particular index value after removing missing values `mean(data[index], na.rm = TRUE)`. In the main `boot()` function we would replace `statistic` with this function that we have created:
-
-`boot(jig_dat$strength, mean_boot, R = 1000)`
-
-To sum up, the `boot()` function is going to send data (the bootstrap samples) with an associated index value (from 1 to 1000) to the function called `mean_boot`. For each data set with each index value `mean_boot` will return the mean.
-
-The code box contains these commands. Run the code.
-
-```{r boot_eg, exercise = TRUE}
-mean_boot <- function(data, index) mean(data[index], na.rm = TRUE)
-boot(jig_dat$strength, mean_boot, R = 1000)
+```{r task, exercise = TRUE, exercise.lines = 8}
 
 ```
 
-The output doesn't give us the confidence intervals. Instead we're told the original mean and an estimate of bias. To get the confidence intervals there is one more step, which is to use the `boot.ci()` function, which takes the general form:
-
-`boot.ci(boot.object, conf = 0.95, type = "all")`
-
-There are other options but these ones are the main ones. First you input an object created with the `boot()` function, then specify the width of confidence interval that you want (the default is 0.95 so can leave this option out if that's what you want), and the type that you want. By default it will compute 5 different types of interval. For most purposes you don't need five different intervals so it would be best to change this option to specify a particular type. There's much to recommend Bias Corrected and Accelerated intervals (`type = "bca"`) or if those fail then a percentile interval (`type  = "perc"`).
-
-The code box below combines what we have learnt. First it creates the function to get the mean. The second line inserts our `boot()` function into the `boot.ci()` function and asked for BCa confidence intervals. Run the code.
-
-```{r boot_ci, exercise = TRUE, exercise.lines = 6}
-mean_boot <- function(data, index) mean(data[index], na.rm = TRUE)
-boot.ci(boot(jig_dat$strength, mean_boot, R = 1000), type = "bca")
-```
-
-There is too much output to embed into a summarize function. We want to discard everything except for the numeric values that represent the lower and upper bound of the confidence interval. These values are stored in a variable called *bca* within the `boot.ci()` object. (Obviously if you chose a type of interval other than bca, the variable name will be different; for example, if you opted for `type = "Perc"` then the variable will be called **perc**). Like any variable, we can access it using `$`. For example, to see the information relating to the BCa confidence intervals we could execute:
-
-`boot.ci(boot(jig_dat$strength, mean_boot, R = 1000), type = "bca")$bca`
-
-Try it in the code box above and you'll see 5 values appear.Values 4 and 5 are the lower and upper limits of the interval. We can access these specific values using:
-
-`boot.ci(boot(jig_dat$strength, mean_boot, R = 1000), type = "bca")$bca[4]`
-`boot.ci(boot(jig_dat$strength, mean_boot, R = 1000), type = "bca")$bca[5]`
-
-Try these commands in the code box above. We can include these lines in the summarize function of the pipe that we used at the start of the tutorial. Remember that we can drop the `jig_dat$` from the command because that tibble is specified earlier in the pipe. The code box below shows the commands.
-
-
-```{r boot_ci_sum, exercise = TRUE}
-mean_boot <- function(data, index) mean(data[index], na.rm = TRUE)
-strength_mean <-
-  jig_dat %>%
-  group_by(employee, sex) %>%
-  summarize(
-    mean_strength = mean(strength),
-    ci_low_boot = boot.ci(boot(strength, mean_boot, R = 1000), type = "bca")$bca[4],
-    ci_upp_boot = boot.ci(boot(strength, mean_boot, R = 1000), type = "bca")$bca[5]
-    )
-strength_mean
-```
-
-Run this code and you should see that it creates a tibble with the means, the lower limit of the 95% bootstrap confidence interval for the mean (`ci_low_boot`) and the upper limit of the 95% bootstrap confidence interval for the mean (`ci_upp_boot`) split b all combinations of **employee** and **sex**.
-
-## Plotting bootstrap confidence intervals
-
-The last section was, I imagine, not the most fun that you have ever had. I expect you are dreading the added complexity of plotting these bootstrap intervals. Well, fear not. Earlier on we plotted this graph:
-
-```{r plot_boot, exercise = TRUE, eval = TRUE}
-strength_plot <- ggplot(jig_dat, aes(employee, strength, colour = sex))
-strength_plot +
-  stat_summary(fun.data = "mean_cl_normal", geom = "pointrange", position = position_dodge(width = 0.9)) +
-  labs(x = "Employee status", y = "Maximal push force (n)", colour = "Biological sex") +
-  coord_cartesian(ylim = c(1000, 1800)) +
-  scale_y_continuous(breaks = seq(1000, 1800, 100)) +
-  scale_colour_manual(values = c("#56B4E9", "#E69F00")) +
+```{r task-solution}
+zhang_plot <- ggplot(zhang_female_dat, aes(name, accuracy))
+zhang_plot +
+  stat_summary(fun.data = "mean_cl_normal", size = 1) +
+  coord_cartesian(ylim = c(0,100)) + 
+  scale_y_continuous(breaks = seq(0, 100, 10)) +
+  labs(x = "Experimental condition", y = "Accuracy on maths test (%)") +
   theme_bw()
+
+#Either of these two will work to get g:
+zhang_female_dat %>%
+  cohen.d(formula = accuracy ~ name, data = ., hedges.correction = T)
+
+cohen.d(formula = accuracy ~ name, data = zhang_female_dat, hedges.correction = T)
+
+#Either of these two will work to get a Bayes factor:
+
+zhang_female_dat %>%
+  data.frame %>%
+  ttestBF(formula = accuracy ~ name, data = .)
+
+ttestBF(formula = accuracy ~ name, data = data.frame(zhang_female_dat))
 ```
 
-To convert these confidence intervals to bootstrap confidence intervals requires only one change to the command:
-
-* In the `stat_summary()` function change `mean_cl_normal` to `mean_cl_boot`.
-
-It's a simple as that. Make the change in the code box above and re-run the code to observe the change on the plot.
 
 ## Other resources
 

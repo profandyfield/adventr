@@ -4,7 +4,7 @@
 \name{jig_dat}
 \alias{jig_dat}
 \title{JIG:SAW employee data.}
-\format{A data frame with 240 rows and 7 variables:
+\format{A tibble with 240 rows and 7 variables:
 \describe{
   \item{id}{employee ID}
   \item{employee}{whether or not the employee works for JIG:SAW}
@@ -22,6 +22,6 @@ jig_dat
 }
 \description{
 A dataset containing information about the characteristics of different groups of employees within
-the corporation called JIG:SAW and non-employees
+the corporation called JIG:SAW and non-employees. It is taken from Chapter 5 of Field, A. P. (2016). An adventure in statistics: the reality enigma. London: Sage.
 }
 \keyword{datasets}

@@ -4,7 +4,7 @@
 \name{ha_dat}
 \alias{ha_dat}
 \title{Subset of Ha et al. (2010) data}
-\format{A data frame with 20 rows and 13 variables:
+\format{A tibble with 20 rows and 13 variables:
 \describe{
   \item{id}{Participant ID}
   \item{age}{Age of the participant, years}
@@ -30,6 +30,7 @@ ha_dat
 A dataset containing a random sample of 20 female participants from Ha, T.,
 Overbeek, G., & Engels, R. C. M. E. (2010). Effects of Attractiveness and
 Social Status on Dating Desire in Heterosexual Adolescents: An Experimental
-Study. Archives of Sexual Behavior, 39(5), 1063-1071. doi: 10.1007/s10508-009-9561-z
+Study. Archives of Sexual Behavior, 39(5), 1063-1071. doi: 10.1007/s10508-009-9561-z.
+It is usedin Chapter 3 of Field, A. P. (2016). An adventure in statistics: the reality enigma. London: Sage.
 }
 \keyword{datasets}

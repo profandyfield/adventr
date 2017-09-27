@@ -4,7 +4,7 @@
 \name{ras_dat}
 \alias{ras_dat}
 \title{Alice's RAS scores}
-\format{A data frame with 10 rows and 2 variables:
+\format{A tibble with 10 rows and 2 variables:
 \describe{
   \item{week}{The week in which the rating was given}
   \item{rating}{Alice's score on the relaationship assessment scale}
@@ -17,6 +17,6 @@ ras_dat
 }
 \description{
 A dataset containing Alice's ratings on the Relationship Assessment Scale (RAS)
-over 10 weeks
+over 10 weeks. It is taken from Chapter 4 of Field, A. P. (2016). An adventure in statistics: the reality enigma. London: Sage.
 }
 \keyword{datasets}

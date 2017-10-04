@@ -9,6 +9,7 @@ bibliography: adventr_bib.bib
 ---
 
 ```{r setup, include=FALSE}
+library(forcats)
 library(learnr)
 library(RefManageR)
 library(tidyverse)
@@ -73,7 +74,8 @@ colFmt = function(x,color){
 #If command tries to work out whether the code is running online (rather than a package). If online it loads the data from external source, otherwise it'll have the data anyway from the package
 
 if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
-    ha_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_c03_ha.csv")
+    ha_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_c03_ha.csv");
+    ha_dat$sex <- forcats::as_factor(ha_dat$sex)
     } else{
       ha_dat <- adventr::ha_dat
     }

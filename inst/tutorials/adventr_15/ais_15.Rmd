@@ -1,0 +1,678 @@
+---
+title: "AAiR: The GLM"
+author: "Andy Field"
+output:
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+bibliography: adventr_bib.bib
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(RefManageR)
+library(tidyverse)
+library(BayesFactor)
+library(boot)
+library(GGally)
+library(lm.beta)
+library(robust)
+library(sjstats)
+
+
+
+knitr::opts_chunk$set(echo = FALSE)
+tutorial_options(exercise.cap = "Exercise")
+
+cbBlack<-"#000000"
+cbGrey<-"#999999"
+cbOrange<-"#E69F00"
+cbBlue<-"#56B4E9"
+cbGreen<-"#009E73"
+cbYellow<-"#F0E442"
+cbBlueDark<-"#0072B2"
+cbOrangeDark<-"#D55E00"
+cbPink<-"#CC79A7"
+cbRed<-"#DF4738"
+
+andy.theme <- function(base_size = 12, base_family = "") {
+  # Starts with theme_grey and then modify some parts
+  theme_grey(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.2)),
+      axis.title.y        = element_text(margin = margin(0, 10, 0, 0), angle = 90),
+      axis.title.x        = element_text(margin = margin(10, 0, 0, 0)),
+      axis.text           = element_text(size = rel(0.75), colour = "grey35"),
+      axis.text.x         = element_text(margin = margin(2, 0, 0, 0)),
+      axis.text.y         = element_text(margin = margin(0, 2, 0, 0)),
+      axis.ticks        = element_line(colour = "grey35"),
+      legend.key        = element_rect(colour = "white"),
+      panel.background  = element_rect(fill = "white", colour = NA),
+      panel.border      = element_rect(fill = NA, colour = "grey50"),
+      panel.grid.major  = element_line(colour = "grey90", size = 0.2),
+      panel.grid.minor  = element_line(colour = "grey98", size = 0.5),
+      strip.background  = element_rect(fill = "grey80", colour = "grey50"),
+      strip.text  = element_text(size = rel(1.4))
+    )
+}
+
+andy.dsus <- function(base_size = 12, base_family = "") {
+  andy.theme(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.6)),
+      axis.text           = element_text(size = rel(1.3), colour = "grey35"),
+      strip.background = element_rect(fill = cbBlueDark, colour = "white"),
+      strip.text  = element_text(size = rel(1.3), colour = "white")
+    )
+}
+
+colFmt = function(x,color){
+  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
+  if(outputFormat == 'latex')
+    paste("\\textcolor{",color,"}{",x,"}",sep="")
+  else if(outputFormat == 'html')
+    paste("<font color='",color,"'>",x,"</font>",sep="")
+  else
+    x
+}
+
+#Read dat files needed for the tutorial
+
+#If command tries to work out whether the code is running online (rather than a package). If online it loads the data from external source, otherwise it'll have the data anyway from the package
+
+if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
+    garlic_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_14_zombie_garlic.csv");
+    taser_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_14_zombie_taser.csv")
+    } else {
+    garlic_dat <- adventr::garlic_dat;
+    taser_dat <- adventr::taser_dat
+    }
+
+#setup objects for code blocks
+
+
+```
+
+# An Adventure in R: The General Linear Model (GLM)
+
+## Overview
+
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+
+* Who is the tutorial aimed at?
+    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+* What is covered?
+    - This tutorial looks at how to fit a linear model with one and more predictor variables. We look at robust variants of the model, and computing a Bayes factor. It would be a useful tutorial to run alongside teaching based on Chapter 14 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
+    - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
+    - The aim of this tutorial is to augment the theory that you already know by guiding you through fitting linear models using **R** and **RStudio** and asking you questions to test your knowledge along the way.
+    
+
+## Story précis
+
+### Why a précis?
+
+Because these tutorials accompany my book *An adventure in statistics*, which uses a fictional narrative to teach the statistics, some of the examples might not make sense unless you know something about the story. For those of you who don't have the book I begin each tutorial with a précis of the story. If you're not interested then fair enough - click past this section.
+
+### General context for the story
+
+It is the future. Zach, a rock musician and Alice, a geneticist, who have been together since high school live together in Elpis, the ‘City of Hope’.
+
+Zach and Alice were born in the wake of the Reality Revolution which occurred after a Professor Milton Gray invented the Reality Prism – a transparent pyramid worn on the head – that brought honesty to the world. Propaganda and media spin became unsustainable, religions collapsed, advertising failed. Society could no longer be lied to. Everyone could know the truth about anything that they could look at. A gift, some said, to a previously self-interested, self-obsessed society in which the collective good had been eroded. 
+
+But also a curse. For, it soon became apparent that through this Reality Prism, people could no longer kid themselves about their own puffed-up selves as they could see what they were really like – by and large, pretty ordinary. And this caused mass depression. People lost faith in themselves. Artists abandoned their pursuits, believing they were untalented and worthless. 
+
+Zach and Alice have never worn a Reality Prism and have no concept of their limitations. They were born after the World Governance Agency (WGA) destroyed all Reality Prisms, along with many other pre-revolution technologies, with the aim of restoring community and well-being. However, this has not been straightforward and in this post-Prism world, society has split into pretty much two factions
+
+* The Chippers who have had WiFi-enabled chips implanted into their brains, enabling them to record and broadcast what they see and think in real time; upload memories for future generations into a newly-created memoryBank and live-stream music and films directly into their brains. 
+* The Clocktarians, followers of the old pre-Prism ways who use steam punk style technologies, who have elected not to have chips in their brains, regarded by the Chippers as backward-looking stuck in a ‘clockwork, Victorian society’. 
+
+Everyone has a star, a limitless space on which to store their digital world.
+
+Zach and Alice are Clocktarians. Their technology consists mainly of:
+
+* A Proteus, a device made from programmable matter that can transform shape and function simply by the owners’ wishes. Zach calls his a diePad, in the shape of a tombstone in an ironic reference to an over-reliance on technology at the expense of memory. 
+* A Reality Checker, a clockwork mechanism that, at the point of critical velocity, projects an opaque human head that is linked to everything and can tell you anything. Every head has a personality and Zach’s is a handsome, laid back ‘dude’ who is like an electronic friend, who answers questions if he feels like it and often winds Zach up by giving him false information. And he often flirts with Alice.
+
+### Main Protagonists
+
+* Zach
+    - Rock musician in band called The Reality Enigma.
+    - Spellbinding performer, has huge fan-base.
+    - Only people living in Elpis get to see The Reality Enigma in the flesh. Otherwise all performances are done via an oculus riff, a multisensory headset for experiencing virtual gigs.
+    - Zach’s music has influenced and changed thousands of lives. 
+    - Wishes he had lived pre-Revolutionary times, the turn of the 21st Century, a golden age for music when bands performed in reality at festivals.
+    - Kind, gentle and self-doubting.
+    - Believes science and maths are dull and uninspiring. Creates a problem between him and Alice as she thinks that because he isn’t interested in science, he isn’t interested in her. Leads to lots of misunderstandings between them. 
+* Alice
+    - Shy, lonely, academically-gifted – estranged from the social world until she met Zach in the college library. 
+    - Serious scientist, works at the Beimeni Centre of Genetics. 
+    - At 21, won the World Science Federation’s Einstein Medal for her genetics research
+    - Desperately wants Zach to get over his fear of science so he can open his mind to the beauty of it.
+
+### How Zach's adventure begins
+
+Alice has been acting strangely, on edge for weeks, disconnected and uncommunicative, as if she is hiding something and Zach can’t get through to her. Arriving home from band practice, unusually, she already home and listening to an old album that the two of them enjoyed together, back in a simpler, less complicated time in their relationship. During an increasingly testy evening, that involves a discussion with the Head about whether or not a Proteus causes brain cancer, Alice is interrupted by an urgent call which she takes in private. She returns looking worried and is once again, distracted. She tells Zach that she has ‘a big decision to make’. Before going to bed, Zach asks her if he can help with the decision but she says he ‘already has’, thanking him for making ‘everything easier.’ He has no idea what she means and goes to sleep, uneasy.
+
+On waking, Zach senses that something is wrong. And he is right. Alice has disappeared. Her clothes, her possessions and every photo of them together have gone. He can’t get hold of any of her family or friends as their contact information is stored on her Proteus, not on his diePad. He manages to contact the Beimeni Centre but is told that no one by the name of Alice Nightingale has ever worked there. He logs into their constellation but her star has gone.  He calls her but finds that her number never existed. She has, thinks Zach, been ‘wiped from the planet.’ He summons The Head but he can’t find her either. He tells Zach that there are three possibilities: Alice has doesn’t want to be found, someone else doesn’t want her to be found or she never existed. 
+
+Zach calls his friend Nick, fellow band member and fan of the WGA-installed Repositories, vast underground repositories of actual film, books, art and music. Nick is a Chipper – solely for the purpose of promoting the band using memoryBank – and he puts the word out to their fans about Alice missing. 
+
+Thinking as hard as he can, Zach recalls the lyrics of the song she’d been playing the previous evening. Maybe they are significant? It may well be a farewell message and the Head is right. In searching for clues, he comes across a ‘memory stone’ which tells him to read what’s on there. File 1 is a research paper that Zach can’t fathom. It’s written in the ‘language of science’ and the Head offers to help Zach translate it and tells him that it looks like the results of her current work were ‘gonna blow the world’. Zach resolves to do ‘something sensible’ with the report.  
+
+Zach doesn’t want to believe that Alice has simply just left him. Rather, that someone has taken her and tried to erase her from the world. He decides to find her therapist, Dr Murali Genari and get Alice’s file. As he breaks into his office, Dr Genari comes up behind him and demands to know what he is doing. He is shaking but not with rage – with fear of Zach. Dr Genari turns out to be friendly and invites Zach to talk to him. Together they explore the possibilities of where Alice might have gone and the likelihood, rating her relationship satisfaction, that she has left him. During their discussion Zach is interrupted by a message on his diePad from someone called Milton. Zach is baffled as to who he is and how he knows that he is currently discussing reverse scoring. Out of the corner of his eye, he spots a ginger cat jumping down from the window ledge outside. The counsellor has to go but suggests that Zach and ‘his new friend Milton’ could try and work things out.
+
+## Packages and data
+### Packages
+
+This tutorial uses the following packages:
+
+* `BayesFactor` [@RN9444] to compute Bayes factors
+* `boot` [@RN11409] to compute bootstrap confidence intervals.
+* `GGally` [@RN11410] to produce a matrix scatterplot
+* `lm.beta` [@RN11412] to compute standardized *b*-values
+* `robust` [@RN11411] to compute robust estimates
+* `sjstats` [@RN11413] to produce robust parameter estimates and confidence intervals
+* `tidyverse` [@RN11407] for general data processing
+
+These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in **RStudio**) then you need to make sure that the package has been installed by executing `install.packages("package_name")`, where *package_name* is the name of the package. If the package is already installed, then you need to reference it in your current session by executing `library(package_name)`, where *package_name* is the name of the package.
+
+### Data
+
+This tutorial has the data files pre-loaded so you shouldn't need to do anything to access the data from within the tutorial. However, if you want to play around with what you have learnt in this tutorial outside of the tutorial environment (i.e. in a stand-alone **RStudio** session) you will need to download the data files and then read them into your **R** session. This tutorial uses the following file:
+
+* [ais_14_zombie_garlic.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_14_zombie_garlic.csv).
+* [ais_14_zombie_taser.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_14_zombie_taser.csv).
+
+
+You can load the files in several way (using the first file as an example):
+
+* Assuming that you save this file into the working directory, you can load it by executing:
+    - `garlic_dat <- read_csv("ais_14_zombie_garlic.csv")`
+    - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
+* To load the file using a standard dialogue box to navigate your file system, execute:
+    - `garlic_dat <- read_csv(file.choose())`
+* You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
+    - `garlic_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_14_zombie_garlic.csv")`
+    - This method relies on an internet connection (and my server having not exploded!)
+
+
+## Zombies! A model with one predictor
+### The model
+
+Zach breaks into the JIG:SAW complex again in a desperate final bid to find Alice and have her explain why she disappeared. Knowing that the complex is guarded by zombie security he scours the internet to find ways to repel zombies. He finds data claiming that garlic will repel zombies. Milton is skeptical and decides to get him to fit a model to the data he's gathered. Zach's data are in the tibble `garlic_dat`, which has three variables:
+
+* **id**: victim ID
+* **latency**: The time taken for a zombie to approach the victim in seconds
+* **garlic**: The number of bulbs of garlic worn by the victim
+
+The model we're fitting is described by the following equation:
+
+$$
+\begin{aligned}
+Y_i & = b_0 + b_1X_i+ ε_i\\
+\text{latency}_i & = b_0 + b_1\text{garlic}_i+ ε_i
+\end{aligned}
+$$
+
+### Plotting the data
+
+Let's plot the data. Use the code box below to create a scatterplot with **latency** on the *y*-axis and **garlic** on the *x*-axis. Superimpose the line of best fit.
+
+```{r scat, exercise = TRUE, exercise.lines = 6}
+     
+               
+```
+
+```{r scat-solution}
+scat <- ggplot(garlic_dat, aes(garlic, latency))
+scat +
+  geom_point(colour = "#56B4E9", size = 3) +
+  geom_smooth(method = "lm", colour = "#E69F00", fill = "#E69F00") +
+  labs(x = "Number of bulbs of garlic", y = "Latency to approach (seconds)") +
+  scale_x_continuous(breaks = 0:15) + 
+  theme_bw()
+```
+
+
+### Fitting the model
+
+It should be clear that a positive relationship exists: the more bulbs of garlic worn, the longer the zombies took to approach. The scatterplot shows the linear model that we are about to fit. To fit the model we use the function `lm()` which stands for 'linear model'. The function takes the following general form (I've retained only the key options):
+
+`lm(outcome ~ predictor(s), data, subset, na.action = na.fail)`
+
+Let's look at these arguments in turn:
+
+* `outcome ~ predictor(s)`: the way we specify the model is basically to write out the model equation but ignoring the *b* values and using a tilde (~) instead of =. For example, if we want the model to predict **latency** from the variable **garlic** we write the model as `latency ~ garlic`. If, say, we had a second predictor, the time since zombification occurred (**age**), then we could fit this model by specifying `latency ~ garlic + age`. So, the model specification maps onto the equation describing the model we're fitting.
+* `data`: you use this argument to specify the tibble containing the data (e.g., `data = garlic_dat`). If you're using `lm()` within a pipe where you've previously input a tibble then remember you use `data = .`
+* `subset`: this argument allows you to specify a condition by which you subset data (a bit like you might use in the `filter()` function). For example, if you want to include only zombies younger than 10 years you could set `subset = age < 10`. Of course, you can also achieve the same thing using a pipe (`garlic_dat %>% filter(age < 10) %>% lm(latency ~ garlic, data = .)`)
+* `na.action`: this option determines how to treat missing values. By default it is set to `na.fail` which means that the model fails (it is not fit). If you have missing values then set this option to `na.omit` which removes cases, or `na.exclude` which excluded cases from the model (but does not remove them). The distinction may not be clear, so here's an example. Imagine you have a tibble with 100 cases, but 10 have missing values on either the predictor or outcome. You want to save the residuals (or predicted values) from the model into the original tibble. If you use `na.omit` this won't work because it will delete the 10 cases and fit the model to the remaining 90. Therefore, you'll have 100 cases in the tibble but only 90 residuals from the model. If you use `na.exclude` it will work because the cases are excluded but not deleted. The model is fit to 90 cases but any outputs from the model are padded with 'NA' for cases with missing values. So you'll have 100 cases in the original tibble and 100 residuals (including 10 NAs) and the two can be combined into a single tibble.
+
+We could fit our model by executing: `lm(latency ~ garlic, data = garlic_dat)` but if you do the function will return only the *b*-values. For a more informative output we enclose the function within the `summary()` function. Best practice is to create an object that contains the model, and then summarize this object. This approach has the advantage that you can extract information from the model by referring to the object that you created. For example, if you want plots relating to the model, you can execute `plot(model_name)` in which `model_name` is the name you gave to the model (more on plots later ...). For example, we could use this code:
+
+```{r echo = T, eval = F}
+garlic_mod <- lm(latency ~ garlic, data = garlic_dat)
+summary(garlic_mod)
+```
+
+The first line creates an object called `garlic_mod` that contains our linear model and the second line prints a summary of this model. Use the code box to create the model, print a summary of it, and print plots by using the three lines of code discussed above.
+
+```{r lm1, exercise = TRUE}
+     
+               
+```
+
+```{r lm1-solution}
+garlic_mod <- lm(latency ~ garlic, data = garlic_dat)
+summary(garlic_mod)
+```
+
+Use the output to answer these questions:
+
+```{r quiz_r2_ex1}
+quiz(
+  question(sprintf("What does the value of *Multiple R-squared* in the output tell us?"),
+    answer("48.35% of the variation in latency scores cannot be accounted for by the amount of garlic worn"),
+    answer("The amount of garlic worn accounts for 0.4835% of the variation in latency scores", message = sprintf("You need to multiply $R^2$ by 100 to convert it to a percentage")),
+    answer("The amount of garlic worn accounts for 48.35% of the variation in latency scores", correct = TRUE),
+    answer("The amount of garlic worn and latency scores have a correlation of 0.4835", message = sprintf("With one predictor in the model (as is the case here) this would be true of *R* not $R^2$")),
+    correct = "Correct - well done!",
+    random_answer_order = TRUE,
+    allow_retry = T
+  ),
+  question(sprintf("How might we interpret the *F-statistic* and *p-value* in the output (assume $\\alpha = 0.05$)?"),
+    answer("The linear model accounts for a significant amount of the variance in latency scores", correct = T, message = "Because the *p*-value associated with *F* is less than 0.05 most people would conclude that the model makes a significant improvement to predicting latency scores."),
+    answer("The linear model is a poor fit of the data", message = "Because the *p*-value associated with *F* is less than 0.05 most people would conclude that the model was a *significant* fit of the data"),
+    answer("The error in the model is greater than the variance in latency scores that it explains", message = sprintf("The *F*-statistic is $\\frac{\\text{MS}_\\text{model}}{\\text{MS}_\\text{residual}}$ so if this statement were true *F* would be less than 1 and *p* would be greater than 0.05.")),
+    correct = "Correct - well done!",
+    random_answer_order = TRUE,
+    allow_retry = T
+  )
+)
+
+```
+
+The output provides estimates of the model parameters (the *b*-values) and the significance of these values. The *Y* intercept ($b_0$) is 15.62. This value can be interpreted as meaning that when no garlic was worn (when *X* = 0), the model predicts that zombies would take 15.62 seconds to approach. The value of $b_1$ is 0.75. This value represents the change in the outcome associated with a unit change in the predictor. In other words, for every extra bulb of garlic that is worn, our model predicts that zombies will take 0.75 additional seconds to approach.
+
+If a predictor is having a significant impact on our ability to predict the outcome then its *b* should be different from 0 (and large relative to its standard error). The *t*-test and associated *p*-value tell us whether the *b*-value is significantly different from 0. The column *Pr(>|t|)* contains the exact probability that a value of *t* at least as big as the one in the output would occur if the value of *b* in the population were zero. If this probability is less than 0.05, then people interpret that as the predictor being a ‘significant’ predictor of the outcome. The *t* for $b_0$ has a *p*-value given as 4.95e-05, which translates as $4.95 \times 10^{-5}$ or 0.0000495. For $b_1$ *p* is 0.0256. As such, for each *t*-value, the probability that value (or larger) occurring if the corresponding *b* in the population were zero is less than 0.05. In other words, the *b*s are significantly different from 0. In the case of the *b* for garlic, this result means that the amount of garlic worn makes a significant contribution (*p* = 0.026) to predicting the latency to approach. It's worth mentioning that even though this value is significantly different from 0, the value of *b* itself (0.75) tells us that in real terms you'd have to wear an awful lot of garlic to delay zombies for a length of time that was practically useful.
+
+### Model diagnostics
+
+We can explore the assumptions of the model using the `plot()` function, which produces a series of diagnostic plots. All we need to do is put our model name into this function and execute it:
+
+```{r echo = T, eval = F}
+plot(garlic_mod)
+```
+
+When you run the `plot()` function from within **RStudio** it will display a single plot in the plots pane with an instruction to hit return to see the next plot. Once you've seen the plots you can scroll through them in the plots pane using ![](./images/arrow_l.png)  and ![](./images/arrow_r.png). If you want to plot a specific plot you can add the argument `which = ` and a number. If you don't specify `which` then these are the four plots you'll get (and I've indicated the value of which that corresponds to them in case you want to print the plot in isolation):
+
+* `plot(garlic_mod, which = 1)`: returns a plot of the predicted values against the raw residuals (interpret as you would a plot of zresid vs zpred). You want to see a random pattern of dots with no funneling and no non-linear patterns.
+* `plot(garlic_mod, which = 2)`: returns a Q-Q plot of the standardized residuals. You want the dots to fall along the diagonal line.
+* `plot(garlic_mod, which = 3)`: returns a plot of the predicted values against the square root of the standardized residuals. Interpret this plot as you would a plot of zresid vs zpred. In essence you want to see a random pattern of dots, and the red line should be roughly flat. If you see funneling and the red line shows an upwards or downward trend then you have heteroscedasticity.
+* `plot(garlic_mod, which = 5)`: returns a plot of the leverage value against the standardized residual. This plot is good for identifying cases with large values of Cook's distance because it superimposes red lines for values of Cook's distance of 0.5 and 1. Any cases falling outside the red boundary that shows a Cook's distance of 1 are likely to be influential cases.
+
+For the current example it's quite hard to interpret the plots because the sample size is so small, so we'll return to these plots in the next example.
+
+
+### Using the model	
+
+Let's use the model to make some predictions. First, replace the *b*-values with the values from the output:
+
+$$
+\begin{aligned}
+\text{latency}_i & = b_0 + b_1\text{garlic}_i+ ε_i \\
+ & = 15.62 + (0.75\times\text{garlic}_i)+ ε_i \\
+\end{aligned}
+$$
+
+It is now possible to make a prediction about latency to approach, by replacing garlic with a value of interest. For example, in the book Milton predicts how long a zombie will be repelled for based on wearing 10 bulbs of garlic:
+
+$$
+\begin{aligned}
+\text{latency}_i & = 15.62 + (0.75\times\text{garlic}_i)+ ε_i \\
+ & = 15.62 + (0.75\times \text{10})+ ε_i \\
+&= 23.12
+\end{aligned}
+$$
+
+## More Zombies! A model with two predictors
+### The model
+
+Zach's garlic plan doesn't go so well: as they enter the JIG:SAW complex they are instantly confronted by a zombie horde. Escaping by the skin of their teeth they hide out in one of the buildings, where they meet a strange, deformed creature who calls himself Clint. Knowing that Alice is likely to be found in one of the research buildings they need to hatch a plan to get across the concourse before being killed by the congregating zombies. After a little research they decide that repetitive transcranial magnetic stimulation (rTMS) and a blast from a taser are likely candidates for good weaponry against zombies. Having obtained some data, Milton fits a model to predict the duration of zombie immobility (**immobility**) from the frequency at which the rTMS is delivered in Hz (**r_tms**) and the strength of the taser in kV (**taser**). The data are in `taser_dat`. The model we're fitting is described by the following equation:
+
+$$
+\begin{aligned}
+Y_i & = b_0 + b_1X_{1i}+ b_2X_{2i} + \ldots + b_nX_{ni} + ε_i\\
+\text{immobility}_i & = b_0 + b_1\text{rTMS}_i+ b_2\text{Taser}_i + ε_i
+\end{aligned}
+$$
+
+### Plotting the data
+
+We can use the `ggpairs()` function from the `GGally` package to plot a matrix of scatterplots between our variables. This package extends the functionality of `ggplot2`. To plot the matrix of scatterplots we'll use the following pipe:
+
+```{r echo = T, eval = F}
+taser_dat %>%
+  select(-id) %>%
+  ggpairs()
+```
+
+This pipe take the `taser_dat` tibble and then uses the `select()` function to drop the variable *id* (placing a minus sign before the variable name removes it from the tibble). Finally we apply `ggpairs()` with all the options set to their defaults. Try this in the code box below, you should get a matrix showing scatterplots between all three variables in the lower portion, and values of the correlation coefficient for each pair of variables in the top half.
+
+```{r ggpair_eg, exercise = TRUE}
+     
+               
+```
+
+```{r ggpair_eg-solution}
+taser_dat %>%
+  select(-id) %>%
+  ggpairs()
+```
+
+rTMS has a negative relationship with immobility and taser a positive one. There aren't any obvious outliers on these plots.
+
+### Fitting the model
+
+We can fit the model using the same commands as we used for the garlic model. Remember, that we specify the model by writing it out (but without the *b*s). See if you can adapt the code from the previous example to create an object called `taser_mod` that predicts the variable **immobility** from the variables **r_tms** and **taser**. Summarize and plot the model. If you get stuck click ![](./images/solution.png).
+
+```{r taser_mod, exercise = TRUE}
+     
+               
+```
+
+```{r taser_mod-solution}
+taser_mod <- lm(immobility ~ r_tms + taser, data = taser_dat)
+summary(taser_mod)
+```
+
+The *F*-statistic is 17.62, *p* < 0.001 suggesting that the model overall 'significantly' improves our ability to predict immobility (compared to a model with no predictors). The $R^2$ of 0.1872 tells us that 18.7% of the variance in immobility times can be accounted for by taser output and rTMS frequency. This is quite a lot, but it is worth considering that this still leaves 81.3% that is unexplained.
+
+The *b*-values tell us to what degree each predictor affects the outcome if the effects of all other predictors are held constant. For rTMS the *b* is -0.251, which means that as rTMS frequency decreases by one unit (Hz), zombies will be immobilized for an extra 0.251 seconds. This interpretation is true only if the effect of taser is held constant.
+
+```{r quiz_b_ex2}
+  question("How would we interpret the *Estimate* (0.342) for taser?",
+    answer("As the taser voltage increases by one unit (kV), zombies will be immobilized for an extra 0.342 seconds, assuming that the effect of rTMS is constant", correct = T),
+    answer("As the taser voltage increases by one standard deviation (kV), zombies will be immobilized for an extra 0.342 of a standard deviation, assuming that the effect of rTMS is constant", message = "This describes the *standardized* B, not the *unstandardized"),
+    answer("Taser voltage explains 34.2% of the variance in immobility", message = sprintf("This would be what $R^2$ tells us")),
+    correct = "Correct - well done!",
+    random_answer_order = TRUE,
+    allow_retry = T
+  )
+```
+
+We can replace these *b*-values into the model:
+
+$$
+\begin{aligned}
+\text{immobility}_i &= b_0 + b_1\text{rTMS}_i+ b_2\text{Taser}_i + ε_i \\
+&= 6.38 -0.251\text{rTMS}_i+ 0.342\text{Taser}_i + ε_i
+\end{aligned}
+$$
+
+### Standardized *b*s
+
+It's sometimes useful to standardize the model parameters. We can add these to the model using the `lm.beta()` function from the package of the same name. All we need to do is to put the object (`taser_mod`) that we created with the `lm()` function into `lm.beta()` and it will add the standardized coefficients. We can use these two lines of code:
+
+```{r echo = T, eval = F}
+taser_mod <- std_beta(taser_mod)
+summary(taser_mod)
+```
+
+The first line re-creates the object `taser_mod` by placing it into the `lm.beta()` function. (You don't have to give the object the same name, I just think it makes sense because all we're doing is adding standardized *b*s to the output.) The second line prints a summary of this new model. It will be the same as we have seen before except that a column of standardized *b*s has been added. Try running these two lines of code in the box.
+
+```{r ztaser_mod-setup}
+taser_mod <- lm(immobility ~ r_tms + taser, data = taser_dat)
+```
+
+```{r ztaser_mod, exercise = TRUE}
+     
+               
+```
+
+```{r ztaser_mod-solution}
+taser_mod <- lm.beta(taser_mod)
+summary(taser_mod)
+```
+
+```{r quiz_zb}
+  question("How would we interpret the *Standardized b* (-0.384) for **r_tms**?",
+    answer("As the rTMS frequency decreases by 1 standard deviation, zombies are immobilized by an additional 0.384 of a standard deviation", correct = T),
+    answer("As the rTMS frequency increases by 1 Hz, zombies are immobilized by an additional 0.384 seconds"),
+    answer("As the rTMS frequency decreases by 1 Hz, zombies are immobilized by an additional 0.384 seconds", message = "This describes the *unstandardized* B, not the *standardized*"),
+    answer("The correlation rTMS frequency and immobility is -0.384", message = "This would be true if rTMS were the only predictor, but because there are other predictors in the model this is not the case."),
+    correct = "Correct - well done!",
+    random_answer_order = TRUE,
+    allow_retry = T
+    )
+```
+
+The standardized beta for taser tells us that as taser voltage increases by one standard deviation, zombie immobility increases by 0.214 of a standard deviation. Because these *b*s are standardized we can look at the relative size of them and see that the effect of rTMS was slightly stronger than the effect of taser (because the magnitude of the standardized beta is greater).
+
+### Confidence intervals
+
+To get confidence intervals for the *b*-values we place the model into the `confint()` function and execute (in our case we could execute `confint(taser_mod)`). Try this in the code box.
+
+```{r taser_mod_ci, exercise = TRUE, exercise.setup = "ztaser_mod-setup"}
+     
+               
+```
+
+```{r taser_mod_ci-solution}
+confint(taser_mod)
+```
+
+```{r quiz_ci_taser}
+  question(sprintf("The confidence interval for taser ranges from 0.11 to 0.57. What does this tell us?"),
+    answer("If this confidence interval is one of the 95% that contains the population value then the population value of *b* lies between 0.11 to 0.57.", correct = TRUE),
+    answer("There is a 95% chance that the population value of *b* lies between 0.11 and 0.57", message = "You cannot make probability statements from a confidence interval. We don't know whether this particular CI is one of the 95% that contains the population value of *b*."),
+    answer("The probability of this confidence interval containing the population value is 0.95.", message = "The probability of this confidence interval containing the population value is either 0 (it doesn't) or 1 (it does) but it's impossible to know which."),
+    answer("I can be 95% confident that the population value of *b* lies between 0.11 and 0.57", message = "Confidence intervals do not quantify your subjective confidence."),
+    correct = "Correct - well done!",
+    random_answer_order = TRUE,
+    allow_retry = T
+  )
+```
+
+### Model diagnosits
+
+Remember that we can explore the assumptions of the model using the `plot()` function:
+
+```{r echo = T, eval = F}
+plot(taser_mod)
+```
+
+Execute this command in the code box:
+
+```{r taser_mod_plot, exercise = TRUE, exercise.setup = "ztaser_mod-setup"}
+     
+               
+```
+ We'll interpret the four default plots:
+
+* The plot of the predicted values against the raw residuals shows a random pattern of dots with no funneling and no non-linear patterns. The red line is close to flat. Basically it shows no evidence of non-linearity or heteroscedasticity.
+* The Q-Q plot of the standardized residuals shows some deviations from normal at the extremes, which is indicative of heavy tails (too many scores at the extremes).
+* The plot of the predicted values against the square root of the standardized residuals again shows a fairly random scatter of dots and the red line is roughly flat. Therefore, no real concern over heteroscedasticity here. heteroscedasticity.
+* The plot of the leverage value against the standardized residual. Notice that no red lines have been superimposed for values of Cook's distance of 0.5 and 1. This is because all values are well below this. If you're interested try executing `plot(taser_mod, which = 4)` in the code box and you'll see that the largest Cook's distance is only about 0.07 (case 125), which is well below 1. In short, no evidence for influential cases.
+
+## Robust zombies
+
+### Robust estimates
+
+Our model doesn't look like it is biased by heteroscedasticity or influential cases.However, if we had found cause for concern, there are numerous ways to produce robust parameter estimates and confidence intervals. There is a good case to be made for always applying a robust method and checking that the results are consistent with the non-robust model [@RN10588]. There are numerous options (more than I've listed in this section). The first is to use the `lmRob()` function from the `robust` package, which returns *b*-values estimated using robust methods. The function is used in the same way as `lm()` so you can copy your earlier code and replace `lm` with `lmRob`. For example:
+
+```{r echo = T, eval = F}
+taser_rob <- lmRob(immobility ~ r_tms + taser, data = taser_dat)
+summary(taser_rob)
+```
+
+Try this code in the code box:
+
+```{r taser_mod_robust, exercise = TRUE, exercise.setup = "ztaser_mod-setup"}
+  
+               
+```
+
+```{r taser_mod_robust-solution}
+taser_rob <- lmRob(immobility ~ r_tms + taser, data = taser_dat)
+summary(taser_rob)   
+```
+
+
+### Robust standard errors
+
+A second option is to apply one of the methods for producing standard errors (and hence confidence intervals) that are robust to heteroscedasticity. This is particularly useful if the main problem is heteroscedasticity. The `robust()` function from the `sjstats` package will compute these for any model you've created with `lm`. It has the general form:
+
+`robust(lm_mod, vcov = c("HC3", "const", "HC", "HC0", "HC1", "HC2", "HC4", "HC4m", "HC5"), conf.int = FALSE)`
+
+The `lm_mod` is the name of any model created with `lm()`, you use `vcov` to determine which method to use (it defaults to "HC3") and, if you want confidence intervals change the default of `conf.int = FALSE` to be `conf.int = TRUE`
+
+The methods (HC0 to HC5) to estimate standard errors (and, therefore, confidence intervals) are described clearly in [@RN5348]. In short, HC3 have been shown to outperform HC0 to HC2 [@RN11398] but HC4 and HC5 outperform HC3 in some circumstances [@RN11402]. Basically, either use the default of HC3 (by not explicitly specifying `vcov`) or use HC4. Assuming we have already created the model `taser_mod` like we did above, we could get a robust variant of it by executing:
+
+`robust(taser_mod, conf.int = T)` to use the default "HC3" method
+`robust(taser_mod, vcov = "HC4", conf.int = T)` to use "HC4"
+
+Run this code in the box:
+
+```{r taser_mod_hc4, exercise = TRUE, exercise.setup = "ztaser_mod-setup"}
+  
+               
+```
+
+```{r taser_mod_hc4-solution}
+robust(taser_mod, vcov = "HC4", conf.int = T)
+```
+
+
+
+### Bootstrap confidence intervals
+
+In small samples especially bootstrap confidence intervals can be useful as these are robust to distributional assumptions. It's a bit fiddly to get them though! Again, there are different methods, but I'll stick with using `boot` because we've used it before. First we need to write a function that tells **R** what to do with the bootstrap samples that we create. We'd write something like this:
+
+```{r echo = T, eval = F}
+boot_lm <- function(formula, data, index){
+  d <- data[index,]
+  fit <- lm(formula, data = d)
+  coef(fit)
+}
+```
+
+Executing this command creates a function called `boot_lm()`. The first bit of the function tells **R** what input to expect into the function: in this case we need to feed into the function a formula like we’d put into the `lm()` function, data, and a variable that I've called index (which is really just a counter for the bootstrap samples  - so for the first bootstrap sample index will be 1, for the second it will be 2 and so on. Within the function we have three instructions:
+*	`d <- data[index,]`: creates a data frame called **d**, which is the subset of the data entered into the function relating to the value of **index**.
+*	`fit <- lm(formula, data = d)`: This creates a linear model called `fit` using the `lm()` function into which we feed the formula fed into `boot_lm()` and the data created in the line above.
+* `coef(fit)`: This line specifies what our function `boot_lm` returns to us. The function `coef()` is one that extracts the coefficients from a linear model object; therefore, this line means that `boot_lm()` return the intercept and any slope coefficients for predictors in the model.
+
+Having created this function (remember to execute the code), we can use the function to obtain the bootstrap samples like this:
+
+```{r echo = T, eval = F}
+boot_result <- boot(boot_lm, formula = immobility ~ r_tms + taser, data = taser_dat, R = 2000)
+```
+
+Executing this command creates an object called `boot_result` that contains the bootstrap samples. We use the `boot()` function to get these. Within this function we tell it to use the function `boot_lm()` that we just created, and because that function requires a formula and data, we specify the model as we did for the original model (`formula = immobility ~ r_tms + taser`), and name the data (`data = taser_dat`). As such, everything in the `boot()` function is something that we specified as being necessary input for the `boot_lm()` function when we defined it. `R = 2000` sets the number of bootstrap samples to 2000, which means we will throw these instructions into the `boot_lm()` function 2000 different times and save the results in `boot_result` each time.
+
+Finally, we use `boot.ci()` to extract confidence intervals from the bootstrap results that we have saved in `boot_result`. We want bootstrap confidence intervals for the *b*-value for the intercept, **r_tms** and **taser**. Because **R** doesn't know the names of the statistics in `boot_result`, we have to use their location in the `boot_result` object to extract them. The intercept will be the first thing in `boot_result`, and we can access it using `index = 1`, after which predictors will occur in the order we specified them in the formula in `boot_result`. For this example we'd get BCa bootstrap the confidence intervals by executing:
+
+`boot.ci(boot_result, type = "bca", index = 1)` for the intercept
+`boot.ci(boot_result, type = "bca", index = 2)` for **r_TMS**
+`boot.ci(boot_result, type = "bca", index = 3)` for **taser**
+
+Use the code box below to obtain bootstrapped confidence intervals.
+
+```{r taser_mod_robust_ci, exercise = TRUE, exercise.lines = 10, exercise.setup = "ztaser_mod-setup"}
+  
+               
+```
+
+```{r taser_mod_robust_ci-solution}
+boot_lm <- function(formula, data, index){
+  d <- data[index,]
+  fit <- lm(formula, data = d)
+  coef(fit)
+}
+
+boot_result <- boot(boot_lm, formula = immobility ~ r_tms + taser, data = taser_dat, R = 2000)
+boot.ci(boot_result, type = "bca", index = 1)
+boot.ci(boot_result, type = "bca", index = 2)
+boot.ci(boot_result, type = "bca", index = 3)
+```
+
+##Bayesian zombies
+### Bayes factors
+
+The first thing we could do is compare models using Bayes factors. We can do this using the `regressionBF()` function in the [BayesFactor package](http://bayesfactorpcl.r-forge.r-project.org/). We could do a whole tutorial on this alone, so I'm just going to show you how to do some stuff (linked to the book) and then you can read more if you get the urge.
+
+In the book, Milton explains to Zach that one approach is to add or remove predictors to the model and at each step compute a Bayes factor that compares the model to a baseline that includes only the intercept108, 109. Milton then shows Zach output showing the Bayes factor when only rTMS is included as a predictor, when only taser voltage is included, and when both are included. The questions to ask are: (1) which model has the largest Bayes factor, and (2) is it big enough to provide evidence for the hypothesis that the model predicts the outcome better than the intercept alone. The Bayes factors in the book were obtained using the `regressionBF()` function, which takes this general form:
+
+`bf_mod <- regressionBF(formula, rscaleCont = "medium", data = data.frame(tibble))`
+
+This creates an object called `bf_mod` based on the same type of formula that we put into the `lm()` function to specify the model (so this should be familiar). To set a prior include `rscaleCont = `. By default (i.e. if you exclude the option altogether) the prior is set at "medium" ($^\sqrt{2}/_4$), but you can specify `rscaleCont = "wide"` ($^1/_2$) or `rscaleCont = "wide"` ($^\sqrt{2}/_2$). Finally, the data are specified. If you are using a tibble (rather than a data frame) then notice that I've placed the tibble's name into the function `data.frame()`, which converts it to a data frame. I've had to do this because (at the time of writing) the `BayesFactor` package doesn't accept tibbles as data. For our data (using the default prior) we could execute:
+
+```{r echo = T, eval = F}
+taser_bf <- regressionBF(immobility ~ r_tms + taser, data = data.frame(taser_dat))
+taser_bf
+```
+
+The first line creates the object `taser_bf` as described above and the second line prints it for us to see. Try this in the code box:
+
+```{r taser_bf, exercise = TRUE}
+  
+```
+
+```{r taser_bf-solution}
+taser_bf <- regressionBF(immobility ~ r_tms + taser, data = data.frame(taser_dat))
+taser_bf
+```
+
+The largest Bayes factor is for when rTMS and taser are both included as predictors, and it is gigantic. taser voltage still has a reasonable effect (the evidence for the model is 3.14 times that of the null) but much smaller than for rTMS alone (BF = 10,810.52). Including both predictors produces a Bayes factor nearly 10 times greater than for rTMS alone (BF = 105,901.60). Therefore, Zach and Milton decide that they may as well try both devices to immobilize zombies.
+
+### Bayesian parameter estimates
+
+The other thing we can do is to estimate the parameters in the model using Bayesian methods. To do this we use the `lmBF` function, which has the same format as the function that we just used to get the Bayes factors. The difference is that it fits *only* the model we specify in the formula (whereas `regressionBF()` compares models with all combinations of predictors to the intercept-only model). For example, `taser_bf` contains 3 models (**r_tms** vs intercept, **taser** vs intercept, and **r_tms** + **taser** vs intercept). If we execute:
+
+```{r echo = T, eval = F}
+full_bf <- lmBF(immobility ~ r_tms + taser, data = data.frame(taser_dat))
+```
+
+it will return only the last of these models (**r_tms** + **taser** vs intercept). Estimating this model in isolation allows us to extract information from the posterior distribution. In particular we can extract the *b*-values derived from Bayesian estimation and their credible intervals. To do this we'd place the `full_bf` object that we just created into the `posterior()` function and set a value for the number of iterations (I've set 10000, which is plenty). I've stored the results in an object called `full_bf_est` the 'est' is short for 'estimates'. To view this object I've used the `summary()` function (which we've used before):
+
+
+```{r echo = T, eval = F}
+full_bf_est <- posterior(full_bf, iterations = 10000)
+summary(full_bf_est)
+```
+
+Try executing these three commands to view the estimates:
+
+```{r taser_bf_est, exercise = TRUE}
+  
+```
+
+```{r taser_bf_est-solution}
+full_bf <- lmBF(immobility ~ r_tms + taser, data = data.frame(taser_dat))
+full_bf_est <- posterior(full_bf, iterations = 10000)
+summary(full_bf_est)
+```
+
+The values to focus on are the means for **r_tms** and **taser**. Because these estimates are based on a sampling process you will get different results each time you run it (and different results to me). Therefore, Figure 1 shows the specific results I got while writing this tutorial. By looking at from where I'm extracting values you can (hopefully) interpret your own values. When I ran it, the Bayesian estimate of *b* for **r_tms** was -0.2377 with a 95% credibility interval ranging from -0.3310 to -0.1433 , and for taser it was is 0.3248 with a 95% credible interval from 0.1015 to 0.5494. Unlike confidence intervals we can interpret these credible intervals in terms of probability. For taser, for example, there is a 95% probability that the population value of *b* lies between 0.1015 and 0.5494.
+
+![Figure 1: Bayesian estimates of the taser model](./images/ais_14_fig_01.png)
+
+The Bayesian estimates are really similar to those we got using least squares estimation, and robust estimation, which suggests that whatever way we approach fitting the model, we get support for the idea that taser voltage, and especially rTMS predict the amount of time for which a zombie will be immobilized.
+
+## Other resources
+
+### Statistics
+
+* The tutorials typically follow examples described in detail in @RN10163, so for most of them there's a thorough account in there. You might also find @RN4832 useful for the **R** stuff.
+* There are free lectures and screen casts on my [YouTube channel](https://www.youtube.com/user/ProfAndyField/)
+* There are free statistical resources on my website [www.discoveringstatistics.com](http://www.discoveringstatistics.com)
+
+### R
+
+* Information on using [ggplot2](http://ggplot2.tidyverse.org/) 
+* [R for data science](http://r4ds.had.co.nz/index.html) is the open-access version of the book by tidyverse creator Hadley Wickham [@RN11404]. It covers the *tidyverse* and data management.
+* [ModernDive](http://moderndive.com/index.html) is an open-access textbook on **R** and **RStudio**
+* [RStudio cheat sheets](https://www.rstudio.com/resources/cheatsheets/)
+* [RStudio list of online resources](https://www.rstudio.com/online-learning/)
+* [SwirlStats](http://swirlstats.com/students.html) is a package for *R* that launches a bunch of interactive tutorials.
+
+## References

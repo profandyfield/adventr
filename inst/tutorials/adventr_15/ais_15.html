@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Andy Field" />
+
+
+<meta name="progressive" content="true" />
+<meta name="allow-skip" content="false" />
+
+<title>AAiR: The GLM</title>
+
+
+<!-- highlightjs -->
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+</head>
+
+<body>
+
+
+
+<div class="pageContent band">
+<div class="bandContent page">
+
+<div class="topics">
+
+<div id="section-an-adventure-in-r-the-general-linear-model-glm" class="section level1">
+<h1>An Adventure in R: The General Linear Model (GLM)</h1>
+<div id="section-overview" class="section level2">
+<h2>Overview</h2>
+<p>This tutorial is one of a series that accompanies <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> <span class="citation">(A. P. Field 2016)</span> and <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(A. P. Field, Miles, and Field 2012)</span> by <a href="https://en.wikipedia.org/wiki/Andy_Field_(academic)">me</a>. These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>,<a href="#section-fn1" class="footnoteRef" id="section-fnref1"><sup>1</sup></a></p>
+<ul>
+<li>Who is the tutorial aimed at?
+<ul>
+<li>Primarily students enrolled on my <em>Linear models in statistics</em> module at the University of Sussex, but anyone teaching from or reading <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> or <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(A. P. Field, Miles, and Field 2012)</span> may find them useful.</li>
+</ul></li>
+<li>What is covered?
+<ul>
+<li>This tutorial looks at how to fit a linear model with one and more predictor variables. We look at robust variants of the model, and computing a Bayes factor. It would be a useful tutorial to run alongside teaching based on Chapter 14 of <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a>.</li>
+<li>This tutorial <em>does not</em> teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else’s)</li>
+<li>The aim of this tutorial is to augment the theory that you already know by guiding you through fitting linear models using <strong>R</strong> and <strong>RStudio</strong> and asking you questions to test your knowledge along the way.</li>
+</ul></li>
+</ul>
+</div>
+<div id="section-story-precis" class="section level2">
+<h2>Story précis</h2>
+<div id="section-why-a-precis" class="section level3">
+<h3>Why a précis?</h3>
+<p>Because these tutorials accompany my book <em>An adventure in statistics</em>, which uses a fictional narrative to teach the statistics, some of the examples might not make sense unless you know something about the story. For those of you who don’t have the book I begin each tutorial with a précis of the story. If you’re not interested then fair enough - click past this section.</p>
+</div>
+<div id="section-general-context-for-the-story" class="section level3">
+<h3>General context for the story</h3>
+<p>It is the future. Zach, a rock musician and Alice, a geneticist, who have been together since high school live together in Elpis, the ‘City of Hope’.</p>
+<p>Zach and Alice were born in the wake of the Reality Revolution which occurred after a Professor Milton Gray invented the Reality Prism – a transparent pyramid worn on the head – that brought honesty to the world. Propaganda and media spin became unsustainable, religions collapsed, advertising failed. Society could no longer be lied to. Everyone could know the truth about anything that they could look at. A gift, some said, to a previously self-interested, self-obsessed society in which the collective good had been eroded.</p>
+<p>But also a curse. For, it soon became apparent that through this Reality Prism, people could no longer kid themselves about their own puffed-up selves as they could see what they were really like – by and large, pretty ordinary. And this caused mass depression. People lost faith in themselves. Artists abandoned their pursuits, believing they were untalented and worthless.</p>
+<p>Zach and Alice have never worn a Reality Prism and have no concept of their limitations. They were born after the World Governance Agency (WGA) destroyed all Reality Prisms, along with many other pre-revolution technologies, with the aim of restoring community and well-being. However, this has not been straightforward and in this post-Prism world, society has split into pretty much two factions</p>
+<ul>
+<li>The Chippers who have had WiFi-enabled chips implanted into their brains, enabling them to record and broadcast what they see and think in real time; upload memories for future generations into a newly-created memoryBank and live-stream music and films directly into their brains.</li>
+<li>The Clocktarians, followers of the old pre-Prism ways who use steam punk style technologies, who have elected not to have chips in their brains, regarded by the Chippers as backward-looking stuck in a ‘clockwork, Victorian society’.</li>
+</ul>
+<p>Everyone has a star, a limitless space on which to store their digital world.</p>
+<p>Zach and Alice are Clocktarians. Their technology consists mainly of:</p>
+<ul>
+<li>A Proteus, a device made from programmable matter that can transform shape and function simply by the owners’ wishes. Zach calls his a diePad, in the shape of a tombstone in an ironic reference to an over-reliance on technology at the expense of memory.</li>
+<li>A Reality Checker, a clockwork mechanism that, at the point of critical velocity, projects an opaque human head that is linked to everything and can tell you anything. Every head has a personality and Zach’s is a handsome, laid back ‘dude’ who is like an electronic friend, who answers questions if he feels like it and often winds Zach up by giving him false information. And he often flirts with Alice.</li>
+</ul>
+</div>
+<div id="section-main-protagonists" class="section level3">
+<h3>Main Protagonists</h3>
+<ul>
+<li>Zach
+<ul>
+<li>Rock musician in band called The Reality Enigma.</li>
+<li>Spellbinding performer, has huge fan-base.</li>
+<li>Only people living in Elpis get to see The Reality Enigma in the flesh. Otherwise all performances are done via an oculus riff, a multisensory headset for experiencing virtual gigs.</li>
+<li>Zach’s music has influenced and changed thousands of lives.</li>
+<li>Wishes he had lived pre-Revolutionary times, the turn of the 21st Century, a golden age for music when bands performed in reality at festivals.</li>
+<li>Kind, gentle and self-doubting.</li>
+<li>Believes science and maths are dull and uninspiring. Creates a problem between him and Alice as she thinks that because he isn’t interested in science, he isn’t interested in her. Leads to lots of misunderstandings between them.</li>
+</ul></li>
+<li>Alice
+<ul>
+<li>Shy, lonely, academically-gifted – estranged from the social world until she met Zach in the college library.</li>
+<li>Serious scientist, works at the Beimeni Centre of Genetics.</li>
+<li>At 21, won the World Science Federation’s Einstein Medal for her genetics research</li>
+<li>Desperately wants Zach to get over his fear of science so he can open his mind to the beauty of it.</li>
+</ul></li>
+</ul>
+</div>
+<div id="section-how-zachs-adventure-begins" class="section level3">
+<h3>How Zach’s adventure begins</h3>
+<p>Alice has been acting strangely, on edge for weeks, disconnected and uncommunicative, as if she is hiding something and Zach can’t get through to her. Arriving home from band practice, unusually, she already home and listening to an old album that the two of them enjoyed together, back in a simpler, less complicated time in their relationship. During an increasingly testy evening, that involves a discussion with the Head about whether or not a Proteus causes brain cancer, Alice is interrupted by an urgent call which she takes in private. She returns looking worried and is once again, distracted. She tells Zach that she has ‘a big decision to make’. Before going to bed, Zach asks her if he can help with the decision but she says he ‘already has’, thanking him for making ‘everything easier.’ He has no idea what she means and goes to sleep, uneasy.</p>
+<p>On waking, Zach senses that something is wrong. And he is right. Alice has disappeared. Her clothes, her possessions and every photo of them together have gone. He can’t get hold of any of her family or friends as their contact information is stored on her Proteus, not on his diePad. He manages to contact the Beimeni Centre but is told that no one by the name of Alice Nightingale has ever worked there. He logs into their constellation but her star has gone. He calls her but finds that her number never existed. She has, thinks Zach, been ‘wiped from the planet.’ He summons The Head but he can’t find her either. He tells Zach that there are three possibilities: Alice has doesn’t want to be found, someone else doesn’t want her to be found or she never existed.</p>
+<p>Zach calls his friend Nick, fellow band member and fan of the WGA-installed Repositories, vast underground repositories of actual film, books, art and music. Nick is a Chipper – solely for the purpose of promoting the band using memoryBank – and he puts the word out to their fans about Alice missing.</p>
+<p>Thinking as hard as he can, Zach recalls the lyrics of the song she’d been playing the previous evening. Maybe they are significant? It may well be a farewell message and the Head is right. In searching for clues, he comes across a ‘memory stone’ which tells him to read what’s on there. File 1 is a research paper that Zach can’t fathom. It’s written in the ‘language of science’ and the Head offers to help Zach translate it and tells him that it looks like the results of her current work were ‘gonna blow the world’. Zach resolves to do ‘something sensible’ with the report.</p>
+<p>Zach doesn’t want to believe that Alice has simply just left him. Rather, that someone has taken her and tried to erase her from the world. He decides to find her therapist, Dr Murali Genari and get Alice’s file. As he breaks into his office, Dr Genari comes up behind him and demands to know what he is doing. He is shaking but not with rage – with fear of Zach. Dr Genari turns out to be friendly and invites Zach to talk to him. Together they explore the possibilities of where Alice might have gone and the likelihood, rating her relationship satisfaction, that she has left him. During their discussion Zach is interrupted by a message on his diePad from someone called Milton. Zach is baffled as to who he is and how he knows that he is currently discussing reverse scoring. Out of the corner of his eye, he spots a ginger cat jumping down from the window ledge outside. The counsellor has to go but suggests that Zach and ‘his new friend Milton’ could try and work things out.</p>
+</div>
+</div>
+<div id="section-packages-and-data" class="section level2">
+<h2>Packages and data</h2>
+<div id="section-packages" class="section level3">
+<h3>Packages</h3>
+<p>This tutorial uses the following packages:</p>
+<ul>
+<li><code>BayesFactor</code> <span class="citation">(Morey and Rouder 2014)</span> to compute Bayes factors</li>
+<li><code>boot</code> <span class="citation">(Canty and Ripley 2017)</span> to compute bootstrap confidence intervals.</li>
+<li><code>GGally</code> <span class="citation">(Schloerke et al. 2017)</span> to produce a matrix scatterplot</li>
+<li><code>lm.beta</code> <span class="citation">(Behrendt 2014)</span> to compute standardized <em>b</em>-values</li>
+<li><code>robust</code> <span class="citation">(Wang et al. 2017)</span> to compute robust estimates</li>
+<li><code>sjstats</code> <span class="citation">(Lüdecke 2017)</span> to produce robust parameter estimates and confidence intervals</li>
+<li><code>tidyverse</code> <span class="citation">(Wickham 2017)</span> for general data processing</li>
+</ul>
+<p>These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in <strong>RStudio</strong>) then you need to make sure that the package has been installed by executing <code>install.packages(&quot;package_name&quot;)</code>, where <em>package_name</em> is the name of the package. If the package is already installed, then you need to reference it in your current session by executing <code>library(package_name)</code>, where <em>package_name</em> is the name of the package.</p>
+</div>
+<div id="section-data" class="section level3">
+<h3>Data</h3>
+<p>This tutorial has the data files pre-loaded so you shouldn’t need to do anything to access the data from within the tutorial. However, if you want to play around with what you have learnt in this tutorial outside of the tutorial environment (i.e. in a stand-alone <strong>RStudio</strong> session) you will need to download the data files and then read them into your <strong>R</strong> session. This tutorial uses the following file:</p>
+<ul>
+<li><a href="http://www.discoveringstatistics.com/repository/ais_data/ais_14_zombie_garlic.csv">ais_14_zombie_garlic.csv</a>.</li>
+<li><a href="http://www.discoveringstatistics.com/repository/ais_data/ais_14_zombie_taser.csv">ais_14_zombie_taser.csv</a>.</li>
+</ul>
+<p>You can load the files in several way (using the first file as an example):</p>
+<ul>
+<li>Assuming that you save this file into the working directory, you can load it by executing:
+<ul>
+<li><code>garlic_dat &lt;- read_csv(&quot;ais_14_zombie_garlic.csv&quot;)</code></li>
+<li>If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called <em>adventr_02</em>)</li>
+</ul></li>
+<li>To load the file using a standard dialogue box to navigate your file system, execute:
+<ul>
+<li><code>garlic_dat &lt;- read_csv(file.choose())</code></li>
+</ul></li>
+<li>You can load the file direct from the URL (i.e., you don’t need to download it first) by executing:
+<ul>
+<li><code>garlic_dat &lt;- read_csv(&quot;http://www.discoveringstatistics.com/repository/ais_data/ais_14_zombie_garlic.csv&quot;)</code></li>
+<li>This method relies on an internet connection (and my server having not exploded!)</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="section-zombies-a-model-with-one-predictor" class="section level2">
+<h2>Zombies! A model with one predictor</h2>
+<div id="section-the-model" class="section level3">
+<h3>The model</h3>
+<p>Zach breaks into the JIG:SAW complex again in a desperate final bid to find Alice and have her explain why she disappeared. Knowing that the complex is guarded by zombie security he scours the internet to find ways to repel zombies. He finds data claiming that garlic will repel zombies. Milton is skeptical and decides to get him to fit a model to the data he’s gathered. Zach’s data are in the tibble <code>garlic_dat</code>, which has three variables:</p>
+<ul>
+<li><strong>id</strong>: victim ID</li>
+<li><strong>latency</strong>: The time taken for a zombie to approach the victim in seconds</li>
+<li><strong>garlic</strong>: The number of bulbs of garlic worn by the victim</li>
+</ul>
+<p>The model we’re fitting is described by the following equation:</p>
+<p><span class="math display">\[
+\begin{aligned}
+Y_i &amp; = b_0 + b_1X_i+ ε_i\\
+\text{latency}_i &amp; = b_0 + b_1\text{garlic}_i+ ε_i
+\end{aligned}
+\]</span></p>
+</div>
+<div id="section-plotting-the-data" class="section level3">
+<h3>Plotting the data</h3>
+<p>Let’s plot the data. Use the code box below to create a scatterplot with <strong>latency</strong> on the <em>y</em>-axis and <strong>garlic</strong> on the <em>x</em>-axis. Superimpose the line of best fit.</p>
+<div class="tutorial-exercise" data-label="scat" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="6">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="scat-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>scat &lt;- ggplot(garlic_dat, aes(garlic, latency))
+scat +
+  geom_point(colour = &quot;#56B4E9&quot;, size = 3) +
+  geom_smooth(method = &quot;lm&quot;, colour = &quot;#E69F00&quot;, fill = &quot;#E69F00&quot;) +
+  labs(x = &quot;Number of bulbs of garlic&quot;, y = &quot;Latency to approach (seconds)&quot;) +
+  scale_x_continuous(breaks = 0:15) + 
+  theme_bw()</code></pre>
+</div>
+</div>
+<div id="section-fitting-the-model" class="section level3">
+<h3>Fitting the model</h3>
+<p>It should be clear that a positive relationship exists: the more bulbs of garlic worn, the longer the zombies took to approach. The scatterplot shows the linear model that we are about to fit. To fit the model we use the function <code>lm()</code> which stands for ‘linear model’. The function takes the following general form (I’ve retained only the key options):</p>
+<p><code>lm(outcome ~ predictor(s), data, subset, na.action = na.fail)</code></p>
+<p>Let’s look at these arguments in turn:</p>
+<ul>
+<li><code>outcome ~ predictor(s)</code>: the way we specify the model is basically to write out the model equation but ignoring the <em>b</em> values and using a tilde (~) instead of =. For example, if we want the model to predict <strong>latency</strong> from the variable <strong>garlic</strong> we write the model as <code>latency ~ garlic</code>. If, say, we had a second predictor, the time since zombification occurred (<strong>age</strong>), then we could fit this model by specifying <code>latency ~ garlic + age</code>. So, the model specification maps onto the equation describing the model we’re fitting.</li>
+<li><code>data</code>: you use this argument to specify the tibble containing the data (e.g., <code>data = garlic_dat</code>). If you’re using <code>lm()</code> within a pipe where you’ve previously input a tibble then remember you use <code>data = .</code></li>
+<li><code>subset</code>: this argument allows you to specify a condition by which you subset data (a bit like you might use in the <code>filter()</code> function). For example, if you want to include only zombies younger than 10 years you could set <code>subset = age &lt; 10</code>. Of course, you can also achieve the same thing using a pipe (<code>garlic_dat %&gt;% filter(age &lt; 10) %&gt;% lm(latency ~ garlic, data = .)</code>)</li>
+<li><code>na.action</code>: this option determines how to treat missing values. By default it is set to <code>na.fail</code> which means that the model fails (it is not fit). If you have missing values then set this option to <code>na.omit</code> which removes cases, or <code>na.exclude</code> which excluded cases from the model (but does not remove them). The distinction may not be clear, so here’s an example. Imagine you have a tibble with 100 cases, but 10 have missing values on either the predictor or outcome. You want to save the residuals (or predicted values) from the model into the original tibble. If you use <code>na.omit</code> this won’t work because it will delete the 10 cases and fit the model to the remaining 90. Therefore, you’ll have 100 cases in the tibble but only 90 residuals from the model. If you use <code>na.exclude</code> it will work because the cases are excluded but not deleted. The model is fit to 90 cases but any outputs from the model are padded with ‘NA’ for cases with missing values. So you’ll have 100 cases in the original tibble and 100 residuals (including 10 NAs) and the two can be combined into a single tibble.</li>
+</ul>
+<p>We could fit our model by executing: <code>lm(latency ~ garlic, data = garlic_dat)</code> but if you do the function will return only the <em>b</em>-values. For a more informative output we enclose the function within the <code>summary()</code> function. Best practice is to create an object that contains the model, and then summarize this object. This approach has the advantage that you can extract information from the model by referring to the object that you created. For example, if you want plots relating to the model, you can execute <code>plot(model_name)</code> in which <code>model_name</code> is the name you gave to the model (more on plots later …). For example, we could use this code:</p>
+<pre class="r"><code>garlic_mod &lt;- lm(latency ~ garlic, data = garlic_dat)
+summary(garlic_mod)</code></pre>
+<p>The first line creates an object called <code>garlic_mod</code> that contains our linear model and the second line prints a summary of this model. Use the code box to create the model, print a summary of it, and print plots by using the three lines of code discussed above.</p>
+<div class="tutorial-exercise" data-label="lm1" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="lm1-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>garlic_mod &lt;- lm(latency ~ garlic, data = garlic_dat)
+summary(garlic_mod)</code></pre>
+</div>
+<p>Use the output to answer these questions:</p>
+<div class="panel panel-default">
+<div class="panel-heading tutorial-panel-heading">Quiz</div>
+<table class="table quiz-table">
+<tr>
+<td>
+
+<div id="htmlwidget-849fea2d8ca3462f8969" style="width:100%;height:auto;", class = "quiz html-widget">
+<div class="panel panel-default">
+<div class="panel-body quizArea">
+</div>
+</div>
+</div>
+
+<script type="application/json" data-for="htmlwidget-849fea2d8ca3462f8969">{"x":{"question":"What does the value of <em>Multiple R-squared<\/em> in the output tell us?","answers":[{"option":"48.35% of the variation in latency scores cannot be accounted for by the amount of garlic worn","correct":false,"message":null},{"option":"The amount of garlic worn accounts for 0.4835% of the variation in latency scores","correct":false,"message":"You need to multiply \\(R^2\\) by 100 to convert it to a percentage"},{"option":"The amount of garlic worn accounts for 48.35% of the variation in latency scores","correct":true,"message":null},{"option":"The amount of garlic worn and latency scores have a correlation of 0.4835","correct":false,"message":"With one predictor in the model (as is the case here) this would be true of <em>R<\/em> not \\(R^2\\)"}],"label":"quiz_r2_ex1-1","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"What does the value of <em>Multiple R-squared<\/em> in the output tell us?","a":[{"option":"48.35% of the variation in latency scores cannot be accounted for by the amount of garlic worn","correct":false,"message":null},{"option":"The amount of garlic worn accounts for 0.4835% of the variation in latency scores","correct":false,"message":"You need to multiply \\(R^2\\) by 100 to convert it to a percentage"},{"option":"The amount of garlic worn accounts for 48.35% of the variation in latency scores","correct":true,"message":null},{"option":"The amount of garlic worn and latency scores have a correlation of 0.4835","correct":false,"message":"With one predictor in the model (as is the case here) this would be true of <em>R<\/em> not \\(R^2\\)"}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+</td>
+</tr>
+<tr>
+<td>
+
+<div id="htmlwidget-8cef8b8ebbe9ef953f36" style="width:100%;height:auto;", class = "quiz html-widget">
+<div class="panel panel-default">
+<div class="panel-body quizArea">
+</div>
+</div>
+</div>
+
+<script type="application/json" data-for="htmlwidget-8cef8b8ebbe9ef953f36">{"x":{"question":"How might we interpret the <em>F-statistic<\/em> and <em>p-value<\/em> in the output (assume \\(\\alpha = 0.05\\))?","answers":[{"option":"The linear model accounts for a significant amount of the variance in latency scores","correct":true,"message":"Because the <em>p<\/em>-value associated with <em>F<\/em> is less than 0.05 most people would conclude that the model makes a significant improvement to predicting latency scores."},{"option":"The linear model is a poor fit of the data","correct":false,"message":"Because the <em>p<\/em>-value associated with <em>F<\/em> is less than 0.05 most people would conclude that the model was a <em>significant<\/em> fit of the data"},{"option":"The error in the model is greater than the variance in latency scores that it explains","correct":false,"message":"The <em>F<\/em>-statistic is \\(\\frac{\\text{MS}_\\text{model}}{\\text{MS}_\\text{residual}}\\) so if this statement were true <em>F<\/em> would be less than 1 and <em>p<\/em> would be greater than 0.05."}],"label":"quiz_r2_ex1-2","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"How might we interpret the <em>F-statistic<\/em> and <em>p-value<\/em> in the output (assume \\(\\alpha = 0.05\\))?","a":[{"option":"The linear model accounts for a significant amount of the variance in latency scores","correct":true,"message":"Because the <em>p<\/em>-value associated with <em>F<\/em> is less than 0.05 most people would conclude that the model makes a significant improvement to predicting latency scores."},{"option":"The linear model is a poor fit of the data","correct":false,"message":"Because the <em>p<\/em>-value associated with <em>F<\/em> is less than 0.05 most people would conclude that the model was a <em>significant<\/em> fit of the data"},{"option":"The error in the model is greater than the variance in latency scores that it explains","correct":false,"message":"The <em>F<\/em>-statistic is \\(\\frac{\\text{MS}_\\text{model}}{\\text{MS}_\\text{residual}}\\) so if this statement were true <em>F<\/em> would be less than 1 and <em>p<\/em> would be greater than 0.05."}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+</td>
+</tr>
+</table>
+</div>
+<p>The output provides estimates of the model parameters (the <em>b</em>-values) and the significance of these values. The <em>Y</em> intercept (<span class="math inline">\(b_0\)</span>) is 15.62. This value can be interpreted as meaning that when no garlic was worn (when <em>X</em> = 0), the model predicts that zombies would take 15.62 seconds to approach. The value of <span class="math inline">\(b_1\)</span> is 0.75. This value represents the change in the outcome associated with a unit change in the predictor. In other words, for every extra bulb of garlic that is worn, our model predicts that zombies will take 0.75 additional seconds to approach.</p>
+<p>If a predictor is having a significant impact on our ability to predict the outcome then its <em>b</em> should be different from 0 (and large relative to its standard error). The <em>t</em>-test and associated <em>p</em>-value tell us whether the <em>b</em>-value is significantly different from 0. The column <em>Pr(&gt;|t|)</em> contains the exact probability that a value of <em>t</em> at least as big as the one in the output would occur if the value of <em>b</em> in the population were zero. If this probability is less than 0.05, then people interpret that as the predictor being a ‘significant’ predictor of the outcome. The <em>t</em> for <span class="math inline">\(b_0\)</span> has a <em>p</em>-value given as 4.95e-05, which translates as <span class="math inline">\(4.95 \times 10^{-5}\)</span> or 0.0000495. For <span class="math inline">\(b_1\)</span> <em>p</em> is 0.0256. As such, for each <em>t</em>-value, the probability that value (or larger) occurring if the corresponding <em>b</em> in the population were zero is less than 0.05. In other words, the <em>b</em>s are significantly different from 0. In the case of the <em>b</em> for garlic, this result means that the amount of garlic worn makes a significant contribution (<em>p</em> = 0.026) to predicting the latency to approach. It’s worth mentioning that even though this value is significantly different from 0, the value of <em>b</em> itself (0.75) tells us that in real terms you’d have to wear an awful lot of garlic to delay zombies for a length of time that was practically useful.</p>
+</div>
+<div id="section-model-diagnostics" class="section level3">
+<h3>Model diagnostics</h3>
+<p>We can explore the assumptions of the model using the <code>plot()</code> function, which produces a series of diagnostic plots. All we need to do is put our model name into this function and execute it:</p>
+<pre class="r"><code>plot(garlic_mod)</code></pre>
+<p>When you run the <code>plot()</code> function from within <strong>RStudio</strong> it will display a single plot in the plots pane with an instruction to hit return to see the next plot. Once you’ve seen the plots you can scroll through them in the plots pane using <img src="images/arrow_l.png" /> and <img src="images/arrow_r.png" />. If you want to plot a specific plot you can add the argument <code>which =</code> and a number. If you don’t specify <code>which</code> then these are the four plots you’ll get (and I’ve indicated the value of which that corresponds to them in case you want to print the plot in isolation):</p>
+<ul>
+<li><code>plot(garlic_mod, which = 1)</code>: returns a plot of the predicted values against the raw residuals (interpret as you would a plot of zresid vs zpred). You want to see a random pattern of dots with no funneling and no non-linear patterns.</li>
+<li><code>plot(garlic_mod, which = 2)</code>: returns a Q-Q plot of the standardized residuals. You want the dots to fall along the diagonal line.</li>
+<li><code>plot(garlic_mod, which = 3)</code>: returns a plot of the predicted values against the square root of the standardized residuals. Interpret this plot as you would a plot of zresid vs zpred. In essence you want to see a random pattern of dots, and the red line should be roughly flat. If you see funneling and the red line shows an upwards or downward trend then you have heteroscedasticity.</li>
+<li><code>plot(garlic_mod, which = 5)</code>: returns a plot of the leverage value against the standardized residual. This plot is good for identifying cases with large values of Cook’s distance because it superimposes red lines for values of Cook’s distance of 0.5 and 1. Any cases falling outside the red boundary that shows a Cook’s distance of 1 are likely to be influential cases.</li>
+</ul>
+<p>For the current example it’s quite hard to interpret the plots because the sample size is so small, so we’ll return to these plots in the next example.</p>
+</div>
+<div id="section-using-the-model" class="section level3">
+<h3>Using the model</h3>
+<p>Let’s use the model to make some predictions. First, replace the <em>b</em>-values with the values from the output:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\text{latency}_i &amp; = b_0 + b_1\text{garlic}_i+ ε_i \\
+ &amp; = 15.62 + (0.75\times\text{garlic}_i)+ ε_i \\
+\end{aligned}
+\]</span></p>
+<p>It is now possible to make a prediction about latency to approach, by replacing garlic with a value of interest. For example, in the book Milton predicts how long a zombie will be repelled for based on wearing 10 bulbs of garlic:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\text{latency}_i &amp; = 15.62 + (0.75\times\text{garlic}_i)+ ε_i \\
+ &amp; = 15.62 + (0.75\times \text{10})+ ε_i \\
+&amp;= 23.12
+\end{aligned}
+\]</span></p>
+</div>
+</div>
+<div id="section-more-zombies-a-model-with-two-predictors" class="section level2">
+<h2>More Zombies! A model with two predictors</h2>
+<div id="section-the-model-1" class="section level3">
+<h3>The model</h3>
+<p>Zach’s garlic plan doesn’t go so well: as they enter the JIG:SAW complex they are instantly confronted by a zombie horde. Escaping by the skin of their teeth they hide out in one of the buildings, where they meet a strange, deformed creature who calls himself Clint. Knowing that Alice is likely to be found in one of the research buildings they need to hatch a plan to get across the concourse before being killed by the congregating zombies. After a little research they decide that repetitive transcranial magnetic stimulation (rTMS) and a blast from a taser are likely candidates for good weaponry against zombies. Having obtained some data, Milton fits a model to predict the duration of zombie immobility (<strong>immobility</strong>) from the frequency at which the rTMS is delivered in Hz (<strong>r_tms</strong>) and the strength of the taser in kV (<strong>taser</strong>). The data are in <code>taser_dat</code>. The model we’re fitting is described by the following equation:</p>
+<p><span class="math display">\[
+\begin{aligned}
+Y_i &amp; = b_0 + b_1X_{1i}+ b_2X_{2i} + \ldots + b_nX_{ni} + ε_i\\
+\text{immobility}_i &amp; = b_0 + b_1\text{rTMS}_i+ b_2\text{Taser}_i + ε_i
+\end{aligned}
+\]</span></p>
+</div>
+<div id="section-plotting-the-data-1" class="section level3">
+<h3>Plotting the data</h3>
+<p>We can use the <code>ggpairs()</code> function from the <code>GGally</code> package to plot a matrix of scatterplots between our variables. This package extends the functionality of <code>ggplot2</code>. To plot the matrix of scatterplots we’ll use the following pipe:</p>
+<pre class="r"><code>taser_dat %&gt;%
+  select(-id) %&gt;%
+  ggpairs()</code></pre>
+<p>This pipe take the <code>taser_dat</code> tibble and then uses the <code>select()</code> function to drop the variable <em>id</em> (placing a minus sign before the variable name removes it from the tibble). Finally we apply <code>ggpairs()</code> with all the options set to their defaults. Try this in the code box below, you should get a matrix showing scatterplots between all three variables in the lower portion, and values of the correlation coefficient for each pair of variables in the top half.</p>
+<div class="tutorial-exercise" data-label="ggpair_eg" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="ggpair_eg-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>taser_dat %&gt;%
+  select(-id) %&gt;%
+  ggpairs()</code></pre>
+</div>
+<p>rTMS has a negative relationship with immobility and taser a positive one. There aren’t any obvious outliers on these plots.</p>
+</div>
+<div id="section-fitting-the-model-1" class="section level3">
+<h3>Fitting the model</h3>
+<p>We can fit the model using the same commands as we used for the garlic model. Remember, that we specify the model by writing it out (but without the <em>b</em>s). See if you can adapt the code from the previous example to create an object called <code>taser_mod</code> that predicts the variable <strong>immobility</strong> from the variables <strong>r_tms</strong> and <strong>taser</strong>. Summarize and plot the model. If you get stuck click <img src="images/solution.png" />.</p>
+<div class="tutorial-exercise" data-label="taser_mod" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="taser_mod-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>taser_mod &lt;- lm(immobility ~ r_tms + taser, data = taser_dat)
+summary(taser_mod)</code></pre>
+</div>
+<p>The <em>F</em>-statistic is 17.62, <em>p</em> &lt; 0.001 suggesting that the model overall ‘significantly’ improves our ability to predict immobility (compared to a model with no predictors). The <span class="math inline">\(R^2\)</span> of 0.1872 tells us that 18.7% of the variance in immobility times can be accounted for by taser output and rTMS frequency. This is quite a lot, but it is worth considering that this still leaves 81.3% that is unexplained.</p>
+<p>The <em>b</em>-values tell us to what degree each predictor affects the outcome if the effects of all other predictors are held constant. For rTMS the <em>b</em> is -0.251, which means that as rTMS frequency decreases by one unit (Hz), zombies will be immobilized for an extra 0.251 seconds. This interpretation is true only if the effect of taser is held constant.</p>
+
+<div id="htmlwidget-afe0b65725e13ee2298a" style="width:100%;height:auto;", class = "quiz html-widget">
+<div class="panel panel-default">
+<div class="panel-body quizArea">
+</div>
+</div>
+</div>
+
+<script type="application/json" data-for="htmlwidget-afe0b65725e13ee2298a">{"x":{"question":"How would we interpret the <em>Estimate<\/em> (0.342) for taser?","answers":[{"option":"As the taser voltage increases by one unit (kV), zombies will be immobilized for an extra 0.342 seconds, assuming that the effect of rTMS is constant","correct":true,"message":null},{"option":"As the taser voltage increases by one standard deviation (kV), zombies will be immobilized for an extra 0.342 of a standard deviation, assuming that the effect of rTMS is constant","correct":false,"message":"This describes the <em>standardized<\/em> B, not the *unstandardized"},{"option":"Taser voltage explains 34.2% of the variance in immobility","correct":false,"message":"This would be what \\(R^2\\) tells us"}],"label":"quiz_b_ex2","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"How would we interpret the <em>Estimate<\/em> (0.342) for taser?","a":[{"option":"As the taser voltage increases by one unit (kV), zombies will be immobilized for an extra 0.342 seconds, assuming that the effect of rTMS is constant","correct":true,"message":null},{"option":"As the taser voltage increases by one standard deviation (kV), zombies will be immobilized for an extra 0.342 of a standard deviation, assuming that the effect of rTMS is constant","correct":false,"message":"This describes the <em>standardized<\/em> B, not the *unstandardized"},{"option":"Taser voltage explains 34.2% of the variance in immobility","correct":false,"message":"This would be what \\(R^2\\) tells us"}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+<p>We can replace these <em>b</em>-values into the model:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\text{immobility}_i &amp;= b_0 + b_1\text{rTMS}_i+ b_2\text{Taser}_i + ε_i \\
+&amp;= 6.38 -0.251\text{rTMS}_i+ 0.342\text{Taser}_i + ε_i
+\end{aligned}
+\]</span></p>
+</div>
+<div id="section-standardized-bs" class="section level3">
+<h3>Standardized <em>b</em>s</h3>
+<p>It’s sometimes useful to standardize the model parameters. We can add these to the model using the <code>lm.beta()</code> function from the package of the same name. All we need to do is to put the object (<code>taser_mod</code>) that we created with the <code>lm()</code> function into <code>lm.beta()</code> and it will add the standardized coefficients. We can use these two lines of code:</p>
+<pre class="r"><code>taser_mod &lt;- std_beta(taser_mod)
+summary(taser_mod)</code></pre>
+<p>The first line re-creates the object <code>taser_mod</code> by placing it into the <code>lm.beta()</code> function. (You don’t have to give the object the same name, I just think it makes sense because all we’re doing is adding standardized <em>b</em>s to the output.) The second line prints a summary of this new model. It will be the same as we have seen before except that a column of standardized <em>b</em>s has been added. Try running these two lines of code in the box.</p>
+<div class="tutorial-exercise-support" data-label="ztaser_mod-setup" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>taser_mod &lt;- lm(immobility ~ r_tms + taser, data = taser_dat)</code></pre>
+</div>
+<div class="tutorial-exercise" data-label="ztaser_mod" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="ztaser_mod-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>taser_mod &lt;- lm.beta(taser_mod)
+summary(taser_mod)</code></pre>
+</div>
+
+<div id="htmlwidget-42733d26db635c5c87b9" style="width:100%;height:auto;", class = "quiz html-widget">
+<div class="panel panel-default">
+<div class="panel-body quizArea">
+</div>
+</div>
+</div>
+
+<script type="application/json" data-for="htmlwidget-42733d26db635c5c87b9">{"x":{"question":"How would we interpret the <em>Standardized b<\/em> (-0.384) for <strong>r_tms<\/strong>?","answers":[{"option":"As the rTMS frequency decreases by 1 standard deviation, zombies are immobilized by an additional 0.384 of a standard deviation","correct":true,"message":null},{"option":"As the rTMS frequency increases by 1 Hz, zombies are immobilized by an additional 0.384 seconds","correct":false,"message":null},{"option":"As the rTMS frequency decreases by 1 Hz, zombies are immobilized by an additional 0.384 seconds","correct":false,"message":"This describes the <em>unstandardized<\/em> B, not the <em>standardized<\/em>"},{"option":"The correlation rTMS frequency and immobility is -0.384","correct":false,"message":"This would be true if rTMS were the only predictor, but because there are other predictors in the model this is not the case."}],"label":"quiz_zb","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"How would we interpret the <em>Standardized b<\/em> (-0.384) for <strong>r_tms<\/strong>?","a":[{"option":"As the rTMS frequency decreases by 1 standard deviation, zombies are immobilized by an additional 0.384 of a standard deviation","correct":true,"message":null},{"option":"As the rTMS frequency increases by 1 Hz, zombies are immobilized by an additional 0.384 seconds","correct":false,"message":null},{"option":"As the rTMS frequency decreases by 1 Hz, zombies are immobilized by an additional 0.384 seconds","correct":false,"message":"This describes the <em>unstandardized<\/em> B, not the <em>standardized<\/em>"},{"option":"The correlation rTMS frequency and immobility is -0.384","correct":false,"message":"This would be true if rTMS were the only predictor, but because there are other predictors in the model this is not the case."}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+<p>The standardized beta for taser tells us that as taser voltage increases by one standard deviation, zombie immobility increases by 0.214 of a standard deviation. Because these <em>b</em>s are standardized we can look at the relative size of them and see that the effect of rTMS was slightly stronger than the effect of taser (because the magnitude of the standardized beta is greater).</p>
+</div>
+<div id="section-confidence-intervals" class="section level3">
+<h3>Confidence intervals</h3>
+<p>To get confidence intervals for the <em>b</em>-values we place the model into the <code>confint()</code> function and execute (in our case we could execute <code>confint(taser_mod)</code>). Try this in the code box.</p>
+<div class="tutorial-exercise" data-label="taser_mod_ci" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"ztaser_mod-setup","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="taser_mod_ci-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>confint(taser_mod)</code></pre>
+</div>
+
+<div id="htmlwidget-68fe9308e06f291f768c" style="width:100%;height:auto;", class = "quiz html-widget">
+<div class="panel panel-default">
+<div class="panel-body quizArea">
+</div>
+</div>
+</div>
+
+<script type="application/json" data-for="htmlwidget-68fe9308e06f291f768c">{"x":{"question":"The confidence interval for taser ranges from 0.11 to 0.57. What does this tell us?","answers":[{"option":"If this confidence interval is one of the 95% that contains the population value then the population value of <em>b<\/em> lies between 0.11 to 0.57.","correct":true,"message":null},{"option":"There is a 95% chance that the population value of <em>b<\/em> lies between 0.11 and 0.57","correct":false,"message":"You cannot make probability statements from a confidence interval. We don&#39;t know whether this particular CI is one of the 95% that contains the population value of <em>b<\/em>."},{"option":"The probability of this confidence interval containing the population value is 0.95.","correct":false,"message":"The probability of this confidence interval containing the population value is either 0 (it doesn&#39;t) or 1 (it does) but it&#39;s impossible to know which."},{"option":"I can be 95% confident that the population value of <em>b<\/em> lies between 0.11 and 0.57","correct":false,"message":"Confidence intervals do not quantify your subjective confidence."}],"label":"quiz_ci_taser","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"The confidence interval for taser ranges from 0.11 to 0.57. What does this tell us?","a":[{"option":"If this confidence interval is one of the 95% that contains the population value then the population value of <em>b<\/em> lies between 0.11 to 0.57.","correct":true,"message":null},{"option":"There is a 95% chance that the population value of <em>b<\/em> lies between 0.11 and 0.57","correct":false,"message":"You cannot make probability statements from a confidence interval. We don&#39;t know whether this particular CI is one of the 95% that contains the population value of <em>b<\/em>."},{"option":"The probability of this confidence interval containing the population value is 0.95.","correct":false,"message":"The probability of this confidence interval containing the population value is either 0 (it doesn&#39;t) or 1 (it does) but it&#39;s impossible to know which."},{"option":"I can be 95% confident that the population value of <em>b<\/em> lies between 0.11 and 0.57","correct":false,"message":"Confidence intervals do not quantify your subjective confidence."}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="section-model-diagnosits" class="section level3">
+<h3>Model diagnosits</h3>
+<p>Remember that we can explore the assumptions of the model using the <code>plot()</code> function:</p>
+<pre class="r"><code>plot(taser_mod)</code></pre>
+<p>Execute this command in the code box:</p>
+<div class="tutorial-exercise" data-label="taser_mod_plot" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"ztaser_mod-setup","exercise.checker":"NULL"}</script>
+</div>
+<p>We’ll interpret the four default plots:</p>
+<ul>
+<li>The plot of the predicted values against the raw residuals shows a random pattern of dots with no funneling and no non-linear patterns. The red line is close to flat. Basically it shows no evidence of non-linearity or heteroscedasticity.</li>
+<li>The Q-Q plot of the standardized residuals shows some deviations from normal at the extremes, which is indicative of heavy tails (too many scores at the extremes).</li>
+<li>The plot of the predicted values against the square root of the standardized residuals again shows a fairly random scatter of dots and the red line is roughly flat. Therefore, no real concern over heteroscedasticity here. heteroscedasticity.</li>
+<li>The plot of the leverage value against the standardized residual. Notice that no red lines have been superimposed for values of Cook’s distance of 0.5 and 1. This is because all values are well below this. If you’re interested try executing <code>plot(taser_mod, which = 4)</code> in the code box and you’ll see that the largest Cook’s distance is only about 0.07 (case 125), which is well below 1. In short, no evidence for influential cases.</li>
+</ul>
+</div>
+</div>
+<div id="section-robust-zombies" class="section level2">
+<h2>Robust zombies</h2>
+<div id="section-robust-estimates" class="section level3">
+<h3>Robust estimates</h3>
+<p>Our model doesn’t look like it is biased by heteroscedasticity or influential cases.However, if we had found cause for concern, there are numerous ways to produce robust parameter estimates and confidence intervals. There is a good case to be made for always applying a robust method and checking that the results are consistent with the non-robust model <span class="citation">(A. P. Field and Wilcox 2017)</span>. There are numerous options (more than I’ve listed in this section). The first is to use the <code>lmRob()</code> function from the <code>robust</code> package, which returns <em>b</em>-values estimated using robust methods. The function is used in the same way as <code>lm()</code> so you can copy your earlier code and replace <code>lm</code> with <code>lmRob</code>. For example:</p>
+<pre class="r"><code>taser_rob &lt;- lmRob(immobility ~ r_tms + taser, data = taser_dat)
+summary(taser_rob)</code></pre>
+<p>Try this code in the code box:</p>
+<div class="tutorial-exercise" data-label="taser_mod_robust" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"ztaser_mod-setup","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="taser_mod_robust-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>taser_rob &lt;- lmRob(immobility ~ r_tms + taser, data = taser_dat)
+summary(taser_rob)   </code></pre>
+</div>
+</div>
+<div id="section-robust-standard-errors" class="section level3">
+<h3>Robust standard errors</h3>
+<p>A second option is to apply one of the methods for producing standard errors (and hence confidence intervals) that are robust to heteroscedasticity. This is particularly useful if the main problem is heteroscedasticity. The <code>robust()</code> function from the <code>sjstats</code> package will compute these for any model you’ve created with <code>lm</code>. It has the general form:</p>
+<p><code>robust(lm_mod, vcov = c(&quot;HC3&quot;, &quot;const&quot;, &quot;HC&quot;, &quot;HC0&quot;, &quot;HC1&quot;, &quot;HC2&quot;, &quot;HC4&quot;, &quot;HC4m&quot;, &quot;HC5&quot;), conf.int = FALSE)</code></p>
+<p>The <code>lm_mod</code> is the name of any model created with <code>lm()</code>, you use <code>vcov</code> to determine which method to use (it defaults to “HC3”) and, if you want confidence intervals change the default of <code>conf.int = FALSE</code> to be <code>conf.int = TRUE</code></p>
+<p>The methods (HC0 to HC5) to estimate standard errors (and, therefore, confidence intervals) are described clearly in <span class="citation">(Hayes and Cai 2007)</span>. In short, HC3 have been shown to outperform HC0 to HC2 <span class="citation">(Long and Ervin 2000)</span> but HC4 and HC5 outperform HC3 in some circumstances <span class="citation">(Cribari-Neto 2004)</span>. Basically, either use the default of HC3 (by not explicitly specifying <code>vcov</code>) or use HC4. Assuming we have already created the model <code>taser_mod</code> like we did above, we could get a robust variant of it by executing:</p>
+<p><code>robust(taser_mod, conf.int = T)</code> to use the default “HC3” method <code>robust(taser_mod, vcov = &quot;HC4&quot;, conf.int = T)</code> to use “HC4”</p>
+<p>Run this code in the box:</p>
+<div class="tutorial-exercise" data-label="taser_mod_hc4" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"ztaser_mod-setup","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="taser_mod_hc4-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>robust(taser_mod, vcov = &quot;HC4&quot;, conf.int = T)</code></pre>
+</div>
+</div>
+<div id="section-bootstrap-confidence-intervals" class="section level3">
+<h3>Bootstrap confidence intervals</h3>
+<p>In small samples especially bootstrap confidence intervals can be useful as these are robust to distributional assumptions. It’s a bit fiddly to get them though! Again, there are different methods, but I’ll stick with using <code>boot</code> because we’ve used it before. First we need to write a function that tells <strong>R</strong> what to do with the bootstrap samples that we create. We’d write something like this:</p>
+<pre class="r"><code>boot_lm &lt;- function(formula, data, index){
+  d &lt;- data[index,]
+  fit &lt;- lm(formula, data = d)
+  coef(fit)
+}</code></pre>
+<p>Executing this command creates a function called <code>boot_lm()</code>. The first bit of the function tells <strong>R</strong> what input to expect into the function: in this case we need to feed into the function a formula like we’d put into the <code>lm()</code> function, data, and a variable that I’ve called index (which is really just a counter for the bootstrap samples - so for the first bootstrap sample index will be 1, for the second it will be 2 and so on. Within the function we have three instructions: * <code>d &lt;- data[index,]</code>: creates a data frame called <strong>d</strong>, which is the subset of the data entered into the function relating to the value of <strong>index</strong>. * <code>fit &lt;- lm(formula, data = d)</code>: This creates a linear model called <code>fit</code> using the <code>lm()</code> function into which we feed the formula fed into <code>boot_lm()</code> and the data created in the line above. * <code>coef(fit)</code>: This line specifies what our function <code>boot_lm</code> returns to us. The function <code>coef()</code> is one that extracts the coefficients from a linear model object; therefore, this line means that <code>boot_lm()</code> return the intercept and any slope coefficients for predictors in the model.</p>
+<p>Having created this function (remember to execute the code), we can use the function to obtain the bootstrap samples like this:</p>
+<pre class="r"><code>boot_result &lt;- boot(boot_lm, formula = immobility ~ r_tms + taser, data = taser_dat, R = 2000)</code></pre>
+<p>Executing this command creates an object called <code>boot_result</code> that contains the bootstrap samples. We use the <code>boot()</code> function to get these. Within this function we tell it to use the function <code>boot_lm()</code> that we just created, and because that function requires a formula and data, we specify the model as we did for the original model (<code>formula = immobility ~ r_tms + taser</code>), and name the data (<code>data = taser_dat</code>). As such, everything in the <code>boot()</code> function is something that we specified as being necessary input for the <code>boot_lm()</code> function when we defined it. <code>R = 2000</code> sets the number of bootstrap samples to 2000, which means we will throw these instructions into the <code>boot_lm()</code> function 2000 different times and save the results in <code>boot_result</code> each time.</p>
+<p>Finally, we use <code>boot.ci()</code> to extract confidence intervals from the bootstrap results that we have saved in <code>boot_result</code>. We want bootstrap confidence intervals for the <em>b</em>-value for the intercept, <strong>r_tms</strong> and <strong>taser</strong>. Because <strong>R</strong> doesn’t know the names of the statistics in <code>boot_result</code>, we have to use their location in the <code>boot_result</code> object to extract them. The intercept will be the first thing in <code>boot_result</code>, and we can access it using <code>index = 1</code>, after which predictors will occur in the order we specified them in the formula in <code>boot_result</code>. For this example we’d get BCa bootstrap the confidence intervals by executing:</p>
+<p><code>boot.ci(boot_result, type = &quot;bca&quot;, index = 1)</code> for the intercept <code>boot.ci(boot_result, type = &quot;bca&quot;, index = 2)</code> for <strong>r_TMS</strong> <code>boot.ci(boot_result, type = &quot;bca&quot;, index = 3)</code> for <strong>taser</strong></p>
+<p>Use the code box below to obtain bootstrapped confidence intervals.</p>
+<div class="tutorial-exercise" data-label="taser_mod_robust_ci" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="10">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"ztaser_mod-setup","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="taser_mod_robust_ci-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>boot_lm &lt;- function(formula, data, index){
+  d &lt;- data[index,]
+  fit &lt;- lm(formula, data = d)
+  coef(fit)
+}
+
+boot_result &lt;- boot(boot_lm, formula = immobility ~ r_tms + taser, data = taser_dat, R = 2000)
+boot.ci(boot_result, type = &quot;bca&quot;, index = 1)
+boot.ci(boot_result, type = &quot;bca&quot;, index = 2)
+boot.ci(boot_result, type = &quot;bca&quot;, index = 3)</code></pre>
+</div>
+</div>
+</div>
+<div id="section-bayesian-zombies" class="section level2">
+<h2>Bayesian zombies</h2>
+<div id="section-bayes-factors" class="section level3">
+<h3>Bayes factors</h3>
+<p>The first thing we could do is compare models using Bayes factors. We can do this using the <code>regressionBF()</code> function in the <a href="http://bayesfactorpcl.r-forge.r-project.org/">BayesFactor package</a>. We could do a whole tutorial on this alone, so I’m just going to show you how to do some stuff (linked to the book) and then you can read more if you get the urge.</p>
+<p>In the book, Milton explains to Zach that one approach is to add or remove predictors to the model and at each step compute a Bayes factor that compares the model to a baseline that includes only the intercept108, 109. Milton then shows Zach output showing the Bayes factor when only rTMS is included as a predictor, when only taser voltage is included, and when both are included. The questions to ask are: (1) which model has the largest Bayes factor, and (2) is it big enough to provide evidence for the hypothesis that the model predicts the outcome better than the intercept alone. The Bayes factors in the book were obtained using the <code>regressionBF()</code> function, which takes this general form:</p>
+<p><code>bf_mod &lt;- regressionBF(formula, rscaleCont = &quot;medium&quot;, data = data.frame(tibble))</code></p>
+<p>This creates an object called <code>bf_mod</code> based on the same type of formula that we put into the <code>lm()</code> function to specify the model (so this should be familiar). To set a prior include <code>rscaleCont =</code>. By default (i.e. if you exclude the option altogether) the prior is set at “medium” (<span class="math inline">\(^\sqrt{2}/_4\)</span>), but you can specify <code>rscaleCont = &quot;wide&quot;</code> (<span class="math inline">\(^1/_2\)</span>) or <code>rscaleCont = &quot;wide&quot;</code> (<span class="math inline">\(^\sqrt{2}/_2\)</span>). Finally, the data are specified. If you are using a tibble (rather than a data frame) then notice that I’ve placed the tibble’s name into the function <code>data.frame()</code>, which converts it to a data frame. I’ve had to do this because (at the time of writing) the <code>BayesFactor</code> package doesn’t accept tibbles as data. For our data (using the default prior) we could execute:</p>
+<pre class="r"><code>taser_bf &lt;- regressionBF(immobility ~ r_tms + taser, data = data.frame(taser_dat))
+taser_bf</code></pre>
+<p>The first line creates the object <code>taser_bf</code> as described above and the second line prints it for us to see. Try this in the code box:</p>
+<div class="tutorial-exercise" data-label="taser_bf" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="taser_bf-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>taser_bf &lt;- regressionBF(immobility ~ r_tms + taser, data = data.frame(taser_dat))
+taser_bf</code></pre>
+</div>
+<p>The largest Bayes factor is for when rTMS and taser are both included as predictors, and it is gigantic. taser voltage still has a reasonable effect (the evidence for the model is 3.14 times that of the null) but much smaller than for rTMS alone (BF = 10,810.52). Including both predictors produces a Bayes factor nearly 10 times greater than for rTMS alone (BF = 105,901.60). Therefore, Zach and Milton decide that they may as well try both devices to immobilize zombies.</p>
+</div>
+<div id="section-bayesian-parameter-estimates" class="section level3">
+<h3>Bayesian parameter estimates</h3>
+<p>The other thing we can do is to estimate the parameters in the model using Bayesian methods. To do this we use the <code>lmBF</code> function, which has the same format as the function that we just used to get the Bayes factors. The difference is that it fits <em>only</em> the model we specify in the formula (whereas <code>regressionBF()</code> compares models with all combinations of predictors to the intercept-only model). For example, <code>taser_bf</code> contains 3 models (<strong>r_tms</strong> vs intercept, <strong>taser</strong> vs intercept, and <strong>r_tms</strong> + <strong>taser</strong> vs intercept). If we execute:</p>
+<pre class="r"><code>full_bf &lt;- lmBF(immobility ~ r_tms + taser, data = data.frame(taser_dat))</code></pre>
+<p>it will return only the last of these models (<strong>r_tms</strong> + <strong>taser</strong> vs intercept). Estimating this model in isolation allows us to extract information from the posterior distribution. In particular we can extract the <em>b</em>-values derived from Bayesian estimation and their credible intervals. To do this we’d place the <code>full_bf</code> object that we just created into the <code>posterior()</code> function and set a value for the number of iterations (I’ve set 10000, which is plenty). I’ve stored the results in an object called <code>full_bf_est</code> the ‘est’ is short for ‘estimates’. To view this object I’ve used the <code>summary()</code> function (which we’ve used before):</p>
+<pre class="r"><code>full_bf_est &lt;- posterior(full_bf, iterations = 10000)
+summary(full_bf_est)</code></pre>
+<p>Try executing these three commands to view the estimates:</p>
+<div class="tutorial-exercise" data-label="taser_bf_est" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="taser_bf_est-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>full_bf &lt;- lmBF(immobility ~ r_tms + taser, data = data.frame(taser_dat))
+full_bf_est &lt;- posterior(full_bf, iterations = 10000)
+summary(full_bf_est)</code></pre>
+</div>
+<p>The values to focus on are the means for <strong>r_tms</strong> and <strong>taser</strong>. Because these estimates are based on a sampling process you will get different results each time you run it (and different results to me). Therefore, Figure 1 shows the specific results I got while writing this tutorial. By looking at from where I’m extracting values you can (hopefully) interpret your own values. When I ran it, the Bayesian estimate of <em>b</em> for <strong>r_tms</strong> was -0.2377 with a 95% credibility interval ranging from -0.3310 to -0.1433 , and for taser it was is 0.3248 with a 95% credible interval from 0.1015 to 0.5494. Unlike confidence intervals we can interpret these credible intervals in terms of probability. For taser, for example, there is a 95% probability that the population value of <em>b</em> lies between 0.1015 and 0.5494.</p>
+<div class="figure">
+<img src="images/ais_14_fig_01.png" alt="Figure 1: Bayesian estimates of the taser model" />
+<p class="caption">Figure 1: Bayesian estimates of the taser model</p>
+</div>
+<p>The Bayesian estimates are really similar to those we got using least squares estimation, and robust estimation, which suggests that whatever way we approach fitting the model, we get support for the idea that taser voltage, and especially rTMS predict the amount of time for which a zombie will be immobilized.</p>
+</div>
+</div>
+<div id="section-other-resources" class="section level2">
+<h2>Other resources</h2>
+<div id="section-statistics" class="section level3">
+<h3>Statistics</h3>
+<ul>
+<li>The tutorials typically follow examples described in detail in <span class="citation">A. P. Field (2016)</span>, so for most of them there’s a thorough account in there. You might also find <span class="citation">A. P. Field, Miles, and Field (2012)</span> useful for the <strong>R</strong> stuff.</li>
+<li>There are free lectures and screen casts on my <a href="https://www.youtube.com/user/ProfAndyField/">YouTube channel</a></li>
+<li>There are free statistical resources on my website <a href="http://www.discoveringstatistics.com">www.discoveringstatistics.com</a></li>
+</ul>
+</div>
+<div id="section-r" class="section level3">
+<h3>R</h3>
+<ul>
+<li>Information on using <a href="http://ggplot2.tidyverse.org/">ggplot2</a></li>
+<li><a href="http://r4ds.had.co.nz/index.html">R for data science</a> is the open-access version of the book by tidyverse creator Hadley Wickham <span class="citation">(Wickham and Grolemund 2017)</span>. It covers the <em>tidyverse</em> and data management.</li>
+<li><a href="http://moderndive.com/index.html">ModernDive</a> is an open-access textbook on <strong>R</strong> and <strong>RStudio</strong></li>
+<li><a href="https://www.rstudio.com/resources/cheatsheets/">RStudio cheat sheets</a></li>
+<li><a href="https://www.rstudio.com/online-learning/">RStudio list of online resources</a></li>
+<li><a href="http://swirlstats.com/students.html">SwirlStats</a> is a package for <em>R</em> that launches a bunch of interactive tutorials.</li>
+</ul>
+</div>
+</div>
+<div id="section-references" class="section level2">
+<h2>References</h2>
+
+<script type="application/shiny-prerendered" data-context="server-start">
+library(learnr)
+library(RefManageR)
+library(tidyverse)
+library(BayesFactor)
+library(boot)
+library(GGally)
+library(lm.beta)
+library(robust)
+library(sjstats)
+
+
+
+knitr::opts_chunk$set(echo = FALSE)
+tutorial_options(exercise.cap = "Exercise")
+
+cbBlack<-"#000000"
+cbGrey<-"#999999"
+cbOrange<-"#E69F00"
+cbBlue<-"#56B4E9"
+cbGreen<-"#009E73"
+cbYellow<-"#F0E442"
+cbBlueDark<-"#0072B2"
+cbOrangeDark<-"#D55E00"
+cbPink<-"#CC79A7"
+cbRed<-"#DF4738"
+
+andy.theme <- function(base_size = 12, base_family = "") {
+  # Starts with theme_grey and then modify some parts
+  theme_grey(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.2)),
+      axis.title.y        = element_text(margin = margin(0, 10, 0, 0), angle = 90),
+      axis.title.x        = element_text(margin = margin(10, 0, 0, 0)),
+      axis.text           = element_text(size = rel(0.75), colour = "grey35"),
+      axis.text.x         = element_text(margin = margin(2, 0, 0, 0)),
+      axis.text.y         = element_text(margin = margin(0, 2, 0, 0)),
+      axis.ticks        = element_line(colour = "grey35"),
+      legend.key        = element_rect(colour = "white"),
+      panel.background  = element_rect(fill = "white", colour = NA),
+      panel.border      = element_rect(fill = NA, colour = "grey50"),
+      panel.grid.major  = element_line(colour = "grey90", size = 0.2),
+      panel.grid.minor  = element_line(colour = "grey98", size = 0.5),
+      strip.background  = element_rect(fill = "grey80", colour = "grey50"),
+      strip.text  = element_text(size = rel(1.4))
+    )
+}
+
+andy.dsus <- function(base_size = 12, base_family = "") {
+  andy.theme(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.6)),
+      axis.text           = element_text(size = rel(1.3), colour = "grey35"),
+      strip.background = element_rect(fill = cbBlueDark, colour = "white"),
+      strip.text  = element_text(size = rel(1.3), colour = "white")
+    )
+}
+
+colFmt = function(x,color){
+  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
+  if(outputFormat == 'latex')
+    paste("\\textcolor{",color,"}{",x,"}",sep="")
+  else if(outputFormat == 'html')
+    paste("<font color='",color,"'>",x,"<\u002ffont>",sep="")
+  else
+    x
+}
+
+#Read dat files needed for the tutorial
+
+#If command tries to work out whether the code is running online (rather than a package). If online it loads the data from external source, otherwise it'll have the data anyway from the package
+
+if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
+    garlic_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_14_zombie_garlic.csv");
+    taser_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_14_zombie_taser.csv")
+    } else {
+    garlic_dat <- adventr::garlic_dat;
+    taser_dat <- adventr::taser_dat
+    }
+
+#setup objects for code blocks
+
+
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+learnr:::register_http_handlers(session, metadata = NULL)
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-scat-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-scat-code-editor`)), session)
+output$`tutorial-exercise-scat-output` <- renderUI({
+  `tutorial-exercise-scat-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-lm1-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-lm1-code-editor`)), session)
+output$`tutorial-exercise-lm1-output` <- renderUI({
+  `tutorial-exercise-lm1-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-ggpair_eg-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-ggpair_eg-code-editor`)), session)
+output$`tutorial-exercise-ggpair_eg-output` <- renderUI({
+  `tutorial-exercise-ggpair_eg-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-taser_mod-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-taser_mod-code-editor`)), session)
+output$`tutorial-exercise-taser_mod-output` <- renderUI({
+  `tutorial-exercise-taser_mod-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-ztaser_mod-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-ztaser_mod-code-editor`)), session)
+output$`tutorial-exercise-ztaser_mod-output` <- renderUI({
+  `tutorial-exercise-ztaser_mod-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-taser_mod_ci-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-taser_mod_ci-code-editor`)), session)
+output$`tutorial-exercise-taser_mod_ci-output` <- renderUI({
+  `tutorial-exercise-taser_mod_ci-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-taser_mod_plot-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-taser_mod_plot-code-editor`)), session)
+output$`tutorial-exercise-taser_mod_plot-output` <- renderUI({
+  `tutorial-exercise-taser_mod_plot-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-taser_mod_robust-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-taser_mod_robust-code-editor`)), session)
+output$`tutorial-exercise-taser_mod_robust-output` <- renderUI({
+  `tutorial-exercise-taser_mod_robust-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-taser_mod_hc4-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-taser_mod_hc4-code-editor`)), session)
+output$`tutorial-exercise-taser_mod_hc4-output` <- renderUI({
+  `tutorial-exercise-taser_mod_hc4-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-taser_mod_robust_ci-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-taser_mod_robust_ci-code-editor`)), session)
+output$`tutorial-exercise-taser_mod_robust_ci-output` <- renderUI({
+  `tutorial-exercise-taser_mod_robust_ci-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-taser_bf-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-taser_bf-code-editor`)), session)
+output$`tutorial-exercise-taser_bf-output` <- renderUI({
+  `tutorial-exercise-taser_bf-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-taser_bf_est-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-taser_bf_est-code-editor`)), session)
+output$`tutorial-exercise-taser_bf_est-output` <- renderUI({
+  `tutorial-exercise-taser_bf_est-result`()
+})
+</script>
+ <!--html_preserve-->
+<script type="application/shiny-prerendered" data-context="dependencies">
+{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery-1.11.3"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap-3.3.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/cerulean.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["pagedtable"]},{"type":"character","attributes":{},"value":["1.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/pagedtable-1.1"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/pagedtable.js"]},{"type":"character","attributes":{},"value":["css/pagedtable.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["highlightjs"]},{"type":"character","attributes":{},"value":["1.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/highlightjs-1.1"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["highlight.js"]},{"type":"character","attributes":{},"value":["textmate.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-format"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmarkdown/templates/tutorial/resources"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-format.js"]},{"type":"character","attributes":{},"value":["tutorial-format.css","rstudio-theme.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery-1.11.3"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["font-awesome"]},{"type":"character","attributes":{},"value":["4.5.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/font-awesome-4.5.0"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/font-awesome.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootbox"]},{"type":"character","attributes":{},"value":["4.4.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/bootbox"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["bootbox.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["localforage"]},{"type":"character","attributes":{},"value":["1.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/localforage"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["localforage.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["0.8"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["quiz-binding"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["quiz.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[false]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery-1.11.3"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap-3.3.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/bootstrap.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootbox"]},{"type":"character","attributes":{},"value":["4.4.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/bootbox"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["bootbox.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["localforage"]},{"type":"character","attributes":{},"value":["1.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/localforage"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["localforage.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["slickquiz"]},{"type":"character","attributes":{},"value":["1.5.20"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/slickquiz"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/slickQuiz.js"]},{"type":"character","attributes":{},"value":["css/slickQuiz.css","css/slickQuizTutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["0.8"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["quiz-binding"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["quiz.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[false]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery-1.11.3"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap-3.3.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/bootstrap.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootbox"]},{"type":"character","attributes":{},"value":["4.4.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/bootbox"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["bootbox.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["localforage"]},{"type":"character","attributes":{},"value":["1.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/localforage"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["localforage.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["slickquiz"]},{"type":"character","attributes":{},"value":["1.5.20"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/slickquiz"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/slickQuiz.js"]},{"type":"character","attributes":{},"value":["css/slickQuiz.css","css/slickQuizTutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["0.8"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["quiz-binding"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["quiz.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[false]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery-1.11.3"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap-3.3.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/bootstrap.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootbox"]},{"type":"character","attributes":{},"value":["4.4.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/bootbox"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["bootbox.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["localforage"]},{"type":"character","attributes":{},"value":["1.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/localforage"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["localforage.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["slickquiz"]},{"type":"character","attributes":{},"value":["1.5.20"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/slickquiz"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/slickQuiz.js"]},{"type":"character","attributes":{},"value":["css/slickQuiz.css","css/slickQuizTutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["0.8"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["quiz-binding"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["quiz.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[false]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery-1.11.3"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap-3.3.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/bootstrap.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootbox"]},{"type":"character","attributes":{},"value":["4.4.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/bootbox"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["bootbox.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["localforage"]},{"type":"character","attributes":{},"value":["1.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/localforage"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["localforage.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["slickquiz"]},{"type":"character","attributes":{},"value":["1.5.20"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/slickquiz"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/slickQuiz.js"]},{"type":"character","attributes":{},"value":["css/slickQuiz.css","css/slickQuizTutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]}]}
+</script>
+<!--/html_preserve-->
+<div id="section-refs" class="references">
+<div id="section-ref-RN11412">
+<p>Behrendt, Stefan and. 2014. “Lm.beta: Add Standardized Regression Coefficients to Lm-Objects.” Journal Article. <em>R Package Version 1.5-1.</em> <a href="https://CRAN.R-project.org/package=lm.beta" class="uri">https://CRAN.R-project.org/package=lm.beta</a>.</p>
+</div>
+<div id="section-ref-RN11409">
+<p>Canty, Angelo, and Brian Ripley. 2017. “Boot: Bootstrap R (S-Plus) Functions.” Journal Article. <em>R Package Version 1.3-19.</em> <a href="https://CRAN.R-project.org/package=boot" class="uri">https://CRAN.R-project.org/package=boot</a>.</p>
+</div>
+<div id="section-ref-RN11402">
+<p>Cribari-Neto, F. 2004. “Asymptotic Inference Under Heteroskedasticity of Unknown Form.” Journal Article. <em>Computational Statistics &amp; Data Analysis</em> 45 (2): 215–33. doi:<a href="https://doi.org/10.1016/s0167-9473(02)00366-3">10.1016/s0167-9473(02)00366-3</a>.</p>
+</div>
+<div id="section-ref-RN10163">
+<p>Field, Andy P. 2016. <em>An Adventure in Statistics: The Reality Enigma</em>. Book. London: Sage.</p>
+</div>
+<div id="section-ref-RN10588">
+<p>Field, Andy P., and Rand R. Wilcox. 2017. “Robust Statistical Methods: A Primer for Clinical Psychology and Experimental Psychopathology Researchers.” Journal Article. <em>Behaviour Research and Therapy</em> 98: 19–38. doi:<a href="https://doi.org/10.1016/j.brat.2017.05.013">10.1016/j.brat.2017.05.013</a>.</p>
+</div>
+<div id="section-ref-RN4832">
+<p>Field, Andy P., Jeremy N. V. Miles, and Zoe C. Field. 2012. <em>Discovering Statistics Using R: And Sex and Drugs and Rock ’N’ Roll</em>. Book. London: Sage.</p>
+</div>
+<div id="section-ref-RN5348">
+<p>Hayes, A. F., and L. Cai. 2007. “Using Heteroskedasticity-Consistent Standard Error Estimators in Ols Regression: An Introduction and Software Implementation.” Journal Article. <em>Behavior Research Methods</em> 39 (4): 709–22.</p>
+</div>
+<div id="section-ref-RN11398">
+<p>Long, J. S., and L. H. Ervin. 2000. “Using Heteroscedasticity Consistent Standard Errors in the Linear Regression Model.” Journal Article. <em>American Statistician</em> 54 (3): 217–24. doi:<a href="https://doi.org/10.2307/2685594">10.2307/2685594</a>.</p>
+</div>
+<div id="section-ref-RN11413">
+<p>Lüdecke, Daniel. 2017. “Sjstats: Statistical Functions for Regression Models.” Journal Article. <em>R Package Version 0.11.1</em>. <a href="https://CRAN.R-project.org/package=sjstats" class="uri">https://CRAN.R-project.org/package=sjstats</a>.</p>
+</div>
+<div id="section-ref-RN9444">
+<p>Morey, Richard D., and Jeffrey N. Rouder. 2014. “BayesFactor: Computation of Bayes Factors for Common Designs.” Journal Article R package version 0.9.9. <a href=" http://CRAN.R-project.org/package=BayesFactor">http://CRAN.R-project.org/package=BayesFactor</a>.</p>
+</div>
+<div id="section-ref-RN11410">
+<p>Schloerke, Barret, Jason Crowley, Di Cook, Francois Briatte, Moritz Marbach, Edwin Thoen, Amos Elberg, and Joseph Larmarange. 2017. “GGally: Extension to ’Ggplot2’.” Journal Article. <em>R Package Version 1.3.2</em>. <a href="  https://CRAN.R-project.org/package=GGally">https://CRAN.R-project.org/package=GGally</a>.</p>
+</div>
+<div id="section-ref-RN11411">
+<p>Wang, Jiahui, Ruben Zamar, Alfio Marazzi, Victor Yohai, Matias Salibian-Barrera, Ricardo Maronna, Eric Zivot, et al. 2017. “Robust: Port of the S+ ‘Robust Library’.” Journal Article. <em>R Package Version 0.4-18.</em> <a href="https://CRAN.R-project.org/package=robust" class="uri">https://CRAN.R-project.org/package=robust</a>.</p>
+</div>
+<div id="section-ref-RN11407">
+<p>Wickham, Hadley. 2017. “Tidyverse: Easily Install and Load ’Tidyverse’ Packages.” Journal Article. <em>R Package Version 1.1.1.</em> <a href="https://CRAN.R-project.org/package=tidyverse" class="uri">https://CRAN.R-project.org/package=tidyverse</a>.</p>
+</div>
+<div id="section-ref-RN11404">
+<p>Wickham, Hadley, and G. Grolemund. 2017. <em>R for Data Science</em>. Book. Sebastopol, CA: O’Reilly.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="section-fn1"><p>Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.<a href="#section-fnref1">↩</a></p></li>
+</ol>
+</div>
+
+</div> <!-- topics -->
+
+<div class="topicsContainer">
+<div class="topicsPositioner">
+<div class="band">
+<div class="bandContent topicsListContainer">
+
+<!-- begin doc-metadata -->
+<div id="doc-metadata">
+<h2 class="title toc-ignore" style="display:none;">AAiR: The GLM</h2>
+<h4 class="author"><em>Andy Field</em></h4>
+</div>
+<!-- end doc-metadata -->
+
+</div> <!-- bandContent.topicsListContainer -->
+</div> <!-- band -->
+</div> <!-- topicsPositioner -->
+</div> <!-- topicsContainer -->
+
+
+</div> <!-- bandContent page -->
+</div> <!-- pageContent band -->
+
+
+
+
+<script>
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+</script>
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+
+</html>

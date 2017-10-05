@@ -12,6 +12,7 @@ LazyData: true
 Imports:
     BayesFactor,
     effsize,
+    forcats,
     GGally,
     gmodels,
     learnr,
@@ -19,7 +20,8 @@ Imports:
     RefManageR,
     robust,
     sjstats,
-    tidyverse
+    tidyverse,
+    WRS2
 RoxygenNote: 6.0.1
 Suggests: knitr,
     rmarkdown

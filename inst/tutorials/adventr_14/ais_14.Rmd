@@ -414,7 +414,7 @@ $$
 It's sometimes useful to standardize the model parameters. We can add these to the model using the `lm.beta()` function from the package of the same name. All we need to do is to put the object (`taser_mod`) that we created with the `lm()` function into `lm.beta()` and it will add the standardized coefficients. We can use these two lines of code:
 
 ```{r echo = T, eval = F}
-taser_mod <- std_beta(taser_mod)
+taser_mod <- lm.beta(taser_mod)
 summary(taser_mod)
 ```
 
@@ -600,7 +600,7 @@ boot.ci(boot_result, type = "bca", index = 3)
 
 The first thing we could do is compare models using Bayes factors. We can do this using the `regressionBF()` function in the [BayesFactor package](http://bayesfactorpcl.r-forge.r-project.org/). We could do a whole tutorial on this alone, so I'm just going to show you how to do some stuff (linked to the book) and then you can read more if you get the urge.
 
-In the book, Milton explains to Zach that one approach is to add or remove predictors to the model and at each step compute a Bayes factor that compares the model to a baseline that includes only the intercept108, 109. Milton then shows Zach output showing the Bayes factor when only rTMS is included as a predictor, when only taser voltage is included, and when both are included. The questions to ask are: (1) which model has the largest Bayes factor, and (2) is it big enough to provide evidence for the hypothesis that the model predicts the outcome better than the intercept alone. The Bayes factors in the book were obtained using the `regressionBF()` function, which takes this general form:
+In the book, Milton explains to Zach that one approach is to add or remove predictors to the model and at each step compute a Bayes factor that compares the model to a baseline that includes only the intercept [@RN9309; @RN9310]. Milton then shows Zach output showing the Bayes factor when only rTMS is included as a predictor, when only taser voltage is included, and when both are included. The questions to ask are: (1) which model has the largest Bayes factor, and (2) is it big enough to provide evidence for the hypothesis that the model predicts the outcome better than the intercept alone. The Bayes factors in the book were obtained using the `regressionBF()` function, which takes this general form:
 
 `bf_mod <- regressionBF(formula, rscaleCont = "medium", data = data.frame(tibble))`
 
@@ -634,13 +634,13 @@ full_bf <- lmBF(immobility ~ r_tms + taser, data = data.frame(taser_dat))
 
 it will return only the last of these models (**r_tms** + **taser** vs intercept). Estimating this model in isolation allows us to extract information from the posterior distribution. In particular we can extract the *b*-values derived from Bayesian estimation and their credible intervals. To do this we'd place the `full_bf` object that we just created into the `posterior()` function and set a value for the number of iterations (I've set 10000, which is plenty). I've stored the results in an object called `full_bf_est` the 'est' is short for 'estimates'. To view this object I've used the `summary()` function (which we've used before):
 
-
 ```{r echo = T, eval = F}
 full_bf_est <- posterior(full_bf, iterations = 10000)
 summary(full_bf_est)
 ```
 
 Try executing these three commands to view the estimates:
+
 
 ```{r taser_bf_est, exercise = TRUE}
   

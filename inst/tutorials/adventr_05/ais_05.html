@@ -513,6 +513,7 @@ scat +
 <h2>References</h2>
 
 <script type="application/shiny-prerendered" data-context="server-start">
+library(forcats)
 library(learnr)
 library(RefManageR)
 library(tidyverse)
@@ -577,7 +578,10 @@ colFmt = function(x,color){
 #If command tries to work out whether the code is running online (rather than a package). If online it loads the data from external source, otherwise it'll have the data anyway from the package
 
 if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
-    jig_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_c05_jigsaw.csv")
+    jig_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_c05_jigsaw.csv");
+    jig_dat$employee <- forcats::as_factor(jig_dat$employee);
+    jig_dat$job_type <- forcats::as_factor(jig_dat$job_type);
+    jig_dat$sex <- forcats::as_factor(jig_dat$sex)
     } else {
     jig_dat <- adventr::jig_dat
     }

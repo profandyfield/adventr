@@ -9,6 +9,7 @@ bibliography: adventr_bib.bib
 ---
 
 ```{r setup, include=FALSE}
+library(forcats)
 library(learnr)
 library(RefManageR)
 library(tidyverse)
@@ -196,7 +197,7 @@ You can load the file in several ways:
 ## Categorical predictors in the GLM
 ### The model
 
-During Zach's visit to the JIG:SAW complex he visits several research buildings. In the first, he discovers experiments being conducted related to invisibility. Each participant sat on a revolving chair in the middle of a circle of 20 people. The 20 people all wore a light deflecting aid on their face. For half of the participants (*N* = 14) the 20 people wore a calcite-based mask, whereas the other half (*N* = 14) saw people wearing ‘invisibility paste’, a transparent cream containing calcite micro-crystals. Participants looked at each person and were given two photographs, one depicting the person they were looking at and one depicting a different person matched for age and sex. Participants had to decide which person they were looking at, before turning to the next person and being given two different photographs. Participants scored a point for each person they identified correctly: a score of 0 would mean they always chose the incorrect photo, a score of 20 would mean that they always chose the correct photo. The question is whether the light deflecting aids interfere with facial recognition. The prediction was that the paste would lead to lower recognition than the masks. The data are in the tibble `mem_dat`, which has three variables:
+During Zach's visit to the JIG:SAW complex he visits several research buildings. In the first, he discovers experiments being conducted related to invisibility. Each participant sat on a revolving chair in the middle of a circle of 20 people. The 20 people all wore a light deflecting aid on their face. For half of the participants (*N* = 14) the 20 people wore a calcite-based mask, whereas the other half (*N* = 14) saw people wearing ‘invisibility paste’, a transparent cream containing calcite micro-crystals. Participants looked at each person and were given two photographs, one depicting the person they were looking at and one depicting a different person matched for age and sex. Participants had to decide which person they were looking at, before turning to the next person and being given two different photographs. Participants scored a point for each person they identified correctly: a score of 0 would mean they always chose the incorrect photo, a score of 20 would mean that they always chose the correct photo. The question is whether the light deflecting aids interfere with facial recognition. The prediction was that the paste would lead to lower recognition than the masks. The data are in the tibble `mask_dat`, which has three variables:
 
 * **id**: Participant ID
 * **mask**: Whether the person was assigned to the calcite mask condition or the invisibility paste condition
@@ -357,7 +358,7 @@ robust(mask_mod, vcov = "HC4", conf.int = T)
 
 ### Robust estimates
 
-We also saw in *advetr_14* that we can get robust parameter estimates using the `lmRob()` function from the `robust` package (again, if you're working outside of the tutorial remember to execute `library(robust)`). Recall that the function is used in the same way as `lm()` so you can copy your earlier code and replace `lm` with `lmRob`. Try this in the code box.
+We also saw in *advetr_14* that we can get robust parameter estimates using the `lmRob()` function from the `robust` package (again, if you're working outside of the tutorial remember to execute `library(robust)`). Recall that the function is used in the same way as `lm()` so you can copy your earlier code and replace `lm` with `lmRob`. Try this in the code box to create a model called `mask_rob`, and use `summary()` to view it.
 
 ```{r mask_mod_robust, exercise = TRUE}
   
@@ -375,6 +376,8 @@ Note that the parameter for the effect of mask has changed from -3.357 to -1.833
 ### Bootstrap confidence intervals
 
 We can also bootstrap confidence intervals just as we did in *adventr_14*. Try this in a separate **RStudio** session outside of the tutorial by loading the data and running:
+
+`r colFmt("Hint: remember that you need the package boot, so execute library(boot) before executing the code below.", cbGreen)`
 
 ```{r mask_mod_boot, echo = T, eval = F}
 library(boot) #This loads the package boot
@@ -434,14 +437,18 @@ Like in *adventr_11* and *adventr_14* we can use the [BayesFactor package](http:
 
 To recap, by default the function assumes independent scores (`paired = FALSE`) so for dependent scores (see *adventr_15_rm*) we'd change this to `paired = TRUE`. The function uses default priors that can be specified as a number or as "medium" (the default), "wide", and "ultrawide". These labels correspond to *r* scale values of $^\sqrt{2}/_2$, 1, and $\sqrt{2}$. These priors were explained in *adventr_11*.
 
-So we would use the same formula that we have used throughout, and specify our tibble as `mask_dat`. It's a good idea to save this model into a new object (lets call it `mask_bf`) because you can do useful things with it (we didn't do this for the `yuen()` functions, but you could). Remember that if you are using a tibble (rather than a data frame) then place the tibble's name into the function `data.frame()`, to convert it to a data frame. This step is necessary because (at the time of writing) the `BayesFactor` package doesn't accept tibbles. For our data (using the default prior) we could execute:
+So we would use the same formula that we have used throughout, and specify our tibble as `mask_dat`. It's a good idea to save this model into a new object (lets call it `mask_bf`) because you can do useful things with it (we didn't do this for the `yuen()` functions, but you could).
+
+`r colFmt("Tip: if you are using a tibble (rather than a data frame) then place the tibble's name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn't accept tibbles.", cbGreen)`
+
+For our data (using the default prior) we could execute:
 
 ```{r echo = T, eval = F}
 mask_bf <- ttestBF(formula = recognition ~ mask, data = data.frame(mask_dat))
 mask_bf
 ```
 
-The first line creates the object `taser_bf` as described above and the second line prints it for us to see. Try this in the code box:
+The first line creates the object `mask_bf` as described above and the second line prints it for us to see. Try this in the code box:
 
 ```{r mask_bf, exercise = TRUE}
   
@@ -456,7 +463,7 @@ The value matches that in the book (*an adventure in statistics*). As Milton exp
 
 ### Bayesian parameter estimates
 
-We can get estimate of the parameters in the model using Bayesian methods using the 'posterior()' function that we used in *adventr_14* to extract the same information. The process is identical to what we did in that previous tutorial. We place the object we just created (`mask_bf`) into the function and specify a number of iterations, then use the `summary()` function to view what we have created:
+We can get estimate of the parameters in the model using the `posterior()` function that we used in *adventr_14* to extract the same information. The process is identical to what we did in that previous tutorial. We place the object we just created (`mask_bf`) into the function and specify a number of iterations, then use the `summary()` function to view what we have created:
 
 ```{r echo = T, eval = F}
 mask_bf_est <- posterior(mask_bf, iterations = 10000)

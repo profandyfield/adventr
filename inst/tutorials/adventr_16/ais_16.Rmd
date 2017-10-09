@@ -357,6 +357,7 @@ dum_mod <- lm(recall ~ erase_dummy + replace_dummy, data = memory_dat)
 summary(dum_mod)
 ```
 
+## Contrasts
 ### Assigning contrasts
 
 We can override the default dummy coding (or, as we shall see, use contrast coding) by using the `contrasts()` function. The way I like to use this function is to create variables containing the codes that I want to use, and then assign these variables to the variable that I want to add contrasts to by using these variables. This method is slightly long-winded but has the advantage that the variable names for the contrasts you create are used in the output. So, it enables you to set names for your contrasts, which make the output more interpretable.
@@ -417,7 +418,7 @@ summary(mem_mod_2)
 
 Compare the output with that of the previous model. Note that the overall fit of the model hasn't changed *F*(2, 33) = 2.51, *p* = 0.097, but that the *b*-values have. ($b_0$) is now 2.67, which is the mean of the replace group (because this is now the reference category). The first *b* for **group** is now the difference between the mean of the control group (5.00) and the mean of the replace group (2.67), which is $5.00 - 2.67 = 2.33$, and the second *b* for **group** is now the difference between the mean of the erase group (4.75) and the mean of the replace group (2.67), which is $4.75 - 2.67 = 2.08$. Finally, note that by naming our coding variables when we specified them, the output helpfully labels the *b*s for group with *rep_vs_control* and *rep_vs_erase*.
 
-## Contrast coding
+### Contrast coding
 
 In the chapter, lecture we was that we can use different types of coding to compare different groups. One alternative to dummy coding is contrast coding. We can achieve contrast coding in the same way as just described: using the `contrasts()` function. In the book, Zach discovered that the researchers at JIG:SAW had predicted that recall will be worse (i.e. lower scores) for participants who had an electrical pulse, or conflicting information sent to their ID chips during recall than those, in the control group, who experienced no interference. In the chapter/lecture we discovered that we could operationalize these hypotheses as two dummy variables using contrast codes.
 
@@ -452,6 +453,28 @@ summary(con_mod)
 
 You should find that the *b* for the first contrast is proportional to the difference between the average of the erase and replace group (because the group sizes are equal we can take a straight average, $\frac{4.75 + 2.67}{2} = 3.71$) and the average of the control (5.00), which is $5.00-3.71 = -1.29$. The *b* is this value divided by the number of groups, 3 ($\frac{-1.29}{3} = -0.43$). The *b* for the first contrast is proportional to the difference between the means of the erase and replace groups ($2.67-4.75 = -2.08$. The *b* is this value divided by the number of groups, 2 ($\frac{-2.08}{2} = -1.04$).
 
+### Trends (polynomial contrasts)
+
+As well as defining our own contrasts, we can use pre-defined ones. For example, if we predicted a trend in our group means (i.e., our groups have a meaningful order such as increasing does of a drug) we might want to do a trend analysis, also known as *polynomial* contrasts. These contrasts test for linear, quadratic, cubic (and higher) trends. When the predictor variable is categorical, these contrasts test for a patterns in the means across groups that follow a linear, quadratic (etc.) pattern. We can set this trend using `contr.poly()` and specifying the number of groups (in this case 3). For example, we would set a polynomial contrast for the variable **group** by executing:
+
+`contrasts(memory_dat$group) <- contr.poly(3)`
+
+`r colFmt("Tip: R will order the groups alphabetically (in this case control, erase, replace). For the current data this is a sensible order because we expect recall to get progressively worse across those groups. However, if the alphabetical order of groups does not represent the order that you want, you can use the fct_relevel() function in the forcats package to re-order the levels of your grouping variable into the order you want.", cbGreen)`
+
+Set the variable **group** to have polynomial contrast (as above) then create and summarize a model called `mem_mod_poly` that fits a linear model predicting **recall** from **group**.
+
+```{r lm_poly, exercise = TRUE}
+     
+               
+```
+
+```{r lm_poly-solution}
+contrasts(memory_dat$group) <- contr.poly(3)
+mem_mod_poly <- lm(recall ~ group, data = memory_dat)
+summary(mem_mod_poly)
+```
+
+The output contains two contrasts (because there were 3 groups). The *b* labelled **group.L** tests the linear contrast (that's what the 'L' is for) and the *b* labelled **group.Q** tests the quadratic contrast (hence the 'Q'). With three groups we can't test for a higher order polynomial, but if you had 4 categories then you'd get a cubic contrast, and so on. The output shows that the linear trend is significant, *t* = -2.04, *p* = 0.049, whereas the quadratic trend is not, *t* =  -0.93, *p* = 0.361. 
 
 ## Robust models
 ### Robust standard errors

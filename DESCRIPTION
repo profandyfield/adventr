@@ -15,6 +15,7 @@ Imports:
     forcats,
     GGally,
     gmodels,
+    Hmisc,
     learnr,
     lm.beta,
     RefManageR,

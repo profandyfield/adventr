@@ -171,6 +171,7 @@ This tutorial uses the following packages:
 * `BayesFactor` [@RN9444] to compute Bayes factors
 * `effsize` [@RN11406] to compute Cohen's *d*
 * `gmodels` [@RN11408] to compute confidence intervals
+* `Hmisc` to compute  confidence intervals within `ggplot2`
 * `tidyverse` [@RN11407] for general data processing
 
 These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in **RStudio**) then you need to make sure that the package has been installed by executing `install.packages("package_name")`, where *package_name* is the name of the package. If the package is already installed, then you need to reference it in your current session by executing `library(package_name)`, where *package_name* is the name of the package.

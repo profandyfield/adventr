@@ -4,7 +4,13 @@
 \name{alice_dat}
 \alias{alice_dat}
 \title{Alice's gene data}
-\format{An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 32 rows and 4 columns.}
+\format{A tibble with 32 rows and 4 variables:
+\describe{
+  \item{id}{Participant ID}
+  \item{picture}{A factor describing whether a participant tried to resemble a picture of themselves (Self), or a matched stranger (Other)}
+  \item{gene}{A factor describing whether a participant received the toggle switch (C-gene + Toggle) or not (C-gene)}
+  \item{resemblance}{How closely their face resembled the picture (100\% = the participants face is exactly like the face in the photograph, 0\% the person in the photo bears no resemblance at all to the participant)}
+}}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

@@ -11,6 +11,8 @@ Depends: R (>= 3.1.0)
 LazyData: true
 Imports:
     BayesFactor,
+    car,
+    effects,
     effsize,
     forcats,
     GGally,

@@ -16,7 +16,7 @@ library(tidyverse)
 
 library(BayesFactor)
 library(car)
-library(effects)
+#library(effects)
 library(gmodels)
 library(lm.beta)
 library(robust)
@@ -85,15 +85,16 @@ colFmt = function(x,color){
 #If command tries to work out whether the code is running online (rather than a package). If online it loads the data from external source, otherwise it'll have the data anyway from the package
 
 if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
-  mem_cov_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_16_memory_cov.csv");
-  mem_cov_dat$group <- forcats::as_factor(mem_cov_dat$group);
-  alice_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_17_alice_data.csv");
-  alice_dat$picture <- forcats::as_factor(alice_dat$picture);
-  alice_dat$gene <- forcats::as_factor(alice_dat$gene)
-    } else {
+    mem_cov_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_16_memory_cov.csv");
+    mem_cov_dat$group <- forcats::as_factor(mem_cov_dat$group);
+    alice_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_17_alice_data.csv");
+    alice_dat$picture <- forcats::as_factor(alice_dat$picture);
+    alice_dat$gene <- forcats::as_factor(alice_dat$gene)
+  } else {
     mem_cov_dat <- adventr::mem_cov_dat;
     alice_dat <- adventr::alice_dat
-    }
+}
+
 
 #setup objects for code blocks
 
@@ -176,7 +177,6 @@ This tutorial uses the following packages:
 * `BayesFactor` [@RN9444] to compute Bayes factors
 * `boot` [@RN11409] to compute bootstrap confidence intervals.
 * `car` [@RN11416] to compute type III sums of squares
-* `effects` [@RN11414] to compute adjusted means
 * `robust` [@RN11411] to compute robust estimates
 * `sjstats` [@RN11413] to produce robust parameter estimates and confidence intervals
 * `tidyverse` [@RN11407] for general data processing
@@ -587,7 +587,7 @@ Y_i & = b_0 + b_1X_i+ ε_i\\
 \end{aligned}
 $$
 
-### Adjusting means
+###Fitting the model
 
 We can fit this model in the same way as described for a factorial design. Remember that **R** will dummy code the variable **group** for us, but we'd want to set some orthogonal contrasts. We did this in the previous tutorial using these commands:
 
@@ -597,26 +597,10 @@ erase_vs_replace <- c(0, -1, 1)
 contrasts(mem_cov_dat$group) <- cbind(interference_vs_none, erase_vs_replace)
 ```
 
-Having done that we can follow the same process as the previous example for fitting the model (using `lm()`), getting *F*-statistics (using `Anova()`), fitting robust models (using `lmRob()` or `robust()`) and getting Bayes factors (using `lmBF()`). The only additional concern is getting the adjusted means, which we can do using the `effect()` function from the `effects` package:
-
- `effect("predictor", model)`
- 
- So, you put in the name of your model and the name of the variable for which you want adjusted means. For the current example, we could, therefore, execute:
- 
-```{r echo = T, eval = F}
-mem_cov_mod <- lm(recall ~ working_mem + group, data = mem_cov_dat)
-effect("group", mem_cov_mod)
-```
-
-The first line creates the model predicting recall scores from working memory and experimental group. The second line returns the means for **group** adjusted for working memory (these are the means in each group at the average level of working memory).
-
-###Fitting the model
-
-Fitting the model is really the same as for the gene example. So, either in a separate **RStudio** session or in the box below generate a script to do the following:
+Having done that we can follow the same process as the previous example for fitting the model (using `lm()`), getting *F*-statistics (using `Anova()`), fitting robust models (using `lmRob()` or `robust()`) and getting Bayes factors (using `lmBF()`). Either in a separate **RStudio** session or in the box below generate a script to do the following:
 
 * Set orthogonal contrasts for the variable **group** (as above)
 * Fit a linear model predicting recall from working memory and group membership
-* extract the adjusted means for **group**
 * Get *F*-statistics (using Type III sums of squares)
 * Fit robust models using `robust()` and `lmRob()`
 * Compute Bayes factors for the model with only working memory as a predictor and then for the model after group has been added. Compare the later model to the former.
@@ -635,7 +619,6 @@ contrasts(mem_cov_dat$group) <- cbind(interference_vs_none, erase_vs_replace)
 
 mem_cov_mod <- lm(recall ~ working_mem + group, data = mem_cov_dat)
 summary(mem_cov_mod)
-effect("group", mem_cov_mod)
 
 Anova(mem_cov_mod, type = 3)
 robust(mem_cov_mod)

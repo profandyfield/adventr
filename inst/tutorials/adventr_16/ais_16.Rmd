@@ -192,7 +192,7 @@ You can load the file in several ways:
 * To load the file using a standard dialogue box to navigate your file system, execute:
     - `memory_dat <- read_csv(file.choose())`
 * You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
-    - `memory_dat <- read_csv("(http://www.discoveringstatistics.com/repository/ais_data/ais_16_memory_erasing.csv")`
+    - `memory_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_16_memory_erasing.csv")`
     - This method relies on an internet connection (and my server having not exploded!)
 
 
@@ -253,7 +253,7 @@ mem_summary
 
 ### Plotting the data
 
-Let's plot the data. Use the code box below to create an error bar chart with **group** on the *y*-axis and **recall** on the *x*-axis. If you feel like it, try to superimpose the raw data. (Hint, you can adapt the code that you used in the *adventr_15* tutorial.)
+Let's plot the data. Use the code box below to create an error bar chart with **group** on the *x*-axis and **recall** on the *y*-axis. If you feel like it, try to superimpose the raw data. (Hint, you can adapt the code that you used in the *adventr_15* tutorial.)
 
 ```{r scat, exercise = TRUE, exercise.lines = 8}
      
@@ -313,7 +313,7 @@ knitr::kable(tibble(Group, groupErase, groupReplace), caption = "Table 1: Dummy 
 
 ```
 
-For now, the *Y* intercept ($b_0$) is 5, which is the value of recognition when when **group** is the reference category. As just described, **R** will have coded the variable **group** alphabetically (unless you tell it something different) so the reference category is the control group. So, ($b_0$) is 5 because the mean of the control group is 5. As we saw above, the two predictors are dummy variables, and their respective *b*s reflect the differences between means that the dummy variables code. **groupErase** will be the difference between the mean of the erase group (4.75) and the mean of the control group (5.00), which is $4.75 - 5.00 = -0.25$, and **groupReplace** will be the difference between the mean of the replace group (2.67) and the mean of the control group (5.00), which is $2.67 - 5.00 = -2.33$.
+For now, the *Y* intercept ($b_0$) is 5, which is the value of recognition when **group** is the reference category. As just described, **R** will have coded the variable **group** alphabetically (unless you tell it something different) so the reference category is the control group. So, ($b_0$) is 5 because the mean of the control group is 5. As we saw above, the two predictors are dummy variables, and their respective *b*s reflect the differences between means that the dummy variables code. **groupErase** will be the difference between the mean of the erase group (4.75) and the mean of the control group (5.00), which is $4.75 - 5.00 = -0.25$, and **groupReplace** will be the difference between the mean of the replace group (2.67) and the mean of the control group (5.00), which is $2.67 - 5.00 = -2.33$.
 
 ```{r quiz_lm_ex1}
 quiz(
@@ -444,9 +444,9 @@ We can implement these contrasts in the same way as just described. All that we'
 ```
 
 ```{r lm3-solution}
-Interference_vs_none <- c(-2, 1, 1)
-Erase_vs_replace <- c(0, -1, 1)
-contrasts(memory_dat$group) <- cbind(Interference_vs_none, Erase_vs_replace)
+interference_vs_none <- c(-2, 1, 1)
+erase_vs_replace <- c(0, -1, 1)
+contrasts(memory_dat$group) <- cbind(interference_vs_none, erase_vs_replace)
 con_mod <- lm(recall ~ group, data = memory_dat)
 summary(con_mod)
 ```
@@ -506,7 +506,7 @@ robust(mem_mod, vcov = "HC4", conf.int = T)
 
 ### Robust estimates
 
-In *advetr_14* we used the `lmRob()` function from the `robust` package (again, if you're working outside of the tutorial remember to execute `library(robust)`) to get robust parameter estimates. Recall that the function is used in the same way as `lm()` so you can copy your earlier code and replace `lm` with `lmRob`. Try this in the code box to create a model called `mem_rob`, and use `summary()` to view it.
+In *adventr_14* we used the `lmRob()` function from the `robust` package (again, if you're working outside of the tutorial remember to execute `library(robust)`) to get robust parameter estimates. Recall that the function is used in the same way as `lm()` so you can copy your earlier code and replace `lm` with `lmRob`. Try this in the code box to create a model called `mem_rob`, and use `summary()` to view it.
 
 ```{r mem_mod_robust, exercise = TRUE}
   
@@ -546,7 +546,7 @@ boot.ci(boot_result, type = "bca", index = 3) #for the second dummy variable for
 
 ###The WRS2 package
 
-The `WRS2` package [@RN10205] wraps up a few of the many functions described by Wilcox to perform robust variants of tests [@RN5244]. We'll look at three functions that compare several means. They have a very similar format:
+The `WRS2` package [@RN10205] wraps up a few of the many functions described by Wilcox to perform robust variants of tests [@RN5244]. We'll look at these functions that compare several means:
 
 * `t1way(formula, data = tibble, tr = 0.2, nboot = 100)`: is a test for trimmed means.
 * `lincon(formula, data = tibble, tr = 0.2)`: *post hoc* tests for trimmed means
@@ -580,7 +580,7 @@ Based on `t1waybt` we'd conclude that the group means were significantly differe
 ##Bayesian models
 ### Bayes factors
 
-Like in previous tutorials (*adventr_11*, *adventr_14*, *adventr_14*) we can use the [BayesFactor package](http://bayesfactorpcl.r-forge.r-project.org/). In this scenario we use the `anovaBF()` function. This function has basically the same format as most of the other functions in this tutorial:
+Like in previous tutorials (*adventr_11*, *adventr_14*, *adventr_15*) we can use the [BayesFactor package](http://bayesfactorpcl.r-forge.r-project.org/). In this scenario we use the `anovaBF()` function. This function has basically the same format as most of the other functions in this tutorial:
 
 `object = anovaBF(formula = outcome ~ group_variable, data = tibble, whichModels = "withmain", rscaleFixed = "medium")`
 

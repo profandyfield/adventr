@@ -190,7 +190,7 @@ You can load the file in several ways:
 * To load the file using a standard dialogue box to navigate your file system, execute:
     - `mask_dat <- read_csv(file.choose())`
 * You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
-    - `mask_dat <- read_csv("(http://www.discoveringstatistics.com/repository/ais_data/ais_15_masks.csv")`
+    - `mask_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_15_masks.csv")`
     - This method relies on an internet connection (and my server having not exploded!)
 
 
@@ -214,7 +214,7 @@ $$
 
 ### Plotting the data
 
-Let's plot the data. Use the code box below to create an error bar chart with **mask** on the *y*-axis and **recognition** on the *x*-axis. If you feel like it, try to superimpose the raw data. (If you do this last part you'll use the `geom_point()` function, try this, but then add into the function `position = position_jitter(width = 0.1, height = 0)`. This adds what's known as a 'jitter' to the points, which just means that small a random value is added so that the dots don't overlap. By setting width to 0.1, we're limiting the horizontal jitter and disabling the horizontal jitter so that the values on the *y*-axis are true to the actual scores.)
+Let's plot the data. Use the code box below to create an error bar chart with **mask** on the *x*-axis and **recognition** on the *y*-axis. If you feel like it, try to superimpose the raw data. (If you do this last part you'll use the `geom_point()` function, try this, but then add into the function `position = position_jitter(width = 0.1, height = 0)`. This adds what's known as a 'jitter' to the points, which just means that small a random value is added so that the dots don't overlap. By setting width to 0.1, we're limiting the horizontal jitter and disabling the horizontal jitter so that the values on the *y*-axis are true to the actual scores.)
 
 ```{r scat, exercise = TRUE, exercise.lines = 8}
      
@@ -262,7 +262,7 @@ confint(mask_mod)
 plot(mask_mod)
 ```
 
-The output provides estimates of the model parameters (the *b*-values) and the significance of these values. The *Y* intercept ($b_0$) is 12.50, which is the value of recognition when when **mask** = 0. **R** will have coded the variable **mask** using dummy coding. It will do this alphabetically (unless you tell it something different), which means that it will have coded 'calcite mask' as 0 and 'invisibility paste' as 1 (because *c* comes before *i* in the alphabet).
+The output provides estimates of the model parameters (the *b*-values) and the significance of these values. The *Y* intercept ($b_0$) is 12.50, which is the value of recognition when **mask** = 0. **R** will have coded the variable **mask** using dummy coding. It will do this alphabetically (unless you tell it something different), which means that it will have coded 'calcite mask' as 0 and 'invisibility paste' as 1 (because *c* comes before *i* in the alphabet).
 
 ```{r quiz_b_ex1}
 quiz(

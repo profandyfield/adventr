@@ -13,7 +13,6 @@ library(forcats)
 library(learnr)
 library(RefManageR)
 library(tidyverse)
-library(kableExtra)
 
 library(BayesFactor)
 library(car)

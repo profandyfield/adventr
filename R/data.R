@@ -235,11 +235,32 @@
 #' \describe{
 #'   \item{id}{Participant ID}
 #'   \item{picture}{A factor describing whether a participant tried to resemble a picture of themselves (Self), or a matched stranger (Other)}
-#'   \item{gene}{A factor describing whether a participant receive dthe toggle switch (C-gene + Toggle) or not (C-gene)}
-#'   \item{resemblance}{How closely their face resembled the picture (100% = the participants face is exactly like the face
-#' in the photograph, 0% the person in the photo bears no resemblance at all to the participant)}
+#'   \item{gene}{A factor describing whether a participant received the toggle switch (C-gene + Toggle) or not (C-gene)}
+#'   \item{resemblance}{How closely their face resembled the picture (100\% = the participants face is exactly like the face in the photograph, 0\% the person in the photo bears no resemblance at all to the participant)}
 #' }
 #' @source \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 
 "alice_dat"
 
+#' Memory erasing data with covariate
+#'
+#' A dataset relating to the following fictitious experiment from Chapter 16 of Field, A. P. (2016). An adventure in statistics: the reality enigma. London: Sage:
+#' "Thirty-six participants with ID chips were tested individually. All participants met a stranger who had a 5-minute scripted conversation with
+#' them containing 10 critical pieces of information. A week later, the participants were asked to recall the encounter for 5 minutes, and then after
+#' a 10-minute break wrote everything that they could remember about the original encounter. During the 5-minute initial recall, one of three things
+#' happened: the control group (N = 12) received no intervention; the erase group (N = 12) had a pulse of electricity sent to their brain via their
+#' ID chip; and the replace group (N = 12) had conflicting verbal descriptions sent to their ID chip. The outcome was how many of the 10 critical
+#' pieces of information the participants wrote down after the recall phase."
+#'
+#'This version of the data includes an additional variable that measured working memory in each participant (as their digit span).
+#'
+#' @format A tibble with 36 rows and 7 variables:
+#' \describe{
+#'   \item{id}{Participant ID}
+#'   \item{recall}{How many of the 10 critical pieces of information the participant identified}
+#'   \item{group}{To which of the no intervention, memory erase or memory replace conditions the participant was assigned}
+#'   \item{working_mem}{Variable that measures working memory capacity as the individual's digit span}
+#' }
+#' @source \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
+
+"mem_cov_dat"

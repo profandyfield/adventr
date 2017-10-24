@@ -1,0 +1,703 @@
+---
+title: "AAiR: Multilevel models"
+author: "Andy Field"
+output:
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+bibliography: adventr_bib.bib
+---
+
+```{r setup, include=FALSE}
+library(forcats)
+library(learnr)
+library(RefManageR)
+library(tidyverse)
+
+library(nlme)
+
+#library(BayesFactor)
+#library(car)
+#library(effects)
+#library(gmodels)
+#library(lm.beta)
+#library(robust)
+#library(sjstats)
+#library(WRS2)
+
+
+
+knitr::opts_chunk$set(echo = FALSE)
+tutorial_options(exercise.cap = "Exercise")
+
+cbBlack<-"#000000"
+cbGrey<-"#999999"
+cbOrange<-"#E69F00"
+cbBlue<-"#56B4E9"
+cbGreen<-"#009E73"
+cbYellow<-"#F0E442"
+cbBlueDark<-"#0072B2"
+cbOrangeDark<-"#D55E00"
+cbPink<-"#CC79A7"
+cbRed<-"#DF4738"
+
+andy.theme <- function(base_size = 12, base_family = "") {
+  # Starts with theme_grey and then modify some parts
+  theme_grey(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.2)),
+      axis.title.y        = element_text(margin = margin(0, 10, 0, 0), angle = 90),
+      axis.title.x        = element_text(margin = margin(10, 0, 0, 0)),
+      axis.text           = element_text(size = rel(0.75), colour = "grey35"),
+      axis.text.x         = element_text(margin = margin(2, 0, 0, 0)),
+      axis.text.y         = element_text(margin = margin(0, 2, 0, 0)),
+      axis.ticks        = element_line(colour = "grey35"),
+      legend.key        = element_rect(colour = "white"),
+      panel.background  = element_rect(fill = "white", colour = NA),
+      panel.border      = element_rect(fill = NA, colour = "grey50"),
+      panel.grid.major  = element_line(colour = "grey90", size = 0.2),
+      panel.grid.minor  = element_line(colour = "grey98", size = 0.5),
+      strip.background  = element_rect(fill = "grey80", colour = "grey50"),
+      strip.text  = element_text(size = rel(1.4))
+    )
+}
+
+andy.dsus <- function(base_size = 12, base_family = "") {
+  andy.theme(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.6)),
+      axis.text           = element_text(size = rel(1.3), colour = "grey35"),
+      strip.background = element_rect(fill = cbBlueDark, colour = "white"),
+      strip.text  = element_text(size = rel(1.3), colour = "white")
+    )
+}
+
+colFmt = function(x,color){
+  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
+  if(outputFormat == 'latex')
+    paste("\\textcolor{",color,"}{",x,"}",sep="")
+  else if(outputFormat == 'html')
+    paste("<font color='",color,"'>",x,"</font>",sep="")
+  else
+    x
+}
+
+#Read dat files needed for the tutorial
+
+#If command tries to work out whether the code is running online (rather than a package). If online it loads the data from external source, otherwise it'll have the data anyway from the package
+
+if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
+  rehab_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_zombie_rehab.csv")
+  rehab_dat$intervention <- forcats::as_factor(rehab_dat$intervention)
+  rehab_dat$gep_level <- forcats::as_factor(rehab_dat$gep_level)
+  rehab_dat$id_clin <- forcats::as_factor(rehab_dat$id_clin)
+  } else {
+    rehab_dat <- adventr::rehab_dat;
+}
+
+
+#setup objects for code blocks
+
+
+```
+
+# An Adventure in R: Factorial designs (and adjusted means)
+
+## Overview
+
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+
+* Who is the tutorial aimed at?
+    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+* What is covered?
+    - This tutorial looks at how to fit a linear model for a factorial design including interactions (moderation). We look at robust variants of the model, and computing a Bayes factor. It would be a useful tutorial to run alongside teaching based on Chapter 17 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/). The tutorial also adds in an example not from the book (but based on it) that demonstrates the use of continuous predictors to adjust means (ANCOVA)
+    - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
+    - The aim of this tutorial is to augment the theory that you already know by guiding you through fitting linear models using **R** and **RStudio** and asking you questions to test your knowledge along the way.
+    
+
+## Story précis
+
+### Why a précis?
+
+Because these tutorials accompany my book *An adventure in statistics*, which uses a fictional narrative to teach the statistics, some of the examples might not make sense unless you know something about the story. For those of you who don't have the book I begin each tutorial with a précis of the story. If you're not interested then fair enough - click past this section.
+
+### General context for the story
+
+It is the future. Zach, a rock musician and Alice, a geneticist, who have been together since high school live together in Elpis, the ‘City of Hope’.
+
+Zach and Alice were born in the wake of the Reality Revolution which occurred after a Professor Milton Gray invented the Reality Prism – a transparent pyramid worn on the head – that brought honesty to the world. Propaganda and media spin became unsustainable, religions collapsed, advertising failed. Society could no longer be lied to. Everyone could know the truth about anything that they could look at. A gift, some said, to a previously self-interested, self-obsessed society in which the collective good had been eroded. 
+
+But also a curse. For, it soon became apparent that through this Reality Prism, people could no longer kid themselves about their own puffed-up selves as they could see what they were really like – by and large, pretty ordinary. And this caused mass depression. People lost faith in themselves. Artists abandoned their pursuits, believing they were untalented and worthless. 
+
+Zach and Alice have never worn a Reality Prism and have no concept of their limitations. They were born after the World Governance Agency (WGA) destroyed all Reality Prisms, along with many other pre-revolution technologies, with the aim of restoring community and well-being. However, this has not been straightforward and in this post-Prism world, society has split into pretty much two factions
+
+* The Chippers who have had WiFi-enabled chips implanted into their brains, enabling them to record and broadcast what they see and think in real time; upload memories for future generations into a newly-created memoryBank and live-stream music and films directly into their brains. 
+* The Clocktarians, followers of the old pre-Prism ways who use steam punk style technologies, who have elected not to have chips in their brains, regarded by the Chippers as backward-looking stuck in a ‘clockwork, Victorian society’. 
+
+Everyone has a star, a limitless space on which to store their digital world.
+
+Zach and Alice are Clocktarians. Their technology consists mainly of:
+
+* A Proteus, a device made from programmable matter that can transform shape and function simply by the owners’ wishes. Zach calls his a diePad, in the shape of a tombstone in an ironic reference to an over-reliance on technology at the expense of memory. 
+* A Reality Checker, a clockwork mechanism that, at the point of critical velocity, projects an opaque human head that is linked to everything and can tell you anything. Every head has a personality and Zach’s is a handsome, laid back ‘dude’ who is like an electronic friend, who answers questions if he feels like it and often winds Zach up by giving him false information. And he often flirts with Alice.
+
+### Main Protagonists
+
+* Zach
+    - Rock musician in band called The Reality Enigma.
+    - Spellbinding performer, has huge fan-base.
+    - Only people living in Elpis get to see The Reality Enigma in the flesh. Otherwise all performances are done via an oculus riff, a multisensory headset for experiencing virtual gigs.
+    - Zach’s music has influenced and changed thousands of lives. 
+    - Wishes he had lived pre-Revolutionary times, the turn of the 21st Century, a golden age for music when bands performed in reality at festivals.
+    - Kind, gentle and self-doubting.
+    - Believes science and maths are dull and uninspiring. Creates a problem between him and Alice as she thinks that because he isn’t interested in science, he isn’t interested in her. Leads to lots of misunderstandings between them. 
+* Alice
+    - Shy, lonely, academically-gifted – estranged from the social world until she met Zach in the college library. 
+    - Serious scientist, works at the Beimeni Centre of Genetics. 
+    - At 21, won the World Science Federation’s Einstein Medal for her genetics research
+    - Desperately wants Zach to get over his fear of science so he can open his mind to the beauty of it.
+
+### How Zach's adventure begins
+
+Alice has been acting strangely, on edge for weeks, disconnected and uncommunicative, as if she is hiding something and Zach can’t get through to her. Arriving home from band practice, unusually, she already home and listening to an old album that the two of them enjoyed together, back in a simpler, less complicated time in their relationship. During an increasingly testy evening, that involves a discussion with the Head about whether or not a Proteus causes brain cancer, Alice is interrupted by an urgent call which she takes in private. She returns looking worried and is once again, distracted. She tells Zach that she has ‘a big decision to make’. Before going to bed, Zach asks her if he can help with the decision but she says he ‘already has’, thanking him for making ‘everything easier.’ He has no idea what she means and goes to sleep, uneasy.
+
+On waking, Zach senses that something is wrong. And he is right. Alice has disappeared. Her clothes, her possessions and every photo of them together have gone. He can’t get hold of any of her family or friends as their contact information is stored on her Proteus, not on his diePad. He manages to contact the Beimeni Centre but is told that no one by the name of Alice Nightingale has ever worked there. He logs into their constellation but her star has gone.  He calls her but finds that her number never existed. She has, thinks Zach, been ‘wiped from the planet.’ He summons The Head but he can’t find her either. He tells Zach that there are three possibilities: Alice has doesn’t want to be found, someone else doesn’t want her to be found or she never existed. 
+
+Zach calls his friend Nick, fellow band member and fan of the WGA-installed Repositories, vast underground repositories of actual film, books, art and music. Nick is a Chipper – solely for the purpose of promoting the band using memoryBank – and he puts the word out to their fans about Alice missing. 
+
+Thinking as hard as he can, Zach recalls the lyrics of the song she’d been playing the previous evening. Maybe they are significant? It may well be a farewell message and the Head is right. In searching for clues, he comes across a ‘memory stone’ which tells him to read what’s on there. File 1 is a research paper that Zach can’t fathom. It’s written in the ‘language of science’ and the Head offers to help Zach translate it and tells him that it looks like the results of her current work were ‘gonna blow the world’. Zach resolves to do ‘something sensible’ with the report.  
+
+Zach doesn’t want to believe that Alice has simply just left him. Rather, that someone has taken her and tried to erase her from the world. He decides to find her therapist, Dr Murali Genari and get Alice’s file. As he breaks into his office, Dr Genari comes up behind him and demands to know what he is doing. He is shaking but not with rage – with fear of Zach. Dr Genari turns out to be friendly and invites Zach to talk to him. Together they explore the possibilities of where Alice might have gone and the likelihood, rating her relationship satisfaction, that she has left him. During their discussion Zach is interrupted by a message on his diePad from someone called Milton. Zach is baffled as to who he is and how he knows that he is currently discussing reverse scoring. Out of the corner of his eye, he spots a ginger cat jumping down from the window ledge outside. The counsellor has to go but suggests that Zach and ‘his new friend Milton’ could try and work things out.
+
+## Packages and data
+### Packages
+
+This tutorial uses the following packages:
+
+* `nlme` [@RN5102] to estimate the multilevel models
+* `forcats` [@RN11418] for processing categorical variables
+* `tidyverse` [@RN11407] for general data processing
+
+
+
+`BayesFactor` [@RN9444] to compute Bayes factors
+* `boot` [@RN11409] to compute bootstrap confidence intervals.
+* `car` [@RN11416] to compute type III sums of squares
+* `robust` [@RN11411] to compute robust estimates
+* `sjstats` [@RN11413] to produce robust parameter estimates and confidence intervals
+
+* `WRS2` [@RN10205] to do various robust tests
+
+These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in **RStudio**) then you need to make sure that the package has been installed by executing `install.packages("package_name")`, where *package_name* is the name of the package. If the package is already installed, then you need to reference it in your current session by executing `library(package_name)`, where *package_name* is the name of the package.
+
+### Data
+
+This tutorial has the data files pre-loaded so you shouldn't need to do anything to access the data from within the tutorial. However, if you want to play around with what you have learnt in this tutorial outside of the tutorial environment (i.e. in a stand-alone **RStudio** session) you will need to download the data files and then read them into your **R** session. This tutorial uses the following file:
+
+* [ais_zombie_rehab.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_zombie_rehab.csv)
+
+You can load the file in several ways:
+
+* Assuming that you save this file into the working directory, you can load it by executing:
+    - `rehab_dat <- read_csv("ais_zombie_rehab.csv")`
+    - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
+* To load the file using a standard dialogue box to navigate your file system, execute:
+    - `rehab_dat <- read_csv(file.choose())`
+* You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
+    - `rehab_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_zombie_rehab.csv")`
+    - This method relies on an internet connection (and my server having not exploded!)
+
+
+## The model
+
+At the end of the story it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset relates to her first attempt. It contains data from 190 code 1318 workers treated at 10 different clinics. Workers were randomly assigned to two arms of the trial (wait list vs.C-gene therapy) and the outcome was how much they resembled their pre-zombie state (as a percentage). The zombification occurred as a result of these workers entering JIG:SAWs genetic enhancement programme (GEP), and additional variables quantify how long it has been since they entered this programme (i.e., how long have they been a zombie) and whether they were originally exposed to the low- or high-intensity GEP. The data are in the tibble `rehab_dat`, which has six variables:
+
+* **id**: Participant ID}
+* **id_clin**: Factor that codes which of 10 clinics the participant attended}
+* **intervention**: Factor that codes which arm of the trial the participant was randomized to (0 = wait list, 1 = gene therapy)}
+* **resemblance**: How closely their face resembled their pre-zombified state (100\% = the participants face is exactly like their original face, 0\% the person bears no resemblance to their pre-zombified face)}
+* **gep_level**: Factor that codes whether the participant was originally exposed to the low- (0) or high-intensity (1) genetic enhancement program at JIG\:SAW}
+* **tse_months**: How many months since the participant completed the genetic enhancement program that resulted in their zombification}
+
+Use the code box to inspect the tibble.
+
+```{r dat_view, exercise = TRUE}
+     
+```
+
+```{r dat_view-solution}
+rehab_dat   
+```
+
+The data has a hierarchical structure because workers were treated in one of 10 clinics (Figure 1). We might, therefore, want to model the possibility of the success of the intervention varying across these clinics/contexts. We'll build up the model in steps.
+
+![Figure 1: The structure of the rehabilitation data](./images/ais_rehab_data_hierarchy_small.png)
+
+### Fixed intercepts and slopes
+
+If we focussed purely on the effect of the intervention, and ignored the contexts in which the intervention took place we'd fit this model:
+
+$$
+\begin{aligned}
+Y_i & = b_0 + b_1X_i+ ε_i\\
+\text{resemblance}_i & = b_0 + b_1\text{intervention}_i + ε_i
+\end{aligned}
+$$
+
+The variable **intervention** is made up of 0s and 1s that code whether a zombie was in the wait list or treatment arm of the trial.
+
+### Random intercepts, fixed slopes
+
+If we want to factor in the possibility that resemblance scores in the control group (the group coded as 0) vary across the 10 clinics, we would fit this model:
+
+$$
+\begin{aligned}
+\text{resemblance}_{ij} & = b_{0j} + b_1\text{intervention}_{ij} + ε_{ij}\\
+b_{0j} &= b_0 + u_{0j}
+\end{aligned}
+$$
+In this model resemblance scores, intervention group membership, and the model errors all vary by both zombie (*i*) and clinic (*j*). The intercept ($b_{0j}$) is made up of the overall intercept ($b_0$) and a term that represents the difference between the intercept for clinic *j* and that overall value ($u_{0j}$).
+
+### Random intercepts and slopes
+
+If we want to factor in the possibility that the effect of the intervention on resemblance scores vary across the 10 clinics, we would fit this model:
+
+$$
+\begin{aligned}
+\text{resemblance}_{ij} & = b_{0j} + b_{1j}\text{intervention}_{ij} + ε_{ij}\\
+b_{0j} &= b_0 + u_{0j} \\
+b_{1j} &= b_1 + u_{1j}
+\end{aligned}
+$$
+This model is the same as the previous one except that the effect of the intervention ($b_{1j}$) is made up of the overall effect ($b_1$) and a term that represents the difference between the effect in clinic *j* and that overall value ($u_{1j}$).
+
+### Adding other fixed effects
+
+We can add both **gep_level** and **tse_months** into the model as fixed effects (that is, we assume their effects are constant across contexts):
+
+$$
+\begin{aligned}
+\text{resemblance}_{ij} & = b_{0j} + b_{1j}\text{intervention}_{ij} + b_2\text{gep_level}_{ij} + b_3\text{tse_months}_{ij} + ε_{ij}\\
+b_{0j} &= b_0 + u_{0j} \\
+b_{1j} &= b_1 + u_{1j}
+\end{aligned}
+$$
+Note that although these additional predictors vary by zombie (*i*) and clinic (*j*), their parameter estimates don't (their *b* values do not have a subscript *j*).
+
+## Exploring the data
+### Preparing variables
+
+
+Descriptive statistics
+
+Using what you've learnt in previous tutorials, create a tibble called `alice_summary` containing the group means and their confidence intervals split by **gene** and **picture**.
+
+`r colFmt("Hint: to group means by more than one variable you can use group_by(x, y). If you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels", cbGreen)`
+
+```{r desc, exercise = TRUE, exercise.lines = 6}
+             
+```
+
+```{r desc-solution}
+alice_summary <- alice_dat %>% group_by(gene, picture) %>% summarize(
+  mean = mean(resemblance),
+  ci_low = ci(resemblance)["CI lower"],
+  ci_upp = ci(resemblance)["CI upper"]
+)
+alice_summary              
+```
+
+It would be useful to get some means for the main effects of **gene** and **picture**, so create two objects `gene_main` and `pic_main` that contain means and confidence intervals when the data are split by only **gene** (for `gene_main`) and **picture** (for `pic_main`).
+
+```{r me, exercise = TRUE, exercise.lines = 14}
+             
+```
+
+```{r me-solution}
+gene_main <- alice_dat %>% group_by(gene) %>% summarize(
+  mean = mean(resemblance),
+  ci_low = ci(resemblance)["CI lower"],
+  ci_upp = ci(resemblance)["CI upper"]
+)
+
+pic_main <- alice_dat %>% group_by(picture) %>% summarize(
+  mean = mean(resemblance),
+  ci_low = ci(resemblance)["CI lower"],
+  ci_upp = ci(resemblance)["CI upper"]
+)
+
+gene_main  
+pic_main
+```
+
+
+### Plotting the data
+
+Let's plot the data. Use the code box below to create an error bar chart with **group** on the *y*-axis, **recall** on the *x*-axis and **picture** displayed in different colours. If you feel like it, try to superimpose the raw data.
+
+```{r plot, exercise = TRUE, exercise.lines = 8}
+     
+               
+```
+
+```{r plot-solution}
+alice_plot<-ggplot(alice_dat, aes(gene, resemblance, colour = picture))
+alice_plot +
+  stat_summary(fun.data = "mean_cl_normal", position = position_dodge(width = 0.5)) +
+  scale_colour_manual(values = c("#E69F00", "#56B4E9")) + 
+  coord_cartesian(ylim = c(0,100)) +
+  scale_y_continuous(breaks = seq(0, 100, 10)) +
+  labs(y = "Resemblance (%)", x = "Participant", colour = "Picture") + 
+  theme_bw()
+```
+
+## Several categorical predictors (factorial designs)
+### Fitting the model
+
+To fit the model we use the `lm()` function, because we are fitting a linear model with two categorical predictors (and an interaction term). We've used this function before, just to recap it takes the following general form (I've retained only the key options):
+
+`lm(outcome ~ predictor(s), data, subset, na.action = na.fail)`
+
+We can specify the model itself in one of two ways. The first is to write out each predictor and the interaction term longhand. To specify an interaction term we use a colon to separate the terms in the interaction. So, the $gene \times picture$ interaction would be specified as `gene:picture`. Therefore, we could specify the model within `lm()` as:
+
+`resemblance ~ gene + picture + gene:picture`
+
+A quicker way, for models where we want to retain all main effects and lower order interaction terms, is just to specify the highest-order interaction separating any variable names by an asterisks. This has the effect of including that interaction and any lower-order effects. For example, if we specify:
+
+`resemblance ~ gene*picture`
+
+The resulting model will include the main effects of **gene** and **picture** as well as the interaction between them.
+
+Using what I have just explained and what you know from previous tutorials do the following:
+
+* Create a model called `gen_mod` using `lm()`
+* Summarize the model using `summary()`
+* Use `confint()` to get confidence intervals for the model parameters (the *b*s)
+* Plot diagnostics with `plot()`
+
+Fit the model in the code box below.
+
+```{r lm1, exercise = TRUE}
+     
+```
+
+```{r lm1-solution}
+gen_mod <- lm(resemblance ~ gene*picture, data = alice_dat)
+summary(gen_mod)
+confint(gen_mod)
+plot(gen_mod)
+```
+
+The output provides estimates of the model parameters (the *b*-values) and the significance of these values. **R** automatically turns the variables **gene** and **picture** into dummy variables. Left to its own devices **R** will order the categories alphabetically (so the order for **gene** will be *C-Gene* and *C-Gene + Toggle* and for **picture** will be *Other* and *Self*) but I have turned these variables into factors and in doing so changed the order of levels for **picture** to be *Self* and *Other*. It doesn't make any difference for these variables (because they have only two categories) but for predictors with more than two categories bear in mind that you might want to set specific orders for factor levels for the predictor variables to make the model parameters conform to meaningful group comparisons.
+
+The *Y* intercept ($b_0$) is 51.50, which is the value of resemblance when all three predictors are zero. That is when **gene** is zero (i.e. C-Gene) and picture is zero (i.e. Self) and the interaction is also zero. So, ($b_0$) is 51.50 because that is the mean of the group that had C-gene therapy only and studied photos of their own face. The predictors are dummy variables, and their respective *b*s reflect the differences between means that the dummy variables code.
+
+* **geneC-Gene + Toggle** will be the main effect of **gene** within the category of **picture** coded as 0. So, looking only at people who studied photos of their own face, it is the difference between the mean of people who had C-Gene therapy (51.50) and the mean of the group that received a toggle switch as well (86.125), which is $86.125 - 51.50 = 34.625$.
+* **pictureOther** is the the main effect of **picture** within the category of **gene** coded as 0. So, looking only at people who had C-Gene therapy, it is the difference between the mean of people who looked at photos of their own face (51.50) and those that studied someone else's face (8.625), which is $8.625 - 51.50 = -42.875$.
+* **geneC-Gene + Toggle:pictureOther** is the interaction term. It is the effect of gene therapy when studying photos of other people minus the effect of gene therapy when studying photos of their own face:
+
+$$
+\begin{aligned}
+b_3 &= \big(\bar{X}_\text{Toggle, other} - \bar{X}_\text{C-gene, other}\big) - \big(\bar{X}_\text{Toggle, self} - \bar{X}_\text{C-gene, self}\big)\\
+&= \big(85.25-8.63\big)-\big(86.13-51.50\big) \\
+&= 42
+\end{aligned}
+$$
+
+###Using *F*-statistics to evaluate effects
+
+It is common to evaluate the effects in factorial models using an *F*-statistic (the so called Analysis of variance, ANOVA). We can get these *F*-statistics in two ways. The first is to place the model we have just created into the `aov` function and then summarize it. For example, we could execute:
+
+```{r echo = T, eval = F}
+gen_aov <- aov(gen_mod)
+summary(gen_aov)
+```
+
+The first takes the model `gen_mod` that we just created and extracts the information needed to present a summary in terms of *F*-statistics. We store this information in a new object called `gen_aov`. The second line uses `summary()` to print the summary table of *F*-values. This method will give us Type I sums of squares (refer to the lecture). These sums of squares are sequential and are affected by the order in which we place variables into the model. That's why software like SAS and SPSS uses type III sums of squares. The fact that our data are balanced (equal numbers of participants in all conditions) and orthogonal (all of our predictors are binary) means that for these data the Type I sums of squares are the same as the Type III. However, if you have unbalanced designs or predictors with more than two categories you need to look at Type III sums of squares.
+
+`r colFmt("Warning: the following section is quite tricky", cbRed)`
+
+To get these we use the `Anova()` function from the `car` package. It's a complicated process because for Type III sums of squares to make sense, the contrasts for predictor variables need to be independent (or to use the posh term *orthogonal*). Orthogonal means that the numbers used to code groups must sum to zero and cross multiple to sum to zero. By default, R will use dummy coding (0s and 1s) which results in non-orthogonal contrasts. You can tell that the contrasts are not orthogonal by the fact that the codes do not sum to zero, and when you cross multiply them that sum is also not zero. Table 1 shows what I mean. The codes for the variable **gene** are 0 for c-gene and 1 for toggle switch. So, the two c-gene groups get a code of 0 and the two toggle groups get a code of 1. Sum these codes and you get 0 + 0 + 1 + 1 = 2. This sum needs to be zero. Similarly, for picture, other is coded as 1 and self as 0. So the two 'other' groups get a 1 and the two 'self' groups get a 0. The resulting codes again do not sum to zero: 1 + 0 + 1 + 0 = 2. The final column shows the codes for **gene** multiplied by the corresponding code for **picture**. For example, for the c-gene and other condition we get $0 \times 1 = 0$, for the c-gene and self condition we get $0 \times 0 = 0$ and so on. If we add these products we get a sum of 1. Again, we need this sum to be zero.
+
+```{r, results = 'asis'}
+
+Group <-  c("C-Gene, Other", "C-Gene, Self", "Toggle, Other", "Toggle, Self", "Sum")
+gene_codes <- c(0, 0, 1, 1, 2)
+picture_codes <- c(1, 0, 1, 0, 2)
+codes_multiplied <- c(0, 0, 1, 0, 1)
+
+knitr::kable(tibble(Group, gene_codes, picture_codes, codes_multiplied), caption = "Table 1: default codes for the two predictors")
+
+```
+
+Table 2 shows a different set of codes that result in orthogonal contrasts. Instead of using 0 and 1, we use 0 and -1 (this is known as effect coding). All I have done is replace all of the zero codes with -1. The codes for the variable **gene** are -1 for c-gene and 1 for toggle switch. So, the two c-gene groups get a code of -1 and the two toggle groups get a code of 1. Sum these codes and you get -1 + -1 + 1 + 1 = 0. Similarly, for **picture**, other is coded as 1 and self as -1. So the two 'other' groups get a 1 and the two 'self' groups get a -1. The resulting codes again sum to zero: 1 - 1 + 1 - 1 = 0. The final column shows the codes for **gene** multiplied by the corresponding code for **picture**. For example, for the c-gene and other condition we get $-1 \times 1 = -1$, for the c-gene and self condition we get $-1 \times -1 = 1$ and so on. If we add these products we get a sum of -1 + 1 + 1 -1 = 0. So the sum of codes for each predictor sum to zero as do those codes multiplied. These are, therefore, orthogonal contrast codes.
+
+```{r, results = 'asis'}
+
+Group <-  c("C-Gene, Other", "C-Gene, Self", "Toggle, Other", "Toggle, Self", "Sum")
+gene_codes <- c(-1, -1, 1, 1, 0)
+picture_codes <- c(1, -1, 1, -1, 0)
+codes_multiplied <- c(-1, 1, 1, -1, 0)
+
+knitr::kable(tibble(Group, gene_codes, picture_codes, codes_multiplied), caption = "Table 2: Codes for the two predictors resulting in orthogonal contrasts")
+
+```
+
+So, to get Type III sums of squares we do the following:
+
+* Set orthogonal contrasts using the `contrasts` function that we have met before. The first two lines below set contrasts for **gene** and **picture** using the codes in Table 2 (it doesn';t matter which way around you specify the 1 and -1)
+* Re-create the model so that these new contrast codes take effect. Line 3 below does this by creating a new model `gen_mod2` that is specified in the same way as the original model, but will include information about the contrasts we have just set.
+* use the `Anova()` function to generate the Type III sums of squares for this new model. Line 4 displays the Type III sums of squares (note that we specify `type = 3`) for the model we created in the line above. 
+* We can display robust versions of *F* by including the argument `white.adjust = "hc3"`. The options here are similar to what we've seen with other functions (i.e. "hc0", "hc1", "hc2", "hc3", "hc4") and as we have seen "hc3" or "hc4" are good choices. Including this argument will adjust for heteroscedasticity in the data.
+
+```{r echo = T, eval = F}
+contrasts(alice_dat$picture) <- c(1, -1)
+contrasts(alice_dat$gene) <- c(1, -1)
+gen_mod2 <- lm(resemblance ~ gene*picture, data = alice_dat)
+Anova(gen_mod2, type = 3)
+Anova(gen_mod2, type = 3, white.adjust = "hc3")
+```
+
+
+The results show significant main effects and interactions for all variables. Using the means we generated at the start of the tutorial we can say that resemblance scores are significantly higher for the C-gene and Toggle group than those that had only C-gene therapy. Resemblance scores were significantly higher for those studying their own face than someone else's face. There was also a significant interaction: in the group that had the toggle switch resemblance scores are similar when they studied their own face compared to studying a stranger's face, but in the c-gene group resemblance scores are much lower when studying a stranger's face compared to their own.
+
+Use the code box to generate *F*-statistics for this model based on Type III sums of squares and with a white adjustment ("hc3").
+
+```{r fstats, exercise = TRUE}
+
+```
+
+```{r fstats-solution}
+contrasts(alice_dat$picture) <- c(1, -1)
+contrasts(alice_dat$gene) <- c(1, -1)
+gen_mod2 <- lm(resemblance ~ gene*picture, data = alice_dat)
+Anova(gen_mod2, type = 3)
+Anova(gen_mod2, type = 3, white.adjust = "hc3")
+```
+
+
+## Robust models
+### Robust standard errors
+
+As in previous tutorials, we can use one of the methods (HC0 to HC5) for producing standard errors (and hence confidence intervals) that are robust to heteroscedasticity.
+
+`r colFmt("Hint: if you're doing this outside of the tutorial you need the sjstats package installed and you need to execute library(sjstats).", cbGreen)`
+
+Remember that we place the model we created with `lm()` (in this case `gen_mod`) into the function `robust()`. For example, we could execute:
+
+* `robust(gen_mod, conf.int = T)` to use the default "HC3" method and request 95% confidence intervals
+* `robust(gen_mod, vcov = "HC4", conf.int = T)` to use "HC4" and request 95% confidence intervals
+
+The HC3 and HC4 refer to different methods to correct the standard errors (refer back to the tutorial *adventr_14*). Try these commands in the code box and compare the results.
+
+```{r gen_mod_hc4-setup}
+gen_mod <- lm(resemblance ~ gene*picture, data = alice_dat)
+```
+
+```{r gen_mod_hc4, exercise = TRUE}
+  
+               
+```
+
+```{r gen_mod_hc4-solution}
+robust(gen_mod, conf.int = T)
+robust(gen_mod, vcov = "HC4", conf.int = T)
+```
+
+###Robust *F*s
+We saw in the previous section that if we evaluate effects with an *F*-statistic we can correct for heteroscedasticity by including `white.adjust = "hc3"` in the `Anova()` function.
+
+### Robust estimates
+
+In *advetr_14* we used the `lmRob()` function from the `robust` package (again, if you're working outside of the tutorial remember to execute `library(robust)`) to get robust parameter estimates. Recall that the function is used in the same way as `lm()` so you can copy your earlier code and replace `lm` with `lmRob`. Try this in the code box to create a model called `gen_rob`, and use `summary()` to view it.
+
+```{r gen_mod_robust, exercise = TRUE}
+  
+               
+```
+
+```{r gen_mod_robust-solution}
+gen_rob <- lmRob(resemblance ~ gene*picture, data = alice_dat)
+summary(gen_rob)   
+```
+
+Note that the parameter estimates for the effect of group have changed because they no longer represents the difference between arithmetic means but instead represents a robust estimate of those differences.
+
+###The WRS2 package
+
+The `WRS2` package [@RN10205] wraps up a few of the many functions described by Wilcox to perform robust variants of tests [@RN5244]. We'll look at these functions that compare several means:
+
+* `t2way(formula, data = tibble, tr = 0.2, nboot = 100)`: is a test for trimmed means.
+* `mcp2atm(formula, data = tibble, tr = 0.2)`: *post hoc* tests for trimmed means
+* `pbad2way(formula, data = tibble, est = "mom", nboot = 599)`: is a test to compare robust measures of location (by default an M-estimator, but you can change it to be the median)
+* `mcp2a(formula, data = tibble, est = "mom", nboot = 599)`: *post hoc* tests for the above test
+
+These functions have similar arguments:
+
+* `formula`: the functions use a formula like that for `lm()`, so in this case we could use `resemblance ~ gene*picture`.
+* `data = tibble`: replace tibble with the name of the tibble or data frame in which the data are stored (in this case `data = alice_dat`)
+* `tr = 0.2`: we've used this argument many times before. It determines the level of trim. The default is a 20% trim, so you can omit this argument if you're happy with that default.
+* `est = "mom"`: the default is to use the modified one-step (MOM) estimator of location based on Huber's Psi, but you can change this to "onestep" to use the unmodified one-step M-estimator, or "median" to use the median. The default is fine though, and if you're happy with it you can omit this argument.
+* `nboot = 599`: specifies the number of bootstrap samples. There is a case for increasing the defaults to 1000.
+
+See if you can run the three commands in the code box below based on my description (if not, press ![](./images/solution.png))
+
+```{r alice_wrs, exercise = TRUE}
+
+```
+
+```{r alice_wrs-solution}
+t2way(resemblance ~ gene*picture, data = alice_dat)
+mcp2atm(resemblance ~ gene*picture, data = alice_dat)
+pbad2way(resemblance ~ gene*picture, data = alice_dat, nboot = 1000)
+mcp2a(resemblance ~ gene*picture, data = alice_dat, nboot = 1000)
+```
+
+Because our predictors are both made up of only two categories, there isn't really any need for *post hoc* tests (because the main effects can only reflect the difference between the two groups). Based on `t2way()` we'd conclude that there was a significant main effect of **gene**, *Q* = 451.36, *p* = 0.001, a significant main effect of **picture**, *Q* = 65.50, *p* = 0.001, and a significant interaction between the two, *Q* = 61.47, *p* = 0.001. `pbad2way()` returns only *p*-values for each effect, and these are all 0, which would again suggest all effects in the model are significant.
+
+##Bayesian models
+### Bayes factors
+
+Like in previous tutorials (*adventr_11*, and *adventr_14* to *adventr_16*) we can obtain Bayes factors using the [BayesFactor package](http://bayesfactorpcl.r-forge.r-project.org/). We are going to use the `lmBF()` function, which is basically the same as the `regressionBF()` and `anovaBF()` functions that we have encountered before. The difference is that with `lmBF` we can build individual models and compare them. This function has this format:
+
+`object = lmBF(formula = outcome ~ group_variable, data = tibble, rscaleCont = "medium")`
+
+The function uses default priors and by default (i.e. if you exclude the option altogether) the prior is set at "medium" ($^\sqrt{2}/_4$), but you can specify `rscaleCont = "wide"` ($^1/_2$) or `rscaleCont = "ultrawide"` ($^\sqrt{2}/_2$). These priors are explained in *adventr_11* and also read @RN9309.
+
+We're going to build three models: (1) **gene** as the only predictor; (2) a model that adds **picture** as a predictor; (3) a model that adds the interaction term (**gene:picture**). Having created these models we will compared them. So, we'll start by looking at the Bayes factor for **gene** as the sole predictor, then get the Bayes factor for what **picture** adds to the model, then finally get the Bayes factor for what the interaction term adds to the model.
+
+`r colFmt("Tip: if you are using a tibble (rather than a data frame) then place the tibble's name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn't accept tibbles.", cbGreen)`
+
+For our data (using the default prior) we could execute the following to create our three models:
+
+```{r echo = T, eval = F}
+gene_bf <- lmBF(formula = resemblance ~ gene, data = data.frame(alice_dat))
+pic_bf <- lmBF(formula = resemblance ~ gene + picture, data = data.frame(alice_dat))
+int_bf <- lmBF(formula = resemblance ~ gene + picture + gene:picture, data = data.frame(alice_dat))
+```
+
+The first line creates model 1 and stores it in the object `gene_bf`, the second line creates model 2 and stores it in the object `pic_bf` and the third line creates model 3 and stores it in the object `int_bf`. having created them we can compare them with the following commands:
+
+```{r echo = T, eval = F}
+gene_bf
+pic_bf/gene_bf
+int_bf/pic_bf
+```
+
+The first line gives us the Bayes factor for model 1, the second shows us the Bayes factor for model 2 *relative* to model 1 (i.e. what does **picture** add to the model), and the third line shows us the Bayes factor for model 3 *relative* to model 2 (i.e. what does the **gene:picture** interaction add above and beyond the main effects?)
+
+Try these commands in the code box:
+
+```{r gene_bf, exercise = TRUE}
+  
+```
+
+```{r gene_bf-solution}
+gene_bf <- lmBF(formula = resemblance ~ gene, data = data.frame(alice_dat))
+pic_bf <- lmBF(formula = resemblance ~ gene + picture, data = data.frame(alice_dat))
+int_bf <- lmBF(formula = resemblance ~ gene + picture + gene:picture, data = data.frame(alice_dat))
+gene_bf
+pic_bf/gene_bf
+int_bf/pic_bf
+```
+
+Because the results are based on sampling (and so will vary each time you generate them) Figure 1 shows a particular set of results that I'll interpret. First we put the main effect of gene therapy into the model and see that the Bayes factor is 16929560, which is huge. You should shift your belief in the alternative hypothesis relative to the null by a factor of 16929560. In short, your belief in gene therapy predicting resemblance scores should shift a lot. We then added the main effect of picture to see how this improved the model compared to when we included only gene therapy as a predictor. The Bayes factor for this main effect is 237.49, which also suggests that your beliefs should move a lot in favour of the type of picture predicting resemblance scores. Finally, we added the interaction effect and compared this full model to the model that included only the main effects. The Bayes factor for the interaction term is 174996.6. Again, this number is huge, suggesting that you should shift your belief in the alternative hypothesis relative to the null by a factor of 174996.6 In short, your belief in the combined effect of gene therapy and the type of picture studied predicting resemblance scores should shift a lot.
+
+![Figure 1: Bayes factors output](./images/ais_17_bf.png)
+
+##Adjusting means (ANCOVA)
+### A familiar example (unless your ID chip has been zapped)
+
+In the lecture (but not the book) we also looked at models including categorical and continuous predictors. In these models, the categorical predictors no longer compare the means of the categories, but compare the means *adjusted for other variables in the model*. This is the basic 'analysis of covariance (ANCOVA)' model. In the lecture we imagined an experiment similar to the one we encountered in the previous tutorial, but with an added covariate. Just to recap:
+
+During Zach's visit to the JIG:SAW complex he visits several research buildings. In the second, he discovers experiments being conducted related to memory. In one experiment thirty-six participants with ID chips were tested. All participants met a stranger who had a 5-minute scripted conversation with them containing 10 critical pieces of information. A week later, the participants were asked to recall the encounter for 5 minutes, and then after a 10-minute break wrote everything that they could remember about the original encounter. During the 5-minute initial recall, one of three things happened: the control group (*N* = 12) received no intervention; the erase group (*N* = 12) had a pulse of electricity sent to their brain via their ID chip; and the replace group (*N* = 12) had conflicting verbal descriptions sent to their ID chip. The outcome was how many of the 10 critical pieces of information the participants wrote down after the recall phase. The prediction was that recall will be worse (i.e. lower scores) for participants who had an electrical pulse, or conflicting information sent to their ID chips during recall than those, in the control group, who experienced no interference. Imagine that (unlike in the book) they had also measured working memory in each participant (as their digit span). The data are in the tibble `mem_cov_dat`, which has these variables:
+
+* **id**: Participant ID
+* **group**: To which of the no intervention, memory erase or memory replace conditions the participant was assigned
+* **recall**: How many of the 10 critical pieces of information the participant identified
+* **working_mem**: a variable that measures working memory capacity as the individual's digit span
+
+Use the code box to inspect the tibble.
+
+```{r dat_view2, exercise = TRUE}
+     
+```
+
+```{r dat_view2-solution}
+mem_cov_dat   
+```
+
+The model we're fitting is described by the following equation:
+
+$$
+\begin{aligned}
+Y_i & = b_0 + b_1X_i+ ε_i\\
+\text{recall}_i & = b_0 + b_1\text{dummy 1}_i + b_2\text{dummy 2}_i + b_3\text{covariate}_i + ε_i \\
+& = b_0 + b_1\text{erase vs. control}_i + b_2\text{replace vs. control}_i + b_3\text{working memory}_i + ε_i
+\end{aligned}
+$$
+
+###Fitting the model
+
+We can fit this model in the same way as described for a factorial design. Remember that **R** will dummy code the variable **group** for us, but we'd want to set some orthogonal contrasts. We did this in the previous tutorial using these commands:
+
+```{r echo = T, eval = F}
+interference_vs_none <- c(-2, 1, 1)
+erase_vs_replace <- c(0, -1, 1)
+contrasts(mem_cov_dat$group) <- cbind(interference_vs_none, erase_vs_replace)
+```
+
+Having done that we can follow the same process as the previous example for fitting the model (using `lm()`), getting *F*-statistics (using `Anova()`), fitting robust models (using `lmRob()` or `robust()`) and getting Bayes factors (using `lmBF()`). Either in a separate **RStudio** session or in the box below generate a script to do the following:
+
+* Set orthogonal contrasts for the variable **group** (as above)
+* Fit a linear model predicting recall from working memory and group membership
+* Get *F*-statistics (using Type III sums of squares)
+* Fit robust models using `robust()` and `lmRob()`
+* Compute Bayes factors for the model with only working memory as a predictor and then for the model after group has been added. Compare the later model to the former.
+
+If you want help, click on ![](./images/solution.png).
+
+
+```{r ancova, exercise = TRUE}
+  
+```
+
+```{r ancova-solution}
+interference_vs_none <- c(-2, 1, 1)
+erase_vs_replace <- c(0, -1, 1)
+contrasts(mem_cov_dat$group) <- cbind(interference_vs_none, erase_vs_replace)
+
+mem_cov_mod <- lm(recall ~ working_mem + group, data = mem_cov_dat)
+summary(mem_cov_mod)
+
+Anova(mem_cov_mod, type = 3)
+robust(mem_cov_mod)
+mem_cov_rob <- lmRob(recall ~ working_mem + group, data = mem_cov_dat)
+summary(mem_cov_rob)
+
+wm_bf <- lmBF(formula = recall ~ working_mem, data = data.frame(mem_cov_dat))
+grp_bf <- lmBF(formula = recall ~ working_mem + group, data = data.frame(mem_cov_dat))
+wm_bf
+grp_bf/wm_bf
+```
+
+
+
+## Other resources
+
+### Statistics
+
+* The tutorials typically follow examples described in detail in @RN10163, so for most of them there's a thorough account in there. You might also find @RN4832 useful for the **R** stuff.
+* There are free lectures and screen casts on my [YouTube channel](https://www.youtube.com/user/ProfAndyField/)
+* There are free statistical resources on my website [www.discoveringstatistics.com](http://www.discoveringstatistics.com)
+
+### R
+
+* Information on using [ggplot2](http://ggplot2.tidyverse.org/) 
+* [R for data science](http://r4ds.had.co.nz/index.html) is the open-access version of the book by tidyverse creator Hadley Wickham [@RN11404]. It covers the *tidyverse* and data management.
+* [ModernDive](http://moderndive.com/index.html) is an open-access textbook on **R** and **RStudio**
+* [RStudio cheat sheets](https://www.rstudio.com/resources/cheatsheets/)
+* [RStudio list of online resources](https://www.rstudio.com/online-learning/)
+* [SwirlStats](http://swirlstats.com/students.html) is a package for *R* that launches a bunch of interactive tutorials.
+
+## References

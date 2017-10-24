@@ -186,7 +186,7 @@ These packages are automatically loaded within this tutorial. If you are working
 
 ### Data
 
-This tutorial has the data files pre-loaded so you shouldn't need to do anything to access the data from within the tutorial. However, if you want to play around with what you have learnt in this tutorial outside of the tutorial environment (i.e. in a stand-alone **RStudio** session) you will need to download the data files and then read them into your **R** session. This tutorial uses the following file:
+This tutorial has the data files pre-loaded so you shouldn't need to do anything to access the data from within the tutorial. However, if you want to play around with what you have learnt in this tutorial outside of the tutorial environment (i.e. in a stand-alone **RStudio** session) you will need to download the data files and then read them into your **R** session. This tutorial uses the following files:
 
 * [ais_17_alice_data.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_17_alice_data.csv)
 * [ais_16_memory_cov.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_16_memory_cov.csv)
@@ -236,7 +236,7 @@ Y_i & = b_0 + b_1X_i+ ε_i\\
 \end{aligned}
 $$
 
-The variables **gene** and **picture**] are made up of 0s and 1s that code the three groups across the two variables (see the book chapter for details).
+The variables **gene** and **picture** are made up of 0s and 1s that code the three groups across the two variables (see the book chapter for details).
 
 ### Descriptive statistics
 

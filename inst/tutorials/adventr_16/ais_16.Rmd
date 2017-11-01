@@ -169,7 +169,8 @@ Zach doesn’t want to believe that Alice has simply just left him. Rather, that
 This tutorial uses the following packages:
 
 * `BayesFactor` [@RN9444] to compute Bayes factors
-* `boot` [@RN11409] to compute bootstrap confidence intervals.
+* `boot` [@RN11409] to compute bootstrap confidence intervals
+* `gmodels` [@RN11408] to get confidence intervals
 * `lm.beta` [@RN11412] to compute standardized *b*-values
 * `robust` [@RN11411] to compute robust estimates
 * `sjstats` [@RN11413] to produce robust parameter estimates and confidence intervals

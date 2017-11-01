@@ -177,6 +177,7 @@ This tutorial uses the following packages:
 * `BayesFactor` [@RN9444] to compute Bayes factors
 * `boot` [@RN11409] to compute bootstrap confidence intervals.
 * `car` [@RN11416] to compute type III sums of squares
+* `gmodels` [@RN11408] to get confidence intervals
 * `robust` [@RN11411] to compute robust estimates
 * `sjstats` [@RN11413] to produce robust parameter estimates and confidence intervals
 * `tidyverse` [@RN11407] for general data processing

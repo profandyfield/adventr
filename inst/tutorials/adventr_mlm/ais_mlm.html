@@ -45,8 +45,8 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 
 <div class="topics">
 
-<div id="section-an-adventure-in-r-factorial-designs-and-adjusted-means" class="section level1">
-<h1>An Adventure in R: Factorial designs (and adjusted means)</h1>
+<div id="section-an-adventure-in-r-multilevel-models" class="section level1">
+<h1>An Adventure in R: Multilevel models</h1>
 <div id="section-overview" class="section level2">
 <h2>Overview</h2>
 <p>This tutorial is one of a series that accompanies <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> <span class="citation">(Field 2016)</span> and <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(Field, Miles, and Field 2012)</span> by <a href="https://en.wikipedia.org/wiki/Andy_Field_(academic)">me</a>. These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>,<a href="#section-fn1" class="footnoteRef" id="section-fnref1"><sup>1</sup></a></p>
@@ -57,7 +57,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 </ul></li>
 <li>What is covered?
 <ul>
-<li>This tutorial looks at how to fit a linear model for a factorial design including interactions (moderation). We look at robust variants of the model, and computing a Bayes factor. It would be a useful tutorial to run alongside teaching based on Chapter 17 of <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a>. The tutorial also adds in an example not from the book (but based on it) that demonstrates the use of continuous predictors to adjust means (ANCOVA)</li>
+<li>This tutorial looks at how to fit a linear model for hierarchical data structures. In other words, we look at multilevel models. This tutorial goes beyond the material covered in <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> but using an example based on the narrative of the story.</li>
 <li>This tutorial <em>does not</em> teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else’s)</li>
 <li>The aim of this tutorial is to augment the theory that you already know by guiding you through fitting linear models using <strong>R</strong> and <strong>RStudio</strong> and asking you questions to test your knowledge along the way.</li>
 </ul></li>
@@ -125,11 +125,8 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <ul>
 <li><code>nlme</code> <span class="citation">(Pinheiro et al. 2017)</span> to estimate the multilevel models</li>
 <li><code>forcats</code> <span class="citation">(Wickham 2017a)</span> for processing categorical variables</li>
+<li><code>gmodels</code> <span class="citation">(Warnes et al. 2015)</span> to compute confidence intervals</li>
 <li><code>tidyverse</code> <span class="citation">(Wickham 2017b)</span> for general data processing</li>
-</ul>
-<p><code>BayesFactor</code> <span class="citation">(Morey and Rouder 2014)</span> to compute Bayes factors * <code>boot</code> <span class="citation">(Canty and Ripley 2017)</span> to compute bootstrap confidence intervals. * <code>car</code> <span class="citation">(Fox and Weisberg 2011)</span> to compute type III sums of squares * <code>robust</code> <span class="citation">(Wang et al. 2017)</span> to compute robust estimates * <code>sjstats</code> <span class="citation">(Lüdecke 2017)</span> to produce robust parameter estimates and confidence intervals</p>
-<ul>
-<li><code>WRS2</code> <span class="citation">(Mair, Schoenbrodt, and Wilcox 2017)</span> to do various robust tests</li>
 </ul>
 <p>These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in <strong>RStudio</strong>) then you need to make sure that the package has been installed by executing <code>install.packages(&quot;package_name&quot;)</code>, where <em>package_name</em> is the name of the package. If the package is already installed, then you need to reference it in your current session by executing <code>library(package_name)</code>, where <em>package_name</em> is the name of the package.</p>
 </div>
@@ -158,21 +155,16 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 </ul>
 </div>
 </div>
-<div id="section-exploring-the-data" class="section level2">
-<h2>Exploring the data</h2>
-<div id="section-the-model" class="section level3">
-<h3>The model</h3>
-<p>At the end of the story it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset (<code>rehab_dat</code>) relates to her first attempt. It contains data from 190 code 1318 workers treated at 10 different clinics. Workers were randomly assigned to two arms of the trial (wait list vs.C-gene therapy) and the outcome was how much they resembled their pre-zombie state (as a percentage). The zombification occurred as a result of these workers entering JIG:SAWs genetic enhancement programme (GEP), and additional variables quantify how long it has been since they entered this programme (i.e., how long have they been a zombie) and whether they were originally exposed to the low- or high-intensity GEP. #‘#’ #‘<span class="citation">(<span class="citeproc-not-found" data-reference-id="format"><strong>???</strong></span>)</span> A tibble with 190 rows and 6 variables: #’ </p>
-<p>At the start of the story when Alice first disappears Zach finds a memory stone containing some of Alice’s secret research. Unable to make sense of it, he keeps the stone and sets off on his mission to find her. At the climax of the book, Zach foolishly gives Vic Luten this stone. Luten takes Alice, against her will, to the epicentre of the JIG:SAW complex and throws her into a Schrödinger’s prison. Zach and Milton follow. Vic brokers a deal: he will release Alice if Zach helps him to understand the results of Alice’s secret research.Can Zach fathom it out and save Alice?</p>
-<p>The experiment on Alice’s memory stone relates to work she has been doing to see whether a genetic toggle switch can be used in conjunction with the chameleon gene to help people with injuries to regenerate their wounds. Participants who had facial burns were recruited. One-week pre-test, a gene C–10XFMG (the so-called chameleon gene) was introduced into all participants. Two days prior to test, a genetic toggle switch was introduced into half of the participants. Half of the participants were asked to look at a photograph of themselves from before their injury and to imagine the cells in their faces changing to become like the photo. The remainder acted as a control and were asked to look at a picture of a same-sex stranger and to try to change their face to become the person in the picture. All participants looked at the picture for 6 sessions of 20 minutes each. At the end of the sessions their faces were scanned into a computer and compared to the face in the photograph. Facial recognition software produced a precise resemblance measure as a percentage (100% = the participants face is exactly like the face in the photograph, 0% the person in the photo bears no resemblance at all to the participant).</p>
-<p>The data are in the tibble <code>rehab_dat</code>, which has six variables:</p>
+<div id="section-the-model" class="section level2">
+<h2>The model</h2>
+<p>At the end of the story it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset relates to her first attempt. It contains data from 190 code 1318 workers treated at 10 different clinics. Workers were randomly assigned to two arms of the trial (wait list vs. C-gene therapy) and the outcome was how much they resembled their pre-zombie state (as a percentage). The zombification occurred as a result of these workers entering JIG:SAWs genetic enhancement programme (GEP), and additional variables quantify how long it has been since they entered this programme (i.e., how long have they been a zombie) and whether they were originally exposed to the low- or high-intensity GEP. The data are in the tibble <code>rehab_dat</code>, which has six variables:</p>
 <ul>
-<li><strong>id</strong>: Participant ID}</li>
-<li><strong>id_clin</strong>: Factor that codes which of 10 clinics the participant attended}</li>
-<li><strong>intervention</strong>: Factor that codes which arm of the trial the participant was randomized to (0 = wait list, 1 = gene therapy)}</li>
-<li><strong>resemblance</strong>: How closely their face resembled their pre-zombified state (100% = the participants face is exactly like their original face, 0% the person bears no resemblance to their pre-zombified face)}</li>
-<li><strong>gep_level</strong>: Factor that codes whether the participant was originally exposed to the low- (0) or high-intensity (1) genetic enhancement program at JIG:SAW}</li>
-<li><strong>tse_months</strong>: How many months since the participant completed the genetic enhancement program that resulted in their zombification}</li>
+<li><strong>id</strong>: Participant ID</li>
+<li><strong>id_clin</strong>: Factor that codes which of 10 clinics the participant attended</li>
+<li><strong>intervention</strong>: Factor that codes which arm of the trial the participant was randomized to (0 = wait list, 1 = gene therapy)</li>
+<li><strong>resemblance</strong>: How closely their face resembled their pre-zombified state (100% = the participants face is exactly like their original face, 0% the person bears no resemblance to their pre-zombified face)</li>
+<li><strong>gep_level</strong>: Factor that codes whether the participant was originally exposed to the low- (0) or high-intensity (1) genetic enhancement program at JIG:SAW</li>
+<li><strong>tse_months</strong>: How many months since the participant completed the genetic enhancement program that resulted in their zombification</li>
 </ul>
 <p>Use the code box to inspect the tibble.</p>
 <div class="tutorial-exercise" data-label="dat_view" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
@@ -181,408 +173,289 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div class="tutorial-exercise-support" data-label="dat_view-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>rehab_dat   </code></pre>
 </div>
-<p>The data has a hierarchical structure because workers were treated in one of 10 clinics.</p>
+<p>The data has a hierarchical structure because workers were treated in one of 10 clinics (Figure 1). We might, therefore, want to model the possibility of the success of the intervention varying across these clinics/contexts. We’ll build up the model in steps.</p>
 <div class="figure">
 <img src="images/ais_rehab_data_hierarchy_small.png" alt="Figure 1: The structure of the rehabilitation data" />
 <p class="caption">Figure 1: The structure of the rehabilitation data</p>
 </div>
-<p>model we’re fitting is described by the following equation:</p>
+<div id="section-fixed-intercepts-and-slopes" class="section level3">
+<h3>Fixed intercepts and slopes</h3>
+<p>If we focussed purely on the effect of the intervention, and ignored the contexts in which the intervention took place we’d fit this model:</p>
 <p><span class="math display">\[
 \begin{aligned}
 Y_i &amp; = b_0 + b_1X_i+ ε_i\\
-\text{resemblance}_i &amp; = b_0 + b_1\text{gene}_i + b_2\text{picture}_i + b_3\text{gene} \times \text{picture}_i + ε_i
+\text{resemblance}_i &amp; = b_0 + b_1\text{intervention}_i + ε_i
 \end{aligned}
 \]</span></p>
-<p>The variables <strong>gene</strong> and <strong>picture</strong>] are made up of 0s and 1s that code the three groups across the two variables (see the book chapter for details).</p>
+<p>The variable <strong>intervention</strong> is made up of 0s and 1s that code whether a zombie was in the wait list or treatment arm of the trial.</p>
 </div>
+<div id="section-random-intercepts-fixed-slopes" class="section level3">
+<h3>Random intercepts, fixed slopes</h3>
+<p>If we want to factor in the possibility that resemblance scores in the control group (the group coded as 0) vary across the 10 clinics, we would fit this model:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\text{resemblance}_{ij} &amp; = b_{0j} + b_1\text{intervention}_{ij} + ε_{ij}\\
+b_{0j} &amp;= b_0 + u_{0j}
+\end{aligned}
+\]</span> In this model resemblance scores, intervention group membership, and the model errors all vary by both zombie (<em>i</em>) and clinic (<em>j</em>). The intercept (<span class="math inline">\(b_{0j}\)</span>) is made up of the overall intercept (<span class="math inline">\(b_0\)</span>) and a term that represents the difference between the intercept for clinic <em>j</em> and that overall value (<span class="math inline">\(u_{0j}\)</span>).</p>
+</div>
+<div id="section-random-intercepts-and-slopes" class="section level3">
+<h3>Random intercepts and slopes</h3>
+<p>If we want to factor in the possibility that the effect of the intervention on resemblance scores vary across the 10 clinics, we would fit this model:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\text{resemblance}_{ij} &amp; = b_{0j} + b_{1j}\text{intervention}_{ij} + ε_{ij}\\
+b_{0j} &amp;= b_0 + u_{0j} \\
+b_{1j} &amp;= b_1 + u_{1j}
+\end{aligned}
+\]</span> This model is the same as the previous one except that the effect of the intervention (<span class="math inline">\(b_{1j}\)</span>) is made up of the overall effect (<span class="math inline">\(b_1\)</span>) and a term that represents the difference between the effect in clinic <em>j</em> and that overall value (<span class="math inline">\(u_{1j}\)</span>).</p>
+</div>
+<div id="section-adding-other-fixed-effects" class="section level3">
+<h3>Adding other fixed effects</h3>
+<p>We can add both <strong>gep_level</strong> and <strong>tse_months</strong> into the model as fixed effects (that is, we assume their effects are constant across contexts):</p>
+<p><span class="math display">\[
+\begin{aligned}
+\text{resemblance}_{ij} &amp; = b_{0j} + b_{1j}\text{intervention}_{ij} + b_2\text{gep_level}_{ij} + b_3\text{tse_months}_{ij} + ε_{ij}\\
+b_{0j} &amp;= b_0 + u_{0j} \\
+b_{1j} &amp;= b_1 + u_{1j}
+\end{aligned}
+\]</span> Note that although these additional predictors vary by zombie (<em>i</em>) and clinic (<em>j</em>), their parameter estimates don’t (their <em>b</em> values do not have a subscript <em>j</em>).</p>
+</div>
+</div>
+<div id="section-preparing-categorical-variables" class="section level2">
+<h2>Preparing categorical variables</h2>
+<p>In these tutorials I tend to be kind to you and set up categorical predictors in the datasets in a way that categories are coded conveniently for the hypotheses being tested. In real life, with your own data, that won’t always be the case: when importing categorical variables <strong>R</strong> will generate levels of those variables alphabetically (if you use <code>read.csv()</code>), or if you use a tidyverse function (like <code>read_csv()</code>) it will code categorical variables in the order that categories appear in the data. In both cases, you might end up with codes that make interpretation awkward. For this reason it is always a good idea to check how categorical variables have been coded so that you know how to interpret their parameters. You can check the levels of a categorical variable using the <code>levels()</code> function, which returns the levels of the variable entered into it. We have three categorical variables: <strong>intervention</strong>, <strong>id_clin</strong> and <strong>gep_level</strong>. We can check the levels of these factors by executing the code in the box below:</p>
+<div class="tutorial-exercise" data-label="fct_levels" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>levels(rehab_dat$intervention)
+levels(rehab_dat$id_clin)
+levels(rehab_dat$gep_level)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<p>You should see that for <strong>intervention</strong>, the first level is wait list and the second gene therapy (which is what we want because the <em>b</em> for this effect will represent the difference in the mean resemblance in the therapy group relative to the control); for <strong>id_clin</strong> the levels are ordered nicely from clinic 1 to 10; for <strong>gep_level</strong> the first level is low intensity and the second level high (which again is convenient because <em>b</em> will represent the shift in the mean resemblance scores due to being in the high intensity genetic enhancement program compared to the low intensity one).</p>
+<p>Let’s try importing the data using the <code>read.csv()</code> function (note this function is different to the tidyverse function <code>read_csv()</code>). This function constructs factor levels <em>alphabetically</em>. Execute the code below. The first line re-imports the data into a data frame called <code>rehab_alt_dat</code> from my webpage by using the <code>read.csv()</code> function. The next three lines use <code>levels()</code> to display the levels of the three categorical predictors (just as we did above).</p>
+<div class="tutorial-exercise" data-label="get_external_data" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>rehab_alt_dat &lt;- read.csv(&quot;http://www.discoveringstatistics.com/repository/ais_data/ais_zombie_rehab.csv&quot;)
+
+levels(rehab_alt_dat$intervention)
+levels(rehab_alt_dat$id_clin)
+levels(rehab_alt_dat$gep_level)</code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<p>Note that the levels are now constructed alphabetically. For <strong>intervention</strong>, the first level is gene therapy and the second wait list (which means that we would have to interpret the resulting <em>b</em> as the effect of the wait list relative to gene therapy - in other words the direction of the expected effect is reversed); for <strong>id_clin</strong> the levels are ordered “clinic_1” “clinic_10” “clinic_2” “clinic_3” … so clinic 10 appears between clinic 1 and 2, which (if you’re as anal retentive as I am) will be really annoying if we plot this variable because the sequence of clinics won’t be pleasing! For <strong>gep_level</strong> the first level is high intensity and the second level low (which again means that the <em>b</em> will represent the reverse effect of what we might intuitively prefer: it will show the effect of low intensity relative to high).</p>
+<p>At some point in your relationship with <strong>R</strong> you will face this kind of situation, so we’ll have a look at how to get the levels of categorical variables in the order that you want using the <code>fct_relevel()</code> function from the <code>forcats</code> package. The function takes this general form:</p>
+<p><code>fct_relevel(factor, levels_to_move, after = &quot;&quot;)</code></p>
+<p>So you place the name of the factor that you want to relevel, then list any levels you want to move (or simply list the levels in the order you want them), and then use <code>after = &quot;&quot;</code> to say which level you want them placed after. Let’s look at <strong>rehab_alt_dat$id_clin</strong>. The current level order is: “clinic_1”, “clinic_10”, “clinic_2”, “clinic_3”, “clinic_4”, “clinic_5”, “clinic_6”, “clinic_7”, “clinic_8”, “clinic_9”. We’d prefer “clinic_10” to be at the end. We can achieve this in one of three ways, in each case we recreate each categorical variable from itself but with re-ordered levels):</p>
+<pre class="r"><code>rehab_alt_dat$id_clin &lt;- fct_relevel(rehab_alt_dat$id_clin, &quot;clinic_1&quot;, &quot;clinic_2&quot;, &quot;clinic_3&quot;, &quot;clinic_4&quot;, &quot;clinic_5&quot;, &quot;clinic_6&quot;, &quot;clinic_7&quot;, &quot;clinic_8&quot;, &quot;clinic_9&quot;, &quot;clinic_10&quot;)
+rehab_alt_dat$id_clin &lt;- fct_relevel(rehab_alt_dat$id_clin, &quot;clinic_10&quot;, after = 9)
+rehab_alt_dat$id_clin &lt;- fct_relevel(rehab_alt_dat$id_clin, &quot;clinic_10&quot;, after = Inf)</code></pre>
+<p>In the first line we achieve what we want by simply listing the factor levels in the order we want them. This method is inefficient for the current example because we only want to move one level, so it’s annoying to have to list all 10 levels. The second line achieves the same goal but by asking for “clinic_10” to be moved to after level 9. This code, therefore, will move “clinic_10” to level 10. The third line uses <code>Inf</code> (short for infinite) to move “clinic_10” to the final level (whatever that may be). This final method is particularly useful when you want to move a level to the end but you don’t know how many levels there are off the top of your head.</p>
+<p><font color='#009E73'>Tip: When you specify levels of a factor the text must exactly match that of the variable level. In the example above if you type “Clinic_10” or “clinic 10” the command will fail because neither exactly match the factopr level of “clinic_10”. Check that upper and lower case letters match with the factor level and so on.</font></p>
+<p>We could re-order the levels of <strong>intervention</strong> (to make the wait list first) in a similar way using any of these 4 ways:</p>
+<pre class="r"><code>rehab_alt_dat$intervention &lt;- fct_relevel(rehab_alt_dat$intervention, &quot;Wait list&quot;, &quot;Gene therapy&quot;)
+rehab_alt_dat$intervention &lt;- fct_relevel(rehab_alt_dat$intervention, &quot;Gene therapy&quot;, after = 1)
+rehab_alt_dat$intervention &lt;- fct_relevel(rehab_alt_dat$intervention, &quot;Gene therapy&quot;, after = Inf)
+rehab_alt_dat$intervention &lt;- fct_relevel(rehab_alt_dat$intervention, &quot;Wait list&quot;, after = 0)</code></pre>
+<p>Again, the first command lists re-orders the levels using a list of the levels in the order we want them. The second command places “Gene therapy” after level 1 (and, therefore, as level 2), the third moves “Gene therapy” to be the final level (i.e., level 2), and the fourth moves “Wait list” to after level 0 (in other words it places it as the first level). Use the code box to re-create <strong>intervention</strong>, <strong>id_clin</strong> and <strong>gep_level</strong> from <code>rehab_alt_dat</code> but with re-ordered levels that match the corresponding variables in <code>rehab_dat</code>. Remember to use <code>levels()</code> to check your handywork!</p>
+<div class="tutorial-exercise-support" data-label="relevel_fcts-setup" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>rehab_alt_dat &lt;- read.csv(&quot;http://www.discoveringstatistics.com/repository/ais_data/ais_zombie_rehab.csv&quot;)</code></pre>
+</div>
+<div class="tutorial-exercise" data-label="relevel_fcts" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="7">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="relevel_fcts-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>#There are various ways (see text for details) but this will work
+rehab_alt_dat$id_clin &lt;- fct_relevel(rehab_alt_dat$id_clin, &quot;clinic_10&quot;, after = Inf)
+rehab_alt_dat$intervention &lt;- fct_relevel(rehab_alt_dat$intervention, &quot;Gene therapy&quot;, after = 1)
+rehab_alt_dat$gep_level &lt;- fct_relevel(rehab_alt_dat$gep_level, &quot;High intensity&quot;, after = 1)
+
+levels(rehab_alt_dat$intervention)
+levels(rehab_alt_dat$id_clin)
+levels(rehab_alt_dat$gep_level)</code></pre>
+</div>
+<p>That was just a little detour to show you how to check the levels of any categorical predictors and make sure that categories are in the order you want them. From now on we’ll return to using the tibble called <code>rehab_dat</code> that has the categorical variables set up as we want them.</p>
+</div>
+<div id="section-exploring-data" class="section level2">
+<h2>Exploring data</h2>
 <div id="section-descriptive-statistics" class="section level3">
 <h3>Descriptive statistics</h3>
-<p>Using what you’ve learnt in previous tutorials, create a tibble called <code>alice_summary</code> containing the group means and their confidence intervals split by <strong>gene</strong> and <strong>picture</strong>.</p>
-<p><font color='#009E73'>Hint: to group means by more than one variable you can use group_by(x, y). If you’re doing this outside of the tutorial remember to load the packages tidyverse and gmodels</font></p>
+<p>Using what you’ve learnt in previous tutorials, create a tibble called <code>rehab_summary</code> containing the group means of the variables <strong>resemblance</strong> and <strong>tse_months</strong> and their confidence intervals split by <strong>id_clin</strong> and <strong>intervention</strong> (in that order).</p>
+<p><font color='#009E73'>Hint: to group means by three variables you can use group_by(x, y, z). If you’re doing this outside of the tutorial remember to load the packages tidyverse and gmodels</font></p>
 <div class="tutorial-exercise" data-label="desc" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="6">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="desc-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>alice_summary &lt;- alice_dat %&gt;% group_by(gene, picture) %&gt;% summarize(
-  mean = mean(resemblance),
-  ci_low = ci(resemblance)[&quot;CI lower&quot;],
-  ci_upp = ci(resemblance)[&quot;CI upper&quot;]
+<pre class="text"><code>rehab_summary &lt;- rehab_dat %&gt;% group_by(id_clin, intervention) %&gt;% summarize(
+  mean_resemblance = mean(resemblance),
+  ci_low_resemblance = ci(resemblance)[&quot;CI lower&quot;],
+  ci_upp_resemblance = ci(resemblance)[&quot;CI upper&quot;],
+  mean_tse = mean(tse_months),
+  ci_low_tse = ci(tse_months)[&quot;CI lower&quot;],
+  ci_upp_tse = ci(tse_months)[&quot;CI upper&quot;]
 )
-alice_summary              </code></pre>
+rehab_summary              </code></pre>
 </div>
-<p>It would be useful to get some means for the main effects of <strong>gene</strong> and <strong>picture</strong>, so create two objects <code>gene_main</code> and <code>pic_main</code> that contain means and confidence intervals when the data are split by only <strong>gene</strong> (for <code>gene_main</code>) and <strong>picture</strong> (for <code>pic_main</code>).</p>
+<p>It would be useful to get some means for the main effects of <strong>intervention</strong> and <strong>gep_level</strong>, so create two objects <code>intervention_main</code> and <code>gep_main</code> that contain means and confidence intervals when the data are split by only <strong>intervention</strong> (for <code>intervention_main</code>) and <strong>gep_level</strong> (for <code>gep_main</code>). Remember to execute <code>intervention_main</code> and <code>gep_main</code> to see the fruits of your labour.</p>
 <div class="tutorial-exercise" data-label="me" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="14">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="me-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>gene_main &lt;- alice_dat %&gt;% group_by(gene) %&gt;% summarize(
+<pre class="text"><code>intervention_main &lt;- rehab_dat %&gt;% group_by(intervention) %&gt;% summarize(
   mean = mean(resemblance),
   ci_low = ci(resemblance)[&quot;CI lower&quot;],
   ci_upp = ci(resemblance)[&quot;CI upper&quot;]
 )
 
-pic_main &lt;- alice_dat %&gt;% group_by(picture) %&gt;% summarize(
+gep_main &lt;- rehab_dat %&gt;% group_by(gep_level) %&gt;% summarize(
   mean = mean(resemblance),
   ci_low = ci(resemblance)[&quot;CI lower&quot;],
   ci_upp = ci(resemblance)[&quot;CI upper&quot;]
 )
 
-gene_main  
-pic_main</code></pre>
+intervention_main  
+gep_main</code></pre>
 </div>
 </div>
 <div id="section-plotting-the-data" class="section level3">
 <h3>Plotting the data</h3>
-<p>Let’s plot the data. Use the code box below to create an error bar chart with <strong>group</strong> on the <em>y</em>-axis, <strong>recall</strong> on the <em>x</em>-axis and <strong>picture</strong> displayed in different colours. If you feel like it, try to superimpose the raw data.</p>
+<p>Let’s plot the data by recreating the image from my lecture slides. I will explain each command line by line. Then try creating the plot in the code box below. Then try removing lines to see what effect it has on the plot.</p>
+<p>The code is:</p>
+<pre class="r"><code>rehab_plot &lt;- ggplot(rehab_dat, aes(intervention, resemblance, colour = id_clin))
+rehab_plot +
+  geom_point(size = 1, position = position_dodge(width = 0.1), alpha = 0.6) + 
+  stat_summary(fun.y = mean, geom=&quot;line&quot;, aes(group = id_clin)) +
+  scale_y_continuous(breaks = seq(0, 100, 10)) +
+  labs(x = &quot;Intervention&quot;, y = &quot;Resemblance (%)&quot;, colour = &quot;Clinic&quot;) +
+  theme_bw()</code></pre>
+<ul>
+<li>The first line is a standard <code>ggplot()</code> command. We create an object called <code>rehab_plot</code> by defining the tibble as <code>rehab_dat</code> and then within <code>aes()</code> plotting <strong>intervention</strong> on the <em>x</em>-axis, <strong>resemblance</strong> on the<em>y</em>-axis and varying the colour by the clinic.</li>
+<li>The second line takes the object created in the first line and starts to add things to it</li>
+<li>The third line adds the raw data as points (of size 1 and transparency 0.6). <code>position_dodge()</code> is used to force data points to shift horizontally (but not vertically) to avoid clashing with each other.</li>
+<li>The fourth line plots a line between the means of the wait list and therapy groups. It uses <code>aes(group = id_clin)</code> to plot different lines for each of the 10 clinics.</li>
+<li>The remaining lines should be familiar to you: they determine the tick intervals on the <em>y</em>-axis, the labels on both axes and the legend, and apply a black and white theme.</li>
+</ul>
 <div class="tutorial-exercise" data-label="plot" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="8">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="plot-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>alice_plot&lt;-ggplot(alice_dat, aes(gene, resemblance, colour = picture))
-alice_plot +
-  stat_summary(fun.data = &quot;mean_cl_normal&quot;, position = position_dodge(width = 0.5)) +
-  scale_colour_manual(values = c(&quot;#E69F00&quot;, &quot;#56B4E9&quot;)) + 
-  coord_cartesian(ylim = c(0,100)) +
+<pre class="text"><code>rehab_plot &lt;- ggplot(rehab_dat, aes(intervention, resemblance, colour = id_clin))
+rehab_plot +
+  geom_point(size = 1, position = position_dodge(width = 0.1), alpha = 0.6) + 
+  stat_summary(fun.y = mean, geom=&quot;line&quot;, aes(group = id_clin)) +
   scale_y_continuous(breaks = seq(0, 100, 10)) +
-  labs(y = &quot;Resemblance (%)&quot;, x = &quot;Participant&quot;, colour = &quot;Picture&quot;) + 
+  labs(x = &quot;Intervention&quot;, y = &quot;Resemblance (%)&quot;, colour = &quot;Clinic&quot;) +
   theme_bw()</code></pre>
 </div>
 </div>
 </div>
-<div id="section-several-categorical-predictors-factorial-designs" class="section level2">
-<h2>Several categorical predictors (factorial designs)</h2>
-<div id="section-fitting-the-model" class="section level3">
-<h3>Fitting the model</h3>
-<p>To fit the model we use the <code>lm()</code> function, because we are fitting a linear model with two categorical predictors (and an interaction term). We’ve used this function before, just to recap it takes the following general form (I’ve retained only the key options):</p>
-<p><code>lm(outcome ~ predictor(s), data, subset, na.action = na.fail)</code></p>
-<p>We can specify the model itself in one of two ways. The first is to write out each predictor and the interaction term longhand. To specify an interaction term we use a colon to separate the terms in the interaction. So, the <span class="math inline">\(gene \times picture\)</span> interaction would be specified as <code>gene:picture</code>. Therefore, we could specify the model within <code>lm()</code> as:</p>
-<p><code>resemblance ~ gene + picture + gene:picture</code></p>
-<p>A quicker way, for models where we want to retain all main effects and lower order interaction terms, is just to specify the highest-order interaction separating any variable names by an asterisks. This has the effect of including that interaction and any lower-order effects. For example, if we specify:</p>
-<p><code>resemblance ~ gene*picture</code></p>
-<p>The resulting model will include the main effects of <strong>gene</strong> and <strong>picture</strong> as well as the interaction between them.</p>
-<p>Using what I have just explained and what you know from previous tutorials do the following:</p>
-<ul>
-<li>Create a model called <code>gen_mod</code> using <code>lm()</code></li>
-<li>Summarize the model using <code>summary()</code></li>
-<li>Use <code>confint()</code> to get confidence intervals for the model parameters (the <em>b</em>s)</li>
-<li>Plot diagnostics with <code>plot()</code></li>
-</ul>
-<p>Fit the model in the code box below.</p>
-<div class="tutorial-exercise" data-label="lm1" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<div id="section-fitting-multilevel-models" class="section level2">
+<h2>Fitting multilevel models</h2>
+<div id="section-assessing-the-need-for-a-multilevel-model" class="section level3">
+<h3>Assessing the need for a multilevel model</h3>
+<p>To ascertain whether there is variation in the outcome (<strong>resemblance</strong>) over contexts (clinics) we need to fit a baseline model in which we include only the intercept; next, we fit a model that allows intercepts to vary over contexts; finally we compare these models to see whether the fit has improved as a result of allowing intercepts to vary. We fit a baseline model that includes only the intercept using the <code>gls()</code> (generalized least squares) function from the <code>nlme</code> package. The format of the <code>gls()</code> function is very much like the <code>lm()</code> function that we have encountered before. For example, we could execute:</p>
+<p><code>rehab_base &lt;- gls(resemblance ~ 1, data = rehab_dat, method = &quot;ML&quot;)</code></p>
+<p>to create an object called <code>rehab_base</code> that contains a model that predicts resemblance scores from the intercept (<code>resemblance ~ 1</code>) using the rehab data (<code>data = rehab_dat</code>) and based on maximum likelihood estimation (<code>method = &quot;ML&quot;</code>). If we had missing data we could also include <code>na.action = na.exclude</code>.</p>
+<p>The estimation method is important (note we are <em>not</em> using least squares estimation). We have to over-ride the default method of REML (restricted maximum likelihood) because models are only comparable if we use maximum likelihood estimation. Having fit the model we don’t particularly need to inspect. In itself it isn;t that interesting, but it acts as a baseline against which to compare a model in which intercepts vary across contexts. We do this using the <code>lme()</code> function from the <code>nlme</code> package. The format of this function is much the same as <code>lm()</code> and <code>gls()</code>; the only difference is that we need to specify the random part of the model using the option <code>random = x|y</code>, in which <em>x</em> is an equation specifying the random parts of the model and <em>y</em> is the contextual variable or variables across which we want to model variance. In the current example, we are trying to model intercepts that vary across clinics; therefore, we could add the instruction <code>random = ~1|id_clin</code>. Remember that we use <code>1</code> to denote the intercept, and that <code>id_clin</code> is the variable that contains information about the clinic that a given zombie attended. To create the model and store it in an object called <code>rehab_ri</code> we’d execute:</p>
+<p><code>rehab_ri &lt;- lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_dat, method = &quot;ML&quot;)</code></p>
+<p>To compare this model to the baseline one we must use maximum likelihood estimation (<code>method = &quot;ML&quot;</code>). To see whether allowing the intercepts to vary improves the model we can use the <code>anova()</code> function, which will produce useful statistics such as the AIC, BIC and log-likelihood. To compare models they must be nested (that is, models higher up the chain need to contain all of the effects that were in models earlier in the chain). We can use this function as follows to compare our two models:</p>
+<p><code>anova(rehab_base, rehab_ri)</code></p>
+<p>Note that we have simply put the names of the two models we created into the function separated by a comma. Use the code box below to create the baseline and random intercept model and compare them.</p>
+<div class="tutorial-exercise" data-label="base_ri" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
-<div class="tutorial-exercise-support" data-label="lm1-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>gen_mod &lt;- lm(resemblance ~ gene*picture, data = alice_dat)
-summary(gen_mod)
-confint(gen_mod)
-plot(gen_mod)</code></pre>
+<div class="tutorial-exercise-support" data-label="base_ri-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>rehab_base &lt;- gls(resemblance ~ 1, data = rehab_dat, method = &quot;ML&quot;)
+rehab_ri &lt;- lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_dat, method = &quot;ML&quot;)
+anova(rehab_base, rehab_ri)</code></pre>
 </div>
-<p>The output provides estimates of the model parameters (the <em>b</em>-values) and the significance of these values. <strong>R</strong> automatically turns the variables <strong>gene</strong> and <strong>picture</strong> into dummy variables. Left to its own devices <strong>R</strong> will order the categories alphabetically (so the order for <strong>gene</strong> will be <em>C-Gene</em> and <em>C-Gene + Toggle</em> and for <strong>picture</strong> will be <em>Other</em> and <em>Self</em>) but I have turned these variables into factors and in doing so changed the order of levels for <strong>picture</strong> to be <em>Self</em> and <em>Other</em>. It doesn’t make any difference for these variables (because they have only two categories) but for predictors with more than two categories bear in mind that you might want to set specific orders for factor levels for the predictor variables to make the model parameters conform to meaningful group comparisons.</p>
-<p>The <em>Y</em> intercept (<span class="math inline">\(b_0\)</span>) is 51.50, which is the value of resemblance when all three predictors are zero. That is when <strong>gene</strong> is zero (i.e. C-Gene) and picture is zero (i.e. Self) and the interaction is also zero. So, (<span class="math inline">\(b_0\)</span>) is 51.50 because that is the mean of the group that had C-gene therapy only and studied photos of their own face. The predictors are dummy variables, and their respective <em>b</em>s reflect the differences between means that the dummy variables code.</p>
-<ul>
-<li><strong>geneC-Gene + Toggle</strong> will be the main effect of <strong>gene</strong> within the category of <strong>picture</strong> coded as 0. So, looking only at people who studied photos of their own face, it is the difference between the mean of people who had C-Gene therapy (51.50) and the mean of the group that received a toggle switch as well (86.125), which is <span class="math inline">\(86.125 - 51.50 = 34.625\)</span>.</li>
-<li><strong>pictureOther</strong> is the the main effect of <strong>picture</strong> within the category of <strong>gene</strong> coded as 0. So, looking only at people who had C-Gene therapy, it is the difference between the mean of people who looked at photos of their own face (51.50) and those that studied someone else’s face (8.625), which is <span class="math inline">\(8.625 - 51.50 = -42.875\)</span>.</li>
-<li><strong>geneC-Gene + Toggle:pictureOther</strong> is the interaction term. It is the effect of gene therapy when studying photos of other people minus the effect of gene therapy when studying photos of their own face:</li>
-</ul>
-<p><span class="math display">\[
-\begin{aligned}
-b_3 &amp;= \big(\bar{X}_\text{Toggle, other} - \bar{X}_\text{C-gene, other}\big) - \big(\bar{X}_\text{Toggle, self} - \bar{X}_\text{C-gene, self}\big)\\
-&amp;= \big(85.25-8.63\big)-\big(86.13-51.50\big) \\
-&amp;= 42
-\end{aligned}
-\]</span></p>
+<p>First, we can compare the fit of the model using indices such as AIC and BIC. In the output from the <code>anova()</code> function you’ll see that the BIC when only the intercept was included is 1731.247 but decreases to 1725.239 when intercepts are allowed to vary. Remember that smaller values of BIC indicate a better fit of the data, so this gives us an indication that by allowing intercepts to vary the model fit has improved (BIC has decreased). The AIC (which also decreases) can be interpreted in a similar way. Most important is the <em>L. Ratio</em> which is the log-likelihood ratio (the change in the −2LL between the models), it has a <em>p</em>-value, which is highly significant suggesting that it is important that we model the variability in intercepts (because doing so significantly improves the fit of our model). The change in the −2LL has a chi-square distribution, so we can report this statistic as <span class="math inline">\(\chi^2(1) = 11.25, p &lt; 0.001\)</span>. We can conclude then that overall levels of resemblance (the intercept) vary significantly across the clinics. Multilevel madness must ensue.</p>
 </div>
-<div id="section-using-f-statistics-to-evaluate-effects" class="section level3">
-<h3>Using <em>F</em>-statistics to evaluate effects</h3>
-<p>It is common to evaluate the effects in factorial models using an <em>F</em>-statistic (the so called Analysis of variance, ANOVA). We can get these <em>F</em>-statistics in two ways. The first is to place the model we have just created into the <code>aov</code> function and then summarize it. For example, we could execute:</p>
-<pre class="r"><code>gen_aov &lt;- aov(gen_mod)
-summary(gen_aov)</code></pre>
-<p>The first takes the model <code>gen_mod</code> that we just created and extracts the information needed to present a summary in terms of <em>F</em>-statistics. We store this information in a new object called <code>gen_aov</code>. The second line uses <code>summary()</code> to print the summary table of <em>F</em>-values. This method will give us Type I sums of squares (refer to the lecture). These sums of squares are sequential and are affected by the order in which we place variables into the model. That’s why software like SAS and SPSS uses type III sums of squares. The fact that our data are balanced (equal numbers of participants in all conditions) and orthogonal (all of our predictors are binary) means that for these data the Type I sums of squares are the same as the Type III. However, if you have unbalanced designs or predictors with more than two categories you need to look at Type III sums of squares.</p>
-<p><font color='#DF4738'>Warning: the following section is quite tricky</font></p>
-<p>To get these we use the <code>Anova()</code> function from the <code>car</code> package. It’s a complicated process because for Type III sums of squares to make sense, the contrasts for predictor variables need to be independent (or to use the posh term <em>orthogonal</em>). Orthogonal means that the numbers used to code groups must sum to zero and cross multiple to sum to zero. By default, R will use dummy coding (0s and 1s) which results in non-orthogonal contrasts. You can tell that the contrasts are not orthogonal by the fact that the codes do not sum to zero, and when you cross multiply them that sum is also not zero. Table 1 shows what I mean. The codes for the variable <strong>gene</strong> are 0 for c-gene and 1 for toggle switch. So, the two c-gene groups get a code of 0 and the two toggle groups get a code of 1. Sum these codes and you get 0 + 0 + 1 + 1 = 2. This sum needs to be zero. Similarly, for picture, other is coded as 1 and self as 0. So the two ‘other’ groups get a 1 and the two ‘self’ groups get a 0. The resulting codes again do not sum to zero: 1 + 0 + 1 + 0 = 2. The final column shows the codes for <strong>gene</strong> multiplied by the corresponding code for <strong>picture</strong>. For example, for the c-gene and other condition we get <span class="math inline">\(0 \times 1 = 0\)</span>, for the c-gene and self condition we get <span class="math inline">\(0 \times 0 = 0\)</span> and so on. If we add these products we get a sum of 1. Again, we need this sum to be zero.</p>
-<table>
-<caption>Table 1: default codes for the two predictors</caption>
-<thead>
-<tr class="header">
-<th align="left">Group</th>
-<th align="right">gene_codes</th>
-<th align="right">picture_codes</th>
-<th align="right">codes_multiplied</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">C-Gene, Other</td>
-<td align="right">0</td>
-<td align="right">1</td>
-<td align="right">0</td>
-</tr>
-<tr class="even">
-<td align="left">C-Gene, Self</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-</tr>
-<tr class="odd">
-<td align="left">Toggle, Other</td>
-<td align="right">1</td>
-<td align="right">1</td>
-<td align="right">1</td>
-</tr>
-<tr class="even">
-<td align="left">Toggle, Self</td>
-<td align="right">1</td>
-<td align="right">0</td>
-<td align="right">0</td>
-</tr>
-<tr class="odd">
-<td align="left">Sum</td>
-<td align="right">2</td>
-<td align="right">2</td>
-<td align="right">1</td>
-</tr>
-</tbody>
-</table>
-<p>Table 2 shows a different set of codes that result in orthogonal contrasts. Instead of using 0 and 1, we use 0 and -1 (this is known as effect coding). All I have done is replace all of the zero codes with -1. The codes for the variable <strong>gene</strong> are -1 for c-gene and 1 for toggle switch. So, the two c-gene groups get a code of -1 and the two toggle groups get a code of 1. Sum these codes and you get -1 + -1 + 1 + 1 = 0. Similarly, for <strong>picture</strong>, other is coded as 1 and self as -1. So the two ‘other’ groups get a 1 and the two ‘self’ groups get a -1. The resulting codes again sum to zero: 1 - 1 + 1 - 1 = 0. The final column shows the codes for <strong>gene</strong> multiplied by the corresponding code for <strong>picture</strong>. For example, for the c-gene and other condition we get <span class="math inline">\(-1 \times 1 = -1\)</span>, for the c-gene and self condition we get <span class="math inline">\(-1 \times -1 = 1\)</span> and so on. If we add these products we get a sum of -1 + 1 + 1 -1 = 0. So the sum of codes for each predictor sum to zero as do those codes multiplied. These are, therefore, orthogonal contrast codes.</p>
-<table>
-<caption>Table 2: Codes for the two predictors resulting in orthogonal contrasts</caption>
-<thead>
-<tr class="header">
-<th align="left">Group</th>
-<th align="right">gene_codes</th>
-<th align="right">picture_codes</th>
-<th align="right">codes_multiplied</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">C-Gene, Other</td>
-<td align="right">-1</td>
-<td align="right">1</td>
-<td align="right">-1</td>
-</tr>
-<tr class="even">
-<td align="left">C-Gene, Self</td>
-<td align="right">-1</td>
-<td align="right">-1</td>
-<td align="right">1</td>
-</tr>
-<tr class="odd">
-<td align="left">Toggle, Other</td>
-<td align="right">1</td>
-<td align="right">1</td>
-<td align="right">1</td>
-</tr>
-<tr class="even">
-<td align="left">Toggle, Self</td>
-<td align="right">1</td>
-<td align="right">-1</td>
-<td align="right">-1</td>
-</tr>
-<tr class="odd">
-<td align="left">Sum</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-</tr>
-</tbody>
-</table>
-<p>So, to get Type III sums of squares we do the following:</p>
-<ul>
-<li>Set orthogonal contrasts using the <code>contrasts</code> function that we have met before. The first two lines below set contrasts for <strong>gene</strong> and <strong>picture</strong> using the codes in Table 2 (it doesn’;t matter which way around you specify the 1 and -1)</li>
-<li>Re-create the model so that these new contrast codes take effect. Line 3 below does this by creating a new model <code>gen_mod2</code> that is specified in the same way as the original model, but will include information about the contrasts we have just set.</li>
-<li>use the <code>Anova()</code> function to generate the Type III sums of squares for this new model. Line 4 displays the Type III sums of squares (note that we specify <code>type = 3</code>) for the model we created in the line above.</li>
-<li>We can display robust versions of <em>F</em> by including the argument <code>white.adjust = &quot;hc3&quot;</code>. The options here are similar to what we’ve seen with other functions (i.e. “hc0”, “hc1”, “hc2”, “hc3”, “hc4”) and as we have seen “hc3” or “hc4” are good choices. Including this argument will adjust for heteroscedasticity in the data.</li>
-</ul>
-<pre class="r"><code>contrasts(alice_dat$picture) &lt;- c(1, -1)
-contrasts(alice_dat$gene) &lt;- c(1, -1)
-gen_mod2 &lt;- lm(resemblance ~ gene*picture, data = alice_dat)
-Anova(gen_mod2, type = 3)
-Anova(gen_mod2, type = 3, white.adjust = &quot;hc3&quot;)</code></pre>
-<p>The results show significant main effects and interactions for all variables. Using the means we generated at the start of the tutorial we can say that resemblance scores are significantly higher for the C-gene and Toggle group than those that had only C-gene therapy. Resemblance scores were significantly higher for those studying their own face than someone else’s face. There was also a significant interaction: in the group that had the toggle switch resemblance scores are similar when they studied their own face compared to studying a stranger’s face, but in the c-gene group resemblance scores are much lower when studying a stranger’s face compared to their own.</p>
-<p>Use the code box to generate <em>F</em>-statistics for this model based on Type III sums of squares and with a white adjustment (“hc3”).</p>
-<div class="tutorial-exercise" data-label="fstats" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<div id="section-adding-in-fixed-effects" class="section level3">
+<h3>Adding in fixed effects</h3>
+<p>We have seen that intercepts vary significantly across clinics. Now that we have a baseline model with random intercepts we can start to add predictors. Let’s first add our main predictor of <strong>interventon</strong>, which defines whether a person had gene therapy or was on the waiting list. To add this predictor we create a new object (which we might call <strong>rehab_int</strong>, short for rehabilitation intervention) using the <code>lme()</code> function. We would use the same command as before except replacing <code>resemblance ~ 1</code> with <code>resemblance ~ intervention</code>:</p>
+<p><code>rehab_int &lt;- lme(resemblance ~ intervention, random = ~ 1|id_clin, data = rehab_dat, method = &quot;ML&quot;)</code></p>
+<p>All we’re doing is changing the model so that rather than resemblance scores being predicted from the intercept (<code>resemblance ~ 1</code>) they are predicted from the intercept <em>and</em> main effect of <strong>intervention</strong> (<code>resemblance ~ intervention</code>). You might think that the intercept has disappeared because we don’t specify it explicitly in the model, but it hasn’t: it is implied when any predictor is added to the model so when we write ’as <code>resemblance ~ intervention</code> we are, in effect, specifying as <code>resemblance ~ 1 + intervention</code>.</p>
+<p>A quicker way to add (or subtract) things to a model is to use the <code>update()</code> function. This takes any existing model placed within it and updates it according to any changes you specify. For example, we could add <strong>intervention</strong> to the model by updating the previous model (<code>rehab_ri</code>) as follows:</p>
+<p><code>rehab_int &lt;- update(rehab_ri, .~. + intervention)</code></p>
+<p>The first argument within the <code>update()</code> function tells it the model that you want to update. The <code>.~.</code> tells it to retain the existing outcome and predictors (incidentally <code>.~</code> would tell it to retain only the outcome variable and to drop any predictors), and <code>+ name_of_predictor</code> adds a predictor to the existing ones. So, <code>+ intervention</code> tells the function to add <strong>intervention</strong> to the existing predictors (incidentally, you can remove predictors using <code>- name_of_predictor</code>).</p>
+<p>We can then use the <code>anova()</code> function to compare the three models we have created:</p>
+<p><code>anova(rehab_base, rehab_ri, rehab_int)</code>.</p>
+<p>Use the code box to create the model <code>rehab_int</code> and compare it to the previous two using the <code>anova()</code> function.</p>
+<div class="tutorial-exercise-support" data-label="rehab_int-setup" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>rehab_base &lt;- gls(resemblance ~ 1, data = rehab_dat, method = &quot;ML&quot;)
+rehab_ri &lt;- lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_dat, method = &quot;ML&quot;)</code></pre>
+</div>
+<div class="tutorial-exercise" data-label="rehab_int" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
-<div class="tutorial-exercise-support" data-label="fstats-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>contrasts(alice_dat$picture) &lt;- c(1, -1)
-contrasts(alice_dat$gene) &lt;- c(1, -1)
-gen_mod2 &lt;- lm(resemblance ~ gene*picture, data = alice_dat)
-Anova(gen_mod2, type = 3)
-Anova(gen_mod2, type = 3, white.adjust = &quot;hc3&quot;)</code></pre>
+<div class="tutorial-exercise-support" data-label="rehab_int-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>rehab_int &lt;- update(rehab_ri, .~. + intervention)
+anova(rehab_base, rehab_ri, rehab_int)</code></pre>
 </div>
+<p>The AIC and BIC are reduced by including <strong>intervention</strong> as a predictor, which indicates a better-fitting model. The <em>L. Ratio</em> (the change in the −2LL between the models), suggests that including <strong>intervention</strong> significantly improves the fit of our model, <span class="math inline">\(\chi^2(1) = 7.12, p = 0.0076\)</span>.</p>
 </div>
+<div id="section-adding-random-slopes-for-the-effect-of-the-intervention" class="section level3">
+<h3>Adding random slopes for the effect of the intervention</h3>
+<p>We might now want to allow the effect of the intervention to vary across clinics to acknowledge that treatment effects might vary across clinics. In doing so we’ll add a random slope to the effect of <strong>intervention</strong>. Again we can do this either by re-specifying the entire model, or by using the <code>update()</code> function to update the previous model (<code>rehab_int</code>). In either case, the crucial change will be to change the specification of the random intercept (<code>random = ~ 1|id_clin</code>) to be a random slope (<code>random = ~ intervention|id_clin</code>). The <code>intervention|id_clin</code> means ‘the effect of <strong>intervention</strong> varies within the variable <strong>id_clinic</strong>. In other words the ’slope’ for <strong>intervention</strong> is random (across clinics). Again, the intercept is implied, so this model includes both a random slope and a random intercept. Let’s call the resulting model <code>rehab_rs</code> (the <em>rs</em> meaning <em>random slope</em>). If we specify the model in full we would execute:</p>
+<p><code>rehab_rs &lt;- lme(resemblance ~ intervention, random = ~ intervention|id_clin, data = rehab_dat, method = &quot;ML&quot;)</code></p>
+<p>If we use update, we’d execute:</p>
+<p><code>rehab_rs &lt;- update(rehab_int, random = ~ intervention|id_clin)</code></p>
+<p>Note that in the <code>update()</code> function we don’t need to include <code>.~.</code> because we’re not changing any predictors, we simply specify the model we want to update and then re-define the argument specifying the random effects within the model.</p>
+<p>Use the code box to create the model <code>rehab_rs</code> and compare it to the previous three using the <code>anova()</code> function.</p>
+<div class="tutorial-exercise-support" data-label="rehab_rs-setup" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>rehab_base &lt;- gls(resemblance ~ 1, data = rehab_dat, method = &quot;ML&quot;)
+rehab_ri &lt;- lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_dat, method = &quot;ML&quot;)
+rehab_int &lt;- update(rehab_ri, .~. + intervention)</code></pre>
 </div>
-<div id="section-robust-models" class="section level2">
-<h2>Robust models</h2>
-<div id="section-robust-standard-errors" class="section level3">
-<h3>Robust standard errors</h3>
-<p>As in previous tutorials, we can use one of the methods (HC0 to HC5) for producing standard errors (and hence confidence intervals) that are robust to heteroscedasticity.</p>
-<p><font color='#009E73'>Hint: if you’re doing this outside of the tutorial you need the sjstats package installed and you need to execute library(sjstats).</font></p>
-<p>Remember that we place the model we created with <code>lm()</code> (in this case <code>gen_mod</code>) into the function <code>robust()</code>. For example, we could execute:</p>
-<ul>
-<li><code>robust(gen_mod, conf.int = T)</code> to use the default “HC3” method and request 95% confidence intervals</li>
-<li><code>robust(gen_mod, vcov = &quot;HC4&quot;, conf.int = T)</code> to use “HC4” and request 95% confidence intervals</li>
-</ul>
-<p>The HC3 and HC4 refer to different methods to correct the standard errors (refer back to the tutorial <em>adventr_14</em>). Try these commands in the code box and compare the results.</p>
-<div class="tutorial-exercise-support" data-label="gen_mod_hc4-setup" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>gen_mod &lt;- lm(resemblance ~ gene*picture, data = alice_dat)</code></pre>
-</div>
-<div class="tutorial-exercise" data-label="gen_mod_hc4" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<div class="tutorial-exercise" data-label="rehab_rs" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
-<div class="tutorial-exercise-support" data-label="gen_mod_hc4-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>robust(gen_mod, conf.int = T)
-robust(gen_mod, vcov = &quot;HC4&quot;, conf.int = T)</code></pre>
+<div class="tutorial-exercise-support" data-label="rehab_rs-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>rehab_rs &lt;- update(rehab_int, random = ~ intervention|id_clin)
+anova(rehab_base, rehab_ri, rehab_int, rehab_rs)</code></pre>
 </div>
+<p>The AIC and BIC are reduced by including a random slope for <strong>intervention</strong> indicating a better-fitting model. The <em>L. Ratio</em> (the change in the −2LL between the models), suggests that including this random slope significantly improves the fit of our model, <span class="math inline">\(\chi^2(2) = 12.27, p = 0.0022\)</span>. Another way to think of this is that there is significant variability in treatment effects across clinics.</p>
 </div>
-<div id="section-robust-fs" class="section level3">
-<h3>Robust <em>F</em>s</h3>
-<p>We saw in the previous section that if we evaluate effects with an <em>F</em>-statistic we can correct for heteroscedasticity by including <code>white.adjust = &quot;hc3&quot;</code> in the <code>Anova()</code> function.</p>
+<div id="section-adding-the-final-fixed-effects" class="section level3">
+<h3>Adding the final fixed effects</h3>
+<p>Finally, we want to add fixed effects for <strong>gep_level</strong> and <strong>tse_months</strong>. We can again add these predictors most efficiently by using the update function. (Although by all means have a go specifying the full model). For example, we might create a model called <code>rehab_gep</code> that updates the model <code>rehab_rs</code> by including <strong>gep_level</strong> by executing:</p>
+<p><code>rehab_gep &lt;- update(rehab_rs, .~. + gep_level)</code></p>
+<p>we might in turn update this model to create one called <code>rehab_tse</code> that also includes <strong>tse_months</strong> by executing:</p>
+<p><code>rehab_tse &lt;- update(rehab_gep, .~. + tse_months)</code></p>
+<p>We could then compare all of the models we have created by executing:</p>
+<p><code>anova(rehab_base, rehab_ri, rehab_int, rehab_rs, rehab_gep, rehab_tse)</code></p>
+<p>Try this in the code box:</p>
+<div class="tutorial-exercise-support" data-label="rehab_tse-setup" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>rehab_base &lt;- gls(resemblance ~ 1, data = rehab_dat, method = &quot;ML&quot;)
+rehab_ri &lt;- lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_dat, method = &quot;ML&quot;)
+rehab_int &lt;- update(rehab_ri, .~. + intervention)
+rehab_rs &lt;- update(rehab_int, random = ~ intervention|id_clin)</code></pre>
 </div>
-<div id="section-robust-estimates" class="section level3">
-<h3>Robust estimates</h3>
-<p>In <em>advetr_14</em> we used the <code>lmRob()</code> function from the <code>robust</code> package (again, if you’re working outside of the tutorial remember to execute <code>library(robust)</code>) to get robust parameter estimates. Recall that the function is used in the same way as <code>lm()</code> so you can copy your earlier code and replace <code>lm</code> with <code>lmRob</code>. Try this in the code box to create a model called <code>gen_rob</code>, and use <code>summary()</code> to view it.</p>
-<div class="tutorial-exercise" data-label="gen_mod_robust" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<div class="tutorial-exercise" data-label="rehab_tse" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
-<div class="tutorial-exercise-support" data-label="gen_mod_robust-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>gen_rob &lt;- lmRob(resemblance ~ gene*picture, data = alice_dat)
-summary(gen_rob)   </code></pre>
+<div class="tutorial-exercise-support" data-label="rehab_tse-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>rehab_gep &lt;- update(rehab_rs, .~. + gep_level)
+rehab_tse &lt;- update(rehab_gep, .~. + tse_months)
+anova(rehab_base, rehab_ri, rehab_int, rehab_rs, rehab_gep, rehab_tse)</code></pre>
 </div>
-<p>Note that the parameter estimates for the effect of group have changed because they no longer represents the difference between arithmetic means but instead represents a robust estimate of those differences.</p>
 </div>
-<div id="section-the-wrs2-package" class="section level3">
-<h3>The WRS2 package</h3>
-<p>The <code>WRS2</code> package <span class="citation">(Mair, Schoenbrodt, and Wilcox 2017)</span> wraps up a few of the many functions described by Wilcox to perform robust variants of tests <span class="citation">(Wilcox 2017)</span>. We’ll look at these functions that compare several means:</p>
-<ul>
-<li><code>t2way(formula, data = tibble, tr = 0.2, nboot = 100)</code>: is a test for trimmed means.</li>
-<li><code>mcp2atm(formula, data = tibble, tr = 0.2)</code>: <em>post hoc</em> tests for trimmed means</li>
-<li><code>pbad2way(formula, data = tibble, est = &quot;mom&quot;, nboot = 599)</code>: is a test to compare robust measures of location (by default an M-estimator, but you can change it to be the median)</li>
-<li><code>mcp2a(formula, data = tibble, est = &quot;mom&quot;, nboot = 599)</code>: <em>post hoc</em> tests for the above test</li>
-</ul>
-<p>These functions have similar arguments:</p>
-<ul>
-<li><code>formula</code>: the functions use a formula like that for <code>lm()</code>, so in this case we could use <code>resemblance ~ gene*picture</code>.</li>
-<li><code>data = tibble</code>: replace tibble with the name of the tibble or data frame in which the data are stored (in this case <code>data = alice_dat</code>)</li>
-<li><code>tr = 0.2</code>: we’ve used this argument many times before. It determines the level of trim. The default is a 20% trim, so you can omit this argument if you’re happy with that default.</li>
-<li><code>est = &quot;mom&quot;</code>: the default is to use the modified one-step (MOM) estimator of location based on Huber’s Psi, but you can change this to “onestep” to use the unmodified one-step M-estimator, or “median” to use the median. The default is fine though, and if you’re happy with it you can omit this argument.</li>
-<li><code>nboot = 599</code>: specifies the number of bootstrap samples. There is a case for increasing the defaults to 1000.</li>
-</ul>
-<p>See if you can run the three commands in the code box below based on my description (if not, press <img src="images/solution.png" />)</p>
-<div class="tutorial-exercise" data-label="alice_wrs" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<div id="section-viewing-the-model-parameters" class="section level3">
+<h3>Viewing the model parameters</h3>
+<p>We can view the parameters of any one of our models by using <code>summary()</code> and we can get confidence intervals for the parameters by using the <code>intervals()</code> function. For example, to inspect the final model we could execute:</p>
+<pre class="r"><code>summary(rehab_tse)
+intervals(rehab_tse, 0.95)</code></pre>
+<p>In the <code>intervals()</code> it isn’t necessary to include 0.95 if you want 95% confidence intervals, I merely included it to make clear that you could change this to get other intervals (for example, 0.9 for 90% confidence intervals or 0.99 for 99% confidence intervals). Execute these commands in the code box.</p>
+<div class="tutorial-exercise-support" data-label="sum_tse-setup" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>rehab_tse &lt;- lme(resemblance ~ intervention + gep_level + tse_months, random = ~ intervention|id_clin, data = rehab_dat, method = &quot;ML&quot;)</code></pre>
+</div>
+<div class="tutorial-exercise" data-label="sum_tse" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
-<div class="tutorial-exercise-support" data-label="alice_wrs-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>t2way(resemblance ~ gene*picture, data = alice_dat)
-mcp2atm(resemblance ~ gene*picture, data = alice_dat)
-pbad2way(resemblance ~ gene*picture, data = alice_dat, nboot = 1000)
-mcp2a(resemblance ~ gene*picture, data = alice_dat, nboot = 1000)</code></pre>
+<div class="tutorial-exercise-support" data-label="sum_tse-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>summary(rehab_tse)
+intervals(rehab_tse, 0.95)</code></pre>
 </div>
-<p>Because our predictors are both made up of only two categories, there isn’t really any need for <em>post hoc</em> tests (because the main effects can only reflect the difference between the two groups). Based on <code>t2way()</code> we’d conclude that there was a significant main effect of <strong>gene</strong>, <em>Q</em> = 451.36, <em>p</em> = 0.001, a significant main effect of <strong>picture</strong>, <em>Q</em> = 65.50, <em>p</em> = 0.001, and a significant interaction between the two, <em>Q</em> = 61.47, <em>p</em> = 0.001. <code>pbad2way()</code> returns only <em>p</em>-values for each effect, and these are all 0, which would again suggest all effects in the model are significant.</p>
-</div>
-</div>
-<div id="section-bayesian-models" class="section level2">
-<h2>Bayesian models</h2>
-<div id="section-bayes-factors" class="section level3">
-<h3>Bayes factors</h3>
-<p>Like in previous tutorials (<em>adventr_11</em>, and <em>adventr_14</em> to <em>adventr_16</em>) we can obtain Bayes factors using the <a href="http://bayesfactorpcl.r-forge.r-project.org/">BayesFactor package</a>. We are going to use the <code>lmBF()</code> function, which is basically the same as the <code>regressionBF()</code> and <code>anovaBF()</code> functions that we have encountered before. The difference is that with <code>lmBF</code> we can build individual models and compare them. This function has this format:</p>
-<p><code>object = lmBF(formula = outcome ~ group_variable, data = tibble, rscaleCont = &quot;medium&quot;)</code></p>
-<p>The function uses default priors and by default (i.e. if you exclude the option altogether) the prior is set at “medium” (<span class="math inline">\(^\sqrt{2}/_4\)</span>), but you can specify <code>rscaleCont = &quot;wide&quot;</code> (<span class="math inline">\(^1/_2\)</span>) or <code>rscaleCont = &quot;ultrawide&quot;</code> (<span class="math inline">\(^\sqrt{2}/_2\)</span>). These priors are explained in <em>adventr_11</em> and also read <span class="citation">Rouder et al. (2012)</span>.</p>
-<p>We’re going to build three models: (1) <strong>gene</strong> as the only predictor; (2) a model that adds <strong>picture</strong> as a predictor; (3) a model that adds the interaction term (<strong>gene:picture</strong>). Having created these models we will compared them. So, we’ll start by looking at the Bayes factor for <strong>gene</strong> as the sole predictor, then get the Bayes factor for what <strong>picture</strong> adds to the model, then finally get the Bayes factor for what the interaction term adds to the model.</p>
-<p><font color='#009E73'>Tip: if you are using a tibble (rather than a data frame) then place the tibble’s name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn’t accept tibbles.</font></p>
-<p>For our data (using the default prior) we could execute the following to create our three models:</p>
-<pre class="r"><code>gene_bf &lt;- lmBF(formula = resemblance ~ gene, data = data.frame(alice_dat))
-pic_bf &lt;- lmBF(formula = resemblance ~ gene + picture, data = data.frame(alice_dat))
-int_bf &lt;- lmBF(formula = resemblance ~ gene + picture + gene:picture, data = data.frame(alice_dat))</code></pre>
-<p>The first line creates model 1 and stores it in the object <code>gene_bf</code>, the second line creates model 2 and stores it in the object <code>pic_bf</code> and the third line creates model 3 and stores it in the object <code>int_bf</code>. having created them we can compare them with the following commands:</p>
-<pre class="r"><code>gene_bf
-pic_bf/gene_bf
-int_bf/pic_bf</code></pre>
-<p>The first line gives us the Bayes factor for model 1, the second shows us the Bayes factor for model 2 <em>relative</em> to model 1 (i.e. what does <strong>picture</strong> add to the model), and the third line shows us the Bayes factor for model 3 <em>relative</em> to model 2 (i.e. what does the <strong>gene:picture</strong> interaction add above and beyond the main effects?)</p>
-<p>Try these commands in the code box:</p>
-<div class="tutorial-exercise" data-label="gene_bf" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
-</div>
-<div class="tutorial-exercise-support" data-label="gene_bf-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>gene_bf &lt;- lmBF(formula = resemblance ~ gene, data = data.frame(alice_dat))
-pic_bf &lt;- lmBF(formula = resemblance ~ gene + picture, data = data.frame(alice_dat))
-int_bf &lt;- lmBF(formula = resemblance ~ gene + picture + gene:picture, data = data.frame(alice_dat))
-gene_bf
-pic_bf/gene_bf
-int_bf/pic_bf</code></pre>
-</div>
-<p>Because the results are based on sampling (and so will vary each time you generate them) Figure 1 shows a particular set of results that I’ll interpret. First we put the main effect of gene therapy into the model and see that the Bayes factor is 16929560, which is huge. You should shift your belief in the alternative hypothesis relative to the null by a factor of 16929560. In short, your belief in gene therapy predicting resemblance scores should shift a lot. We then added the main effect of picture to see how this improved the model compared to when we included only gene therapy as a predictor. The Bayes factor for this main effect is 237.49, which also suggests that your beliefs should move a lot in favour of the type of picture predicting resemblance scores. Finally, we added the interaction effect and compared this full model to the model that included only the main effects. The Bayes factor for the interaction term is 174996.6. Again, this number is huge, suggesting that you should shift your belief in the alternative hypothesis relative to the null by a factor of 174996.6 In short, your belief in the combined effect of gene therapy and the type of picture studied predicting resemblance scores should shift a lot.</p>
-<div class="figure">
-<img src="./images/ais_17_bf.png" alt="Figure 1: Bayes factors output" />
-<p class="caption">Figure 1: Bayes factors output</p>
-</div>
-</div>
-</div>
-<div id="section-adjusting-means-ancova" class="section level2">
-<h2>Adjusting means (ANCOVA)</h2>
-<div id="section-a-familiar-example-unless-your-id-chip-has-been-zapped" class="section level3">
-<h3>A familiar example (unless your ID chip has been zapped)</h3>
-<p>In the lecture (but not the book) we also looked at models including categorical and continuous predictors. In these models, the categorical predictors no longer compare the means of the categories, but compare the means <em>adjusted for other variables in the model</em>. This is the basic ‘analysis of covariance (ANCOVA)’ model. In the lecture we imagined an experiment similar to the one we encountered in the previous tutorial, but with an added covariate. Just to recap:</p>
-<p>During Zach’s visit to the JIG:SAW complex he visits several research buildings. In the second, he discovers experiments being conducted related to memory. In one experiment thirty-six participants with ID chips were tested. All participants met a stranger who had a 5-minute scripted conversation with them containing 10 critical pieces of information. A week later, the participants were asked to recall the encounter for 5 minutes, and then after a 10-minute break wrote everything that they could remember about the original encounter. During the 5-minute initial recall, one of three things happened: the control group (<em>N</em> = 12) received no intervention; the erase group (<em>N</em> = 12) had a pulse of electricity sent to their brain via their ID chip; and the replace group (<em>N</em> = 12) had conflicting verbal descriptions sent to their ID chip. The outcome was how many of the 10 critical pieces of information the participants wrote down after the recall phase. The prediction was that recall will be worse (i.e. lower scores) for participants who had an electrical pulse, or conflicting information sent to their ID chips during recall than those, in the control group, who experienced no interference. Imagine that (unlike in the book) they had also measured working memory in each participant (as their digit span). The data are in the tibble <code>mem_cov_dat</code>, which has these variables:</p>
-<ul>
-<li><strong>id</strong>: Participant ID</li>
-<li><strong>group</strong>: To which of the no intervention, memory erase or memory replace conditions the participant was assigned</li>
-<li><strong>recall</strong>: How many of the 10 critical pieces of information the participant identified</li>
-<li><strong>working_mem</strong>: a variable that measures working memory capacity as the individual’s digit span</li>
-</ul>
-<p>Use the code box to inspect the tibble.</p>
-<div class="tutorial-exercise" data-label="dat_view2" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
-</div>
-<div class="tutorial-exercise-support" data-label="dat_view2-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>mem_cov_dat   </code></pre>
-</div>
-<p>The model we’re fitting is described by the following equation:</p>
-<p><span class="math display">\[
-\begin{aligned}
-Y_i &amp; = b_0 + b_1X_i+ ε_i\\
-\text{recall}_i &amp; = b_0 + b_1\text{dummy 1}_i + b_2\text{dummy 2}_i + b_3\text{covariate}_i + ε_i \\
-&amp; = b_0 + b_1\text{erase vs. control}_i + b_2\text{replace vs. control}_i + b_3\text{working memory}_i + ε_i
-\end{aligned}
-\]</span></p>
-</div>
-<div id="section-fitting-the-model-1" class="section level3">
-<h3>Fitting the model</h3>
-<p>We can fit this model in the same way as described for a factorial design. Remember that <strong>R</strong> will dummy code the variable <strong>group</strong> for us, but we’d want to set some orthogonal contrasts. We did this in the previous tutorial using these commands:</p>
-<pre class="r"><code>interference_vs_none &lt;- c(-2, 1, 1)
-erase_vs_replace &lt;- c(0, -1, 1)
-contrasts(mem_cov_dat$group) &lt;- cbind(interference_vs_none, erase_vs_replace)</code></pre>
-<p>Having done that we can follow the same process as the previous example for fitting the model (using <code>lm()</code>), getting <em>F</em>-statistics (using <code>Anova()</code>), fitting robust models (using <code>lmRob()</code> or <code>robust()</code>) and getting Bayes factors (using <code>lmBF()</code>). Either in a separate <strong>RStudio</strong> session or in the box below generate a script to do the following:</p>
-<ul>
-<li>Set orthogonal contrasts for the variable <strong>group</strong> (as above)</li>
-<li>Fit a linear model predicting recall from working memory and group membership</li>
-<li>Get <em>F</em>-statistics (using Type III sums of squares)</li>
-<li>Fit robust models using <code>robust()</code> and <code>lmRob()</code></li>
-<li>Compute Bayes factors for the model with only working memory as a predictor and then for the model after group has been added. Compare the later model to the former.</li>
-</ul>
-<p>If you want help, click on <img src="images/solution.png" />.</p>
-<div class="tutorial-exercise" data-label="ancova" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
-</div>
-<div class="tutorial-exercise-support" data-label="ancova-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>interference_vs_none &lt;- c(-2, 1, 1)
-erase_vs_replace &lt;- c(0, -1, 1)
-contrasts(mem_cov_dat$group) &lt;- cbind(interference_vs_none, erase_vs_replace)
-
-mem_cov_mod &lt;- lm(recall ~ working_mem + group, data = mem_cov_dat)
-summary(mem_cov_mod)
-
-Anova(mem_cov_mod, type = 3)
-robust(mem_cov_mod)
-mem_cov_rob &lt;- lmRob(recall ~ working_mem + group, data = mem_cov_dat)
-summary(mem_cov_rob)
-
-wm_bf &lt;- lmBF(formula = recall ~ working_mem, data = data.frame(mem_cov_dat))
-grp_bf &lt;- lmBF(formula = recall ~ working_mem + group, data = data.frame(mem_cov_dat))
-wm_bf
-grp_bf/wm_bf</code></pre>
-</div>
+<p>The final model shows that gene therapy (compared to a wait list control) significantly predicted resemblance scores, <em>b</em> = 6.79 [1.51, 12.08], <em>t</em>(177) = 2.51, p = 0.0129. Both the initial intensity of the genetic enhancement programme, <em>b</em> = -4.30 [-5.37, -3.23], <em>t</em>(177) = -7.84, p &lt; 0.001, and the time since the enhancement took place, <em>b</em> = -1.98 [-2.03, -1.92], <em>t</em>(177) = 69.63, p &lt; 0.001, significantly reduced resemblance scores.</p>
 </div>
 </div>
 <div id="section-other-resources" class="section level2">
@@ -617,17 +490,7 @@ library(RefManageR)
 library(tidyverse)
 
 library(nlme)
-
-#library(BayesFactor)
-#library(car)
-#library(effects)
-#library(gmodels)
-#library(lm.beta)
-#library(robust)
-#library(sjstats)
-#library(WRS2)
-
-
+library(gmodels)
 
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
@@ -715,6 +578,27 @@ output$`tutorial-exercise-dat_view-output` <- renderUI({
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-fct_levels-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-fct_levels-code-editor`)), session)
+output$`tutorial-exercise-fct_levels-output` <- renderUI({
+  `tutorial-exercise-fct_levels-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-get_external_data-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-get_external_data-code-editor`)), session)
+output$`tutorial-exercise-get_external_data-output` <- renderUI({
+  `tutorial-exercise-get_external_data-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-relevel_fcts-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-relevel_fcts-code-editor`)), session)
+output$`tutorial-exercise-relevel_fcts-output` <- renderUI({
+  `tutorial-exercise-relevel_fcts-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
 `tutorial-exercise-desc-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-desc-code-editor`)), session)
 output$`tutorial-exercise-desc-output` <- renderUI({
   `tutorial-exercise-desc-result`()
@@ -736,58 +620,37 @@ output$`tutorial-exercise-plot-output` <- renderUI({
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-`tutorial-exercise-lm1-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-lm1-code-editor`)), session)
-output$`tutorial-exercise-lm1-output` <- renderUI({
-  `tutorial-exercise-lm1-result`()
+`tutorial-exercise-base_ri-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-base_ri-code-editor`)), session)
+output$`tutorial-exercise-base_ri-output` <- renderUI({
+  `tutorial-exercise-base_ri-result`()
 })
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-`tutorial-exercise-fstats-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-fstats-code-editor`)), session)
-output$`tutorial-exercise-fstats-output` <- renderUI({
-  `tutorial-exercise-fstats-result`()
+`tutorial-exercise-rehab_int-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-rehab_int-code-editor`)), session)
+output$`tutorial-exercise-rehab_int-output` <- renderUI({
+  `tutorial-exercise-rehab_int-result`()
 })
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-`tutorial-exercise-gen_mod_hc4-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-gen_mod_hc4-code-editor`)), session)
-output$`tutorial-exercise-gen_mod_hc4-output` <- renderUI({
-  `tutorial-exercise-gen_mod_hc4-result`()
+`tutorial-exercise-rehab_rs-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-rehab_rs-code-editor`)), session)
+output$`tutorial-exercise-rehab_rs-output` <- renderUI({
+  `tutorial-exercise-rehab_rs-result`()
 })
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-`tutorial-exercise-gen_mod_robust-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-gen_mod_robust-code-editor`)), session)
-output$`tutorial-exercise-gen_mod_robust-output` <- renderUI({
-  `tutorial-exercise-gen_mod_robust-result`()
+`tutorial-exercise-rehab_tse-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-rehab_tse-code-editor`)), session)
+output$`tutorial-exercise-rehab_tse-output` <- renderUI({
+  `tutorial-exercise-rehab_tse-result`()
 })
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-`tutorial-exercise-alice_wrs-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-alice_wrs-code-editor`)), session)
-output$`tutorial-exercise-alice_wrs-output` <- renderUI({
-  `tutorial-exercise-alice_wrs-result`()
-})
-</script>
- 
-<script type="application/shiny-prerendered" data-context="server">
-`tutorial-exercise-gene_bf-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-gene_bf-code-editor`)), session)
-output$`tutorial-exercise-gene_bf-output` <- renderUI({
-  `tutorial-exercise-gene_bf-result`()
-})
-</script>
- 
-<script type="application/shiny-prerendered" data-context="server">
-`tutorial-exercise-dat_view2-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-dat_view2-code-editor`)), session)
-output$`tutorial-exercise-dat_view2-output` <- renderUI({
-  `tutorial-exercise-dat_view2-result`()
-})
-</script>
- 
-<script type="application/shiny-prerendered" data-context="server">
-`tutorial-exercise-ancova-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-ancova-code-editor`)), session)
-output$`tutorial-exercise-ancova-output` <- renderUI({
-  `tutorial-exercise-ancova-result`()
+`tutorial-exercise-sum_tse-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-sum_tse-code-editor`)), session)
+output$`tutorial-exercise-sum_tse-output` <- renderUI({
+  `tutorial-exercise-sum_tse-result`()
 })
 </script>
  <!--html_preserve-->
@@ -796,35 +659,17 @@ output$`tutorial-exercise-ancova-output` <- renderUI({
 </script>
 <!--/html_preserve-->
 <div id="section-refs" class="references">
-<div id="section-ref-RN11409">
-<p>Canty, Angelo, and Brian Ripley. 2017. “Boot: Bootstrap R (S-Plus) Functions.” Journal Article. <em>R Package Version 1.3-19.</em> <a href="https://CRAN.R-project.org/package=boot" class="uri">https://CRAN.R-project.org/package=boot</a>.</p>
-</div>
 <div id="section-ref-RN10163">
 <p>Field, Andy P. 2016. <em>An Adventure in Statistics: The Reality Enigma</em>. Book. London: Sage.</p>
 </div>
 <div id="section-ref-RN4832">
 <p>Field, Andy P., Jeremy N. V. Miles, and Zoe C. Field. 2012. <em>Discovering Statistics Using R: And Sex and Drugs and Rock ’N’ Roll</em>. Book. London: Sage.</p>
 </div>
-<div id="section-ref-RN11416">
-<p>Fox, John, and Sanford Weisberg. 2011. <em>An R Companion to Applied Regression</em>. Book. Second. Thousand Oaks, CA: Sage. <a href="http://socserv.socsci.mcmaster.ca/jfox/Books/Companion" class="uri">http://socserv.socsci.mcmaster.ca/jfox/Books/Companion</a>.</p>
-</div>
-<div id="section-ref-RN11413">
-<p>Lüdecke, Daniel. 2017. “Sjstats: Statistical Functions for Regression Models.” Journal Article. <em>R Package Version 0.11.1</em>. <a href="https://CRAN.R-project.org/package=sjstats" class="uri">https://CRAN.R-project.org/package=sjstats</a>.</p>
-</div>
-<div id="section-ref-RN10205">
-<p>Mair, P., F. Schoenbrodt, and Rand R. Wilcox. 2017. “WRS2: Wilcox Robust Estimation and Testing.” Journal Article. <em>R Package Version 0.9-2</em>. <a href="http://CRAN.R-project.org/package=WRS2" class="uri">http://CRAN.R-project.org/package=WRS2</a>.</p>
-</div>
-<div id="section-ref-RN9444">
-<p>Morey, Richard D., and Jeffrey N. Rouder. 2014. “BayesFactor: Computation of Bayes Factors for Common Designs.” Journal Article R package version 0.9.9. <a href=" http://CRAN.R-project.org/package=BayesFactor">http://CRAN.R-project.org/package=BayesFactor</a>.</p>
-</div>
 <div id="section-ref-RN5102">
 <p>Pinheiro, Jose, Douglas Bates, Saikat DebRoy, Deepayan Sarkar, and R Development Core Team. 2017. “Nlme: Linear and Nonlinear Mixed Effects Models.” Journal Article. <em>R Package Version 3.1-131</em>. <a href="http://CRAN.R-project.org/package=nlme" class="uri">http://CRAN.R-project.org/package=nlme</a>.</p>
 </div>
-<div id="section-ref-RN9309">
-<p>Rouder, Jeffrey N., Richard D. Morey, Paul L. Speckman, and Jordan M. Province. 2012. “Default Bayes Factors for Anova Designs.” Journal Article. <em>Journal of Mathematical Psychology</em> 56 (5): 356–74. doi:<a href="https://doi.org/10.1016/j.jmp.2012.08.001">10.1016/j.jmp.2012.08.001</a>.</p>
-</div>
-<div id="section-ref-RN11411">
-<p>Wang, Jiahui, Ruben Zamar, Alfio Marazzi, Victor Yohai, Matias Salibian-Barrera, Ricardo Maronna, Eric Zivot, et al. 2017. “Robust: Port of the S+ ‘Robust Library’.” Journal Article. <em>R Package Version 0.4-18.</em> <a href="https://CRAN.R-project.org/package=robust" class="uri">https://CRAN.R-project.org/package=robust</a>.</p>
+<div id="section-ref-RN11408">
+<p>Warnes, Gregory R., Ben Bolker, Thomas Lumley, and Randall C Johnson. 2015. “Gmodels: Various R Programming Tools for Model Fitting.” Journal Article. <em>R Package Version 2.16.2.</em> <a href="  https://CRAN.R-project.org/package=gmodels">https://CRAN.R-project.org/package=gmodels</a>.</p>
 </div>
 <div id="section-ref-RN11418">
 <p>Wickham, Hadley. 2017a. “Forcats: Tools for Working with Categorical Variables (Factors).” Journal Article. <em>R Package Version 0.2.0.</em> <a href="  https://CRAN.R-project.org/package=forcats">https://CRAN.R-project.org/package=forcats</a>.</p>
@@ -834,9 +679,6 @@ output$`tutorial-exercise-ancova-output` <- renderUI({
 </div>
 <div id="section-ref-RN11404">
 <p>Wickham, Hadley, and G. Grolemund. 2017. <em>R for Data Science</em>. Book. Sebastopol, CA: O’Reilly.</p>
-</div>
-<div id="section-ref-RN5244">
-<p>Wilcox, Rand R. 2017. <em>Introduction to Robust Estimation and Hypothesis Testing</em>. Book. 4th ed. Burlington, MA: Elsevier.</p>
 </div>
 </div>
 </div>

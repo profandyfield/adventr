@@ -14,7 +14,7 @@
 <meta name="progressive" content="true" />
 <meta name="allow-skip" content="false" />
 
-<title>AAiR: Repeated measures designs</title>
+<title>AAiR: Repeated-measures designs</title>
 
 
 <!-- highlightjs -->
@@ -46,7 +46,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div class="topics">
 
 <div id="section-an-adventure-in-r-repeated-measures-designs-part-1" class="section level1">
-<h1>An Adventure in R: Repeated measures designs (part 1)</h1>
+<h1>An Adventure in R: Repeated-measures designs (part 1)</h1>
 <div id="section-overview" class="section level2">
 <h2>Overview</h2>
 <p>This tutorial is one of a series that accompanies <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> <span class="citation">(A. P. Field 2016)</span> and <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(A. P. Field, Miles, and Field 2012)</span> by <a href="https://en.wikipedia.org/wiki/Andy_Field_(academic)">me</a>. These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>,<a href="#section-fn1" class="footnoteRef" id="section-fnref1"><sup>1</sup></a></p>
@@ -290,14 +290,14 @@ intervals(calcite_rs, which = &quot;fixed&quot;)</code></pre>
 <tr>
 <td>
 
-<div id="htmlwidget-1f8f6af874d67f004a86" style="width:100%;height:auto;", class = "quiz html-widget">
+<div id="htmlwidget-9ea864882e7b3266bb94" style="width:100%;height:auto;", class = "quiz html-widget">
 <div class="panel panel-default">
 <div class="panel-body quizArea">
 </div>
 </div>
 </div>
 
-<script type="application/json" data-for="htmlwidget-1f8f6af874d67f004a86">{"x":{"question":"How would we interpret the <em>Value<\/em> (-2.35) for <em>face_typedifferent<\/em>? [Select <strong>two<\/strong> correct answers.]","answers":[{"option":"As the value of <strong>face_type<\/strong> changed from 0 (actual) to 1 (different), recognition scores decrease by 2.35.","correct":true,"message":null},{"option":"The difference between group means is -2.35.","correct":true,"message":null},{"option":"As the value of <strong>face_type<\/strong> changed from 0 (actual) to 1 (different), recognition scores decrease by 2.35 of a standard deviation","correct":false,"message":"This describes the <em>standardized<\/em> B, not the <em>unstandardized<\/em>."},{"option":"Group membership explains -2.35% of the variance in recognition scores","correct":false,"message":"This is what \\(R^2\\) tells us and you can&#39;t have a negative percentage of variance explained!"}],"label":"quiz_b_ex1-1","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"How would we interpret the <em>Value<\/em> (-2.35) for <em>face_typedifferent<\/em>? [Select <strong>two<\/strong> correct answers.]","a":[{"option":"As the value of <strong>face_type<\/strong> changed from 0 (actual) to 1 (different), recognition scores decrease by 2.35.","correct":true,"message":null},{"option":"The difference between group means is -2.35.","correct":true,"message":null},{"option":"As the value of <strong>face_type<\/strong> changed from 0 (actual) to 1 (different), recognition scores decrease by 2.35 of a standard deviation","correct":false,"message":"This describes the <em>standardized<\/em> B, not the <em>unstandardized<\/em>."},{"option":"Group membership explains -2.35% of the variance in recognition scores","correct":false,"message":"This is what \\(R^2\\) tells us and you can&#39;t have a negative percentage of variance explained!"}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-9ea864882e7b3266bb94">{"x":{"question":"How would we interpret the <em>Value<\/em> (-2.35) for <em>face_typedifferent<\/em>? [Select <strong>two<\/strong> correct answers.]","answers":[{"option":"As the value of <strong>face_type<\/strong> changed from 0 (actual) to 1 (different), recognition scores decrease by 2.35.","correct":true,"message":null},{"option":"The difference between group means is -2.35.","correct":true,"message":null},{"option":"As the value of <strong>face_type<\/strong> changed from 0 (actual) to 1 (different), recognition scores decrease by 2.35 of a standard deviation","correct":false,"message":"This describes the <em>standardized<\/em> B, not the <em>unstandardized<\/em>."},{"option":"Group membership explains -2.35% of the variance in recognition scores","correct":false,"message":"This is what \\(R^2\\) tells us and you can&#39;t have a negative percentage of variance explained!"}],"label":"quiz_b_ex1-1","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"How would we interpret the <em>Value<\/em> (-2.35) for <em>face_typedifferent<\/em>? [Select <strong>two<\/strong> correct answers.]","a":[{"option":"As the value of <strong>face_type<\/strong> changed from 0 (actual) to 1 (different), recognition scores decrease by 2.35.","correct":true,"message":null},{"option":"The difference between group means is -2.35.","correct":true,"message":null},{"option":"As the value of <strong>face_type<\/strong> changed from 0 (actual) to 1 (different), recognition scores decrease by 2.35 of a standard deviation","correct":false,"message":"This describes the <em>standardized<\/em> B, not the <em>unstandardized<\/em>."},{"option":"Group membership explains -2.35% of the variance in recognition scores","correct":false,"message":"This is what \\(R^2\\) tells us and you can&#39;t have a negative percentage of variance explained!"}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
 </td>
 </tr>
 </table>
@@ -640,7 +640,7 @@ output$`tutorial-exercise-calcite_bf_est-output` <- renderUI({
 
 <!-- begin doc-metadata -->
 <div id="doc-metadata">
-<h2 class="title toc-ignore" style="display:none;">AAiR: Repeated measures designs</h2>
+<h2 class="title toc-ignore" style="display:none;">AAiR: Repeated-measures designs</h2>
 <h4 class="author"><em>Andy Field</em></h4>
 </div>
 <!-- end doc-metadata -->

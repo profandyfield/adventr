@@ -1,5 +1,5 @@
 ---
-title: "AAiR: Repeated measures designs"
+title: "AAiR: Repeated-measures designs"
 author: "Andy Field"
 output:
   learnr::tutorial:
@@ -92,7 +92,7 @@ calcite_tidy <- calcite_dat %>% gather(key = "face_type", value = "recognition",
 
 ```
 
-# An Adventure in R: Repeated measures designs (part 1)
+# An Adventure in R: Repeated-measures designs (part 1)
 
 ## Overview
 

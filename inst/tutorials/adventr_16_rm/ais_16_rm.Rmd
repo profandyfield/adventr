@@ -1,0 +1,555 @@
+---
+title: "AAiR: Repeated-measures designs 2"
+author: "Andy Field"
+output:
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+bibliography: adventr_bib.bib
+---
+
+```{r setup, include=FALSE}
+library(forcats)
+library(learnr)
+library(RefManageR)
+library(tidyverse)
+
+library(BayesFactor)
+library(gmodels)
+library(nlme)
+library(WRS2)
+
+
+
+knitr::opts_chunk$set(echo = FALSE)
+tutorial_options(exercise.cap = "Exercise")
+
+cbBlack<-"#000000"
+cbGrey<-"#999999"
+cbOrange<-"#E69F00"
+cbBlue<-"#56B4E9"
+cbGreen<-"#009E73"
+cbYellow<-"#F0E442"
+cbBlueDark<-"#0072B2"
+cbOrangeDark<-"#D55E00"
+cbPink<-"#CC79A7"
+cbRed<-"#DF4738"
+
+andy.theme <- function(base_size = 12, base_family = "") {
+  # Starts with theme_grey and then modify some parts
+  theme_grey(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.2)),
+      axis.title.y        = element_text(margin = margin(0, 10, 0, 0), angle = 90),
+      axis.title.x        = element_text(margin = margin(10, 0, 0, 0)),
+      axis.text           = element_text(size = rel(0.75), colour = "grey35"),
+      axis.text.x         = element_text(margin = margin(2, 0, 0, 0)),
+      axis.text.y         = element_text(margin = margin(0, 2, 0, 0)),
+      axis.ticks        = element_line(colour = "grey35"),
+      legend.key        = element_rect(colour = "white"),
+      panel.background  = element_rect(fill = "white", colour = NA),
+      panel.border      = element_rect(fill = NA, colour = "grey50"),
+      panel.grid.major  = element_line(colour = "grey90", size = 0.2),
+      panel.grid.minor  = element_line(colour = "grey98", size = 0.5),
+      strip.background  = element_rect(fill = "grey80", colour = "grey50"),
+      strip.text  = element_text(size = rel(1.4))
+    )
+}
+
+andy.dsus <- function(base_size = 12, base_family = "") {
+  andy.theme(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.6)),
+      axis.text           = element_text(size = rel(1.3), colour = "grey35"),
+      strip.background = element_rect(fill = cbBlueDark, colour = "white"),
+      strip.text  = element_text(size = rel(1.3), colour = "white")
+    )
+}
+
+colFmt = function(x,color){
+  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
+  if(outputFormat == 'latex')
+    paste("\\textcolor{",color,"}{",x,"}",sep="")
+  else if(outputFormat == 'html')
+    paste("<font color='",color,"'>",x,"</font>",sep="")
+  else
+    x
+}
+
+#Read dat files needed for the tutorial
+
+#If command tries to work out whether the code is running online (rather than a package). If online it loads the data from external source, otherwise it'll have the data anyway from the package
+
+if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
+    implant_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_16_implanting.csv");
+    } else {
+    implant_dat <- adventr::implant_dat
+    }
+
+
+#setup objects for code blocks
+implant_tidy <- implant_dat %>% gather(key = "interference", value = "recall", -id)
+
+```
+
+# An Adventure in R: Repeated-measures designs (part 2)
+
+## Overview
+
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+
+* Who is the tutorial aimed at?
+    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+* What is covered?
+    - This tutorial looks at how to fit a linear model with a predictor variable that represents more than two dependent categories. We look at robust variants of the model, and computing a Bayes factor. It would be a useful tutorial to run alongside teaching based on Chapter 16 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
+    - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
+    - The aim of this tutorial is to augment the theory that you already know by guiding you through fitting linear models using **R** and **RStudio** and asking you questions to test your knowledge along the way.
+    
+
+## Story précis
+
+### Why a précis?
+
+Because these tutorials accompany my book *An adventure in statistics*, which uses a fictional narrative to teach the statistics, some of the examples might not make sense unless you know something about the story. For those of you who don't have the book I begin each tutorial with a précis of the story. If you're not interested then fair enough - click past this section.
+
+### General context for the story
+
+It is the future. Zach, a rock musician and Alice, a geneticist, who have been together since high school live together in Elpis, the ‘City of Hope’.
+
+Zach and Alice were born in the wake of the Reality Revolution which occurred after a Professor Milton Gray invented the Reality Prism – a transparent pyramid worn on the head – that brought honesty to the world. Propaganda and media spin became unsustainable, religions collapsed, advertising failed. Society could no longer be lied to. Everyone could know the truth about anything that they could look at. A gift, some said, to a previously self-interested, self-obsessed society in which the collective good had been eroded. 
+
+But also a curse. For, it soon became apparent that through this Reality Prism, people could no longer kid themselves about their own puffed-up selves as they could see what they were really like – by and large, pretty ordinary. And this caused mass depression. People lost faith in themselves. Artists abandoned their pursuits, believing they were untalented and worthless. 
+
+Zach and Alice have never worn a Reality Prism and have no concept of their limitations. They were born after the World Governance Agency (WGA) destroyed all Reality Prisms, along with many other pre-revolution technologies, with the aim of restoring community and well-being. However, this has not been straightforward and in this post-Prism world, society has split into pretty much two factions
+
+* The Chippers who have had WiFi-enabled chips implanted into their brains, enabling them to record and broadcast what they see and think in real time; upload memories for future generations into a newly-created memoryBank and live-stream music and films directly into their brains. 
+* The Clocktarians, followers of the old pre-Prism ways who use steam punk style technologies, who have elected not to have chips in their brains, regarded by the Chippers as backward-looking stuck in a ‘clockwork, Victorian society’. 
+
+Everyone has a star, a limitless space on which to store their digital world.
+
+Zach and Alice are Clocktarians. Their technology consists mainly of:
+
+* A Proteus, a device made from programmable matter that can transform shape and function simply by the owners’ wishes. Zach calls his a diePad, in the shape of a tombstone in an ironic reference to an over-reliance on technology at the expense of memory. 
+* A Reality Checker, a clockwork mechanism that, at the point of critical velocity, projects an opaque human head that is linked to everything and can tell you anything. Every head has a personality and Zach’s is a handsome, laid back ‘dude’ who is like an electronic friend, who answers questions if he feels like it and often winds Zach up by giving him false information. And he often flirts with Alice.
+
+### Main Protagonists
+
+* Zach
+    - Rock musician in band called The Reality Enigma.
+    - Spellbinding performer, has huge fan-base.
+    - Only people living in Elpis get to see The Reality Enigma in the flesh. Otherwise all performances are done via an oculus riff, a multisensory headset for experiencing virtual gigs.
+    - Zach’s music has influenced and changed thousands of lives. 
+    - Wishes he had lived pre-Revolutionary times, the turn of the 21st Century, a golden age for music when bands performed in reality at festivals.
+    - Kind, gentle and self-doubting.
+    - Believes science and maths are dull and uninspiring. Creates a problem between him and Alice as she thinks that because he isn’t interested in science, he isn’t interested in her. Leads to lots of misunderstandings between them. 
+* Alice
+    - Shy, lonely, academically-gifted – estranged from the social world until she met Zach in the college library. 
+    - Serious scientist, works at the Beimeni Centre of Genetics. 
+    - At 21, won the World Science Federation’s Einstein Medal for her genetics research
+    - Desperately wants Zach to get over his fear of science so he can open his mind to the beauty of it.
+
+### How Zach's adventure begins
+
+Alice has been acting strangely, on edge for weeks, disconnected and uncommunicative, as if she is hiding something and Zach can’t get through to her. Arriving home from band practice, unusually, she already home and listening to an old album that the two of them enjoyed together, back in a simpler, less complicated time in their relationship. During an increasingly testy evening, that involves a discussion with the Head about whether or not a Proteus causes brain cancer, Alice is interrupted by an urgent call which she takes in private. She returns looking worried and is once again, distracted. She tells Zach that she has ‘a big decision to make’. Before going to bed, Zach asks her if he can help with the decision but she says he ‘already has’, thanking him for making ‘everything easier.’ He has no idea what she means and goes to sleep, uneasy.
+
+On waking, Zach senses that something is wrong. And he is right. Alice has disappeared. Her clothes, her possessions and every photo of them together have gone. He can’t get hold of any of her family or friends as their contact information is stored on her Proteus, not on his diePad. He manages to contact the Beimeni Centre but is told that no one by the name of Alice Nightingale has ever worked there. He logs into their constellation but her star has gone.  He calls her but finds that her number never existed. She has, thinks Zach, been ‘wiped from the planet.’ He summons The Head but he can’t find her either. He tells Zach that there are three possibilities: Alice has doesn’t want to be found, someone else doesn’t want her to be found or she never existed. 
+
+Zach calls his friend Nick, fellow band member and fan of the WGA-installed Repositories, vast underground repositories of actual film, books, art and music. Nick is a Chipper – solely for the purpose of promoting the band using memoryBank – and he puts the word out to their fans about Alice missing. 
+
+Thinking as hard as he can, Zach recalls the lyrics of the song she’d been playing the previous evening. Maybe they are significant? It may well be a farewell message and the Head is right. In searching for clues, he comes across a ‘memory stone’ which tells him to read what’s on there. File 1 is a research paper that Zach can’t fathom. It’s written in the ‘language of science’ and the Head offers to help Zach translate it and tells him that it looks like the results of her current work were ‘gonna blow the world’. Zach resolves to do ‘something sensible’ with the report.  
+
+Zach doesn’t want to believe that Alice has simply just left him. Rather, that someone has taken her and tried to erase her from the world. He decides to find her therapist, Dr Murali Genari and get Alice’s file. As he breaks into his office, Dr Genari comes up behind him and demands to know what he is doing. He is shaking but not with rage – with fear of Zach. Dr Genari turns out to be friendly and invites Zach to talk to him. Together they explore the possibilities of where Alice might have gone and the likelihood, rating her relationship satisfaction, that she has left him. During their discussion Zach is interrupted by a message on his diePad from someone called Milton. Zach is baffled as to who he is and how he knows that he is currently discussing reverse scoring. Out of the corner of his eye, he spots a ginger cat jumping down from the window ledge outside. The counsellor has to go but suggests that Zach and ‘his new friend Milton’ could try and work things out.
+
+## Packages and data
+### Packages
+
+This tutorial uses the following packages:
+
+* `BayesFactor` [@RN9444] to compute Bayes factors
+* `gmodels` [@RN11408] to compute confidence intervals
+* `nlme` [@RN5102] to estimate the multilevel models
+* `tidyverse` [@RN11407] for general data processing
+* `WRS2` [@RN10205] to do various robust tests
+
+These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in **RStudio**) then you need to make sure that the package has been installed by executing `install.packages("package_name")`, where *package_name* is the name of the package. If the package is already installed, then you need to reference it in your current session by executing `library(package_name)`, where *package_name* is the name of the package.
+
+### Data
+
+This tutorial has the data files pre-loaded so you shouldn't need to do anything to access the data from within the tutorial. However, if you want to play around with what you have learnt in this tutorial outside of the tutorial environment (i.e. in a stand-alone **RStudio** session) you will need to download the data files and then read them into your **R** session. This tutorial uses the following file:
+
+* [ais_16_implanting.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_16_implanting.csv).
+
+You can load the file in several ways:
+
+* Assuming that you save this file into the working directory, you can load it by executing:
+    - `implant_dat <- read_csv("ais_16_implanting.csv")`
+    - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
+* To load the file using a standard dialogue box to navigate your file system, execute:
+    - `implant_dat <- read_csv(file.choose())`
+* You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
+    - `implant_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_16_implanting.csv")`
+    - This method relies on an internet connection (and my server having not exploded!)
+
+
+## Exploring the data
+### The model
+
+During Zach's visit to the JIG:SAW complex he visits several research buildings. In the second, he discovers experiments being conducted related to memory. One experiment aimed to see whether a failure to replace memories was due to the type of conflicting information used. Five participants engaged in three different scripted encounters with strangers during which 10 unusual things happened. After each encounter participants were asked to privately recall what had happened. During the period of recall for one encounter they were left alone (control), during the recall of another their ID chip was used to implant a verbal description of the encounter in which the 10 unusual events were replaced with different events, and during the recall of the final encounter their ID chip was used to implant visual images of 10 different things to what they actually experienced. Each participant, therefore, experienced three encounters and a different type of recall manipulation followed each one; the type of manipulation associated with a particular encounter was counterbalanced. Finally, participants recalled the event for a second time and we measured how many of the 10 unusual events that they originally experienced that they could recall. The data are in the tibble `implant_dat`, which has four variables:
+
+* **id**: Participant ID
+* **no_interference**: How many of the 10 unusual events were remembered when there was no interference
+* **verbal**: How many of the 10 unusual events were remembered when verbal information was used as interference
+* **visual**: How many of the 10 unusual events were remembered when visual images were used as interference
+
+The data has a hierarchical structure because recall scores are nested within participants (Figure 1). We, therefore, need to model the individual differences in recognition scores (random intercept) and the effect of the type of face (random slopes).
+
+![Figure 1: The structure of the memory implanting data](./images/ais_implant_data_hierarchy_small.png)
+
+The model we're fitting is described by the following equation:
+
+$$
+\begin{aligned}
+\text{recall}_{ij} & = b_{0i} + b_{1i}\text{interference}_{ij}+ ε_{ij}\\
+b_{0i} &= b_0 + u_{0i}\\
+b_{1i} &= b_1 + u_{1i}
+\end{aligned}
+$$
+
+Recall scores within participants (*i*) and experimental treatments (*j*) are predicted from overall recall scores ($b_0$) and participant's variation around it ($u_0i$), the overall effect of the type of interference ($b_1$) and participant's variation around that effect ($u_{1i}$), and some error ($ε_{ij}$). In other words, it is a multilevel model with random intercepts and slopes for the effect of interference. (In fact, the model will be more complex than this because interference will be split into two dummy variables.)
+
+### Making data 'tidy'
+
+Use the code box to inspect the `implant_dat` tibble.
+
+```{r inspect_dat, exercise = TRUE}
+     
+```
+
+```{r inspect_dat-solution}
+implant_dat   
+```
+
+The data are organised in what is known as the *wide format* (see **adventr_15_rm**. The *wide format* is common but *messy*. Usually we want the data to *tidy*. To make these data 'tidy' we can follow the same process as in **adventr_15_rm**: use the `gather()` function from the `tidyverse` suite of packages to gather the columns representing different types of memory interference together. To recap, the function takes the form:
+
+`gather(data, key = "name_of_column_containing_variable_information", value = "name_of_column_containing_values")`
+
+Our initial tibble has 5 rows (one for each participant) and 4 columns (**id**, **no_interference**, **verbal**, **visual**). We need to gather only the **no_interference**, **verbal**, and **visual** columns and leave the **id** column alone (because this column tells us to which participant a score belongs). To do this, we execute:
+
+`gather(implant_dat, key = "interference", value = "recall", -id)`
+
+Try this command is the code box. The resulting tibble should have 15 rows (each of 5 participants under each of the three interference conditions) and three columns (**id** tells us the participant number, **interference** defines the experimental condition, and **recall** contains the recall score for each participant in each experimental condition). These data are tidy. So we can use this restructured tibble we need to save it into an object. Let's call it `implant_tidy`. We can do this by either placing the original tibble directly into the `gather()` function:
+
+`implant_tidy <- gather(implant_dat, key = "interference", value = "recall", -id)`
+
+or by using a pipe:
+
+`implant_tidy <- implant_dat %>% gather(key = "interference", value = "recall", -id)`
+
+Execute one of these commands in the code box, and then inspect the resulting tibble.
+
+
+```{r gather_dat, exercise = TRUE}
+     
+```
+
+```{r gather_dat-solution}
+implant_tidy <- implant_dat %>% gather(key = "interference", value = "recall", -id)
+implant_tidy
+```
+
+### Descriptive statistics
+
+Using what you've learnt in previous tutorials, create a tibble called `implant_summary` containing the mean recall ( and their confidence intervals) within each interference condition.
+
+`r colFmt("Hint: if you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels", cbGreen)`
+
+```{r desc, exercise = TRUE, exercise.lines = 6}
+             
+```
+
+```{r desc-solution}
+implant_summary <-  implant_tidy %>% group_by(interference) %>% summarize(
+  mean = mean(recall),
+  ci_low = ci(recall)["CI lower"],
+  ci_upp = ci(recall)["CI upper"]
+)
+implant_summary              
+```
+
+
+### Plotting the data
+
+Use the code box below to create an error bar chart with **interference** on the *x*-axis and **recall** on the *y*-axis. If you feel like it, try to superimpose the raw data. (Hint, you can adapt the code that you used in the **adventr_15_rm** tutorial.)
+
+```{r scat, exercise = TRUE, exercise.lines = 8}
+     
+               
+```
+
+```{r scat-solution}
+implant_plot <- ggplot(implant_tidy, aes(interference, recall))
+implant_plot +
+    stat_summary(fun.data = "mean_cl_normal", geom = "pointrange") +
+  geom_point(colour = "#E69F00", position = position_jitter(width = 0.1, height = 0)) +
+  labs(x = "Type of interference", y = "Recoognition (out of 20") +
+  coord_cartesian(ylim = c(0, 10)) +
+  scale_y_continuous(breaks = 0:10) +
+  scale_x_discrete(labels = c("No interference", "Verbal", "Visual")) + #adds more descriptive labels to the x-axis
+  theme_bw()
+```
+
+## Predictors with several categories
+### Fitting the model
+
+To fit the model we use the `lme()` function, because we are fitting a linear model with a categorical predictor, but we want to also model the dependency between scores. This function is explained in the tutorial **adventr_mlm**, just to recap it takes the following general form (I've retained only the key options):
+
+`new_object <- lme(outcome ~ predictors, random = formula, data = tibble, method = "REML", na.action = na.fail)`
+
+* `new_model`: an object created that contains information about the model. We can get summary statistics for this model by executing the name of the model.
+* `outcome`: the variable that contains the scores for the outcome measure (in this case **recall**).
+* `predictor`: the variable that contains information about to which condition a score belongs (in this case **interference**).
+* `random`: defines the random parts of the model. This takes a formula in the style `~ predictor|context`. In this case our context is participants, which is represented by the variable **id**. If we want only to let intercepts vary by participant we could use `~ 1|id`, but in fact we also want to let the effect of **interference** vary by participant so we'd use `~ interference|id`.
+* `tibble`: the name of the tibble containing the data (in this case `implant_tidy`).
+* `method`: defines which estimation method is used. By default restricted maximum likelihood is used (REML), but if you want to compare models you should override the default and use maximum likelihood (`method = "ML"`).
+* `na.action`: If you have complete data (as we have here) exclude this option, but if you have missing values (i.e., ‘NA’s in the data frame) then by default the model will fail, so include `na.action = na.exclude` to exclude cases with missing values.
+
+We could, therefore, specify the model as:
+
+```{r echo = TRUE, eval = FALSE}
+implant_rs <- lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")
+anova(implant_rs)
+summary(implant_rs)
+intervals(implant_rs, which = "fixed")
+```
+
+The first line creates an object called `implant_rs` which predicts recall scores from the effect of **intervention** but with intercepts and slopes allowed to vary across participants (I appended `_rs` to the name to remind me it is a *r*andom *s*lopes model). We then place this model into the `anova()` function to get some overall tests of the effect of intervention, and then use `summary()` to look at the parameters of the model and their *t*-statistics and *p*-values and `intervals()` to get 95% confidence intervals for the fixed effects (hence the `which = "fixed"`), which in this case are the intercept and the parameters for the effect of **intervention**.
+
+Try executing these commands in the code box.
+
+```{r lme_1, exercise = TRUE}
+     
+```
+
+```{r lme_1-solution}
+implant_rs <- lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")
+anova(implant_rs)
+summary(implant_rs)
+intervals(implant_rs, which = "fixed")
+```
+
+The output provides estimates of the model parameters (the *b*-values) and the significance of these values. The *Y* intercept ($b_0$) is 7.00, which is the value of recall when **interference** = 0. **R** will have coded the variable **interference** using dummy coding. It will do this alphabetically (unless you tell it something different), which means that it will have coded 'no_interference' as the base category (because *n* comes before *v* in the alphabet). Table 1 shows the scheme that will have been used. Note that 7.00 is the value of the mean in the *no_interference* condition that we calculated earlier.
+
+```{r, results = 'asis'}
+
+Condition <-  c("No interference", "Verbal interference", "Visual interference")
+interference_verbal <- c(0, 1, 0)
+interference_visual <- c(0, 0, 1)
+
+knitr::kable(tibble(Condition, interference_verbal, interference_visual), caption = "Table 1: Dummy codes used by R (see text for details)")
+
+```
+
+
+```{r quiz_b_ex1}
+quiz(
+  question("How would we interpret the *Value* (-1) for *interferenceverbal*?",
+    answer("The difference between the means of the verbal and no interference conditions is -1, which is not significant.", correct = T),
+    answer("As the value of **interference** increased by 1 standard deviation, recall scores decreased by 1 standard deviation"),
+    answer("Verbal interference explains -1% of the variance in recognition scores"),
+    answer("The difference between the means of the verbal and visual conditions is -1, which is significant."),
+    correct = "Correct - well done!",
+    random_answer_order = TRUE,
+    allow_retry = T
+  ),
+  question("How would we interpret the *Value* (-4.2) for *interferencevisual*?",
+    answer("The difference between the means of the visual and no interference conditions is -4.2, which is significant.", correct = T),
+    answer("As the value of **interference** increased by 1 standard deviation, recall scores decreased by -4.2 standard deviations"),
+    answer("Visual interference explains -4.2% of the variance in recognition scores"),
+    answer("The difference between the means of the verbal and visual conditions is -4.2, which is significant."),
+    correct = "Correct - well done!",
+    random_answer_order = TRUE,
+    allow_retry = T
+  )
+)
+```
+
+The confidence intervals for the effect of **interference** tells us about whether the parameters likely to be 0 (assuming that this is one of the 95% of samples that yields confidence intervals containing the population value). Under this assumption, the true difference between recall scores when verbal interference is used compared to no interference lies between -3.352 and 1.352. This means it could be anything between a negative change to a positive change, or even no change. The *p*-value suggests that this difference is not significant, *p* = 0.406. In other words, we can not significantly predict recall scores from whether someone had no interference or verbal interference. Conversely, the true difference between recall scores when visual interference is used compared to no interference lies between -6.841 and -1.559. This means it is likely to be a negative change, and unlikely to be zero. The *p*-value suggests that this difference is  significant, *p* = 0.011. In other words, we can significantly predict recall scores from whether someone had no interference or visual interference.
+
+##Contrasts
+### Assigning contrasts
+
+Just like for independent designs, we can use contrast coding by using the `contrasts()` function. This process was explained in **adventr_16**. I tend to create variables containing the codes that I want to use, and then assign these variables to the predictor that I want to add contrasts to by using these variables. This method is slightly long-winded but has the advantage that the variable names for the contrasts you create are used in the output. So, it enables you to set names for your contrasts, which make the output more interpretable.
+
+Let's imagine that the researchers at JIG:SAW had predicted that recall will be worse (i.e. lower scores) when any kind of interference was sent to participant's ID chips during recall than when no interference was used. We can operationalize these hypotheses as two dummy variables using contrast codes.
+
+```{r, results = 'asis'}
+
+Condition <-  c("No interference", "Verbal interference", "Visual interference")
+Interference_vs_none <- c(-2, 1, 1)
+Verbal_vs_visual <- c(0, -1, 1)
+
+knitr::kable(tibble(Condition, Interference_vs_none, Verbal_vs_visual), caption = "Table 2: Contrast codes for the implanting data")
+```
+
+The first contrast (**Interference_vs_none** in Table 2) compares the no interference condition to any condition in which attempts were made to interfere with memories (i.e. the visual and verbal conditions combined), whereas the second (**Verbal_vs_visual** in Table 2) ignores the no interference conditions (by coding it with 0) and compares the conditions that used verbal and visual interference. These contrasts test these questions:
+
+1. Does having interference (but ignoring if the interference was visual or verbal) sent to your ID chip result in different memory recall than having no interference?
+2. Do attempts to implant memories with verbal information lead to different recall than attempts that use visual information?
+
+We can implement these contrasts in the same way as in **adventr_16.** All that we'll be changing is the names of the contrasts and the codes that we use. So, we could execute something like:
+
+```{r echo = TRUE, eval = FALSE}
+implant_tidy$interference <- factor(implant_tidy$interference)
+interference_vs_none <- c(-2, 1, 1)
+verbal_vs_visual <- c(0, -1, 1)
+contrasts(implant_tidy$interference) <- cbind(interference_vs_none, verbal_vs_visual)
+implant_rs <- lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")
+anova(implant_rs)
+summary(implant_rs)
+intervals(implant_rs, which = "fixed")
+```
+
+The first line converts the variable **interference** into a factor (we need to do this to assign contrasts and currently the variable is a different data type). The second and third lines creates variables that contain the contrast codes that we want to use. The fourth line sets these contrasts for the variable **interference**, and the remaining lines repeat the model specification that we previously used. Execute these commands in the code box:
+
+```{r lme_contrast, exercise = TRUE, exercise.lines = 8}
+     
+               
+```
+
+```{r lme_contrast-solution}
+implant_tidy$interference <- factor(implant_tidy$interference)
+interference_vs_none <- c(-2, 1, 1)
+verbal_vs_visual <- c(0, -1, 1)
+contrasts(implant_tidy$interference) <- cbind(interference_vs_none, verbal_vs_visual)
+implant_rs <- lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")
+anova(implant_rs)
+summary(implant_rs)
+intervals(implant_rs, which = "fixed")
+```
+
+Note that the overall ANOVA doesn't change, but the model parameters do. You should find that the *b* for the first contrast is proportional to the difference between the average of the verbal and visual group (because the group sizes are equal we can take a straight average, $\frac{6.0 + 2.8}{2} = 4.40$) and the average of the control (7.00), which is $4.4-7.0 = -2.6$. The *b* is this value divided by the number of groups, 3 ($\frac{-2.6}{3} = -0.87$). The *b* for the first contrast is proportional to the difference between the means of the verbal and visual groups ($2.8-6.0 = -3.2$. The *b* is this value divided by the number of groups, 2 ($\frac{-3.2}{2} = -1.60$).
+
+## Optional learning exercise
+
+This section is entirely unnecessary other than as a learning exercise to demonstrate how the multilevel model approach to repeated measures designs is a more flexible version of the analysis of variance approach (which, I'll refer to as RM-ANOVA). Skip to the next section if you're not interested. The RM-ANOVA approach is much more commonly taught as a way to compare means that are related (as they are in repeated-measures designs). The RM-ANOVA approach relies on a couple of restrictive assumptions:
+
+* Effects are constant across participants. That is, we expect overall levels of the outcome to differ across participants, but not the effect that our experimental manipulation has. In multilevel language this is akin to assuming a random intercept but a fixed slope. In our specific example, overall recall will differ across participants, but the effect of interference on recall will not.
+* Compound symmetry: it is generally assumed that the covariances between different levels of the repeated-measures variable should be equal. That is, the covariance between the no interference and verbal condition should be the same as between the no interference group and visual condition and the same as the covariance between the visual and verbal condition. Sometimes the less-restrictive assumption of sphericity is made, but let's stick with compound symmetry for now.
+
+To analyse the current example using RM-ANOVA, we'd execute (trust me):
+
+```{r rm_anova, exercise = TRUE}
+implant_aov <- aov(recall ~ interference + Error(id/interference), data = implant_tidy)
+summary(implant_aov)
+```
+
+These values match those in Output 16.8 of the book (which are from IBM SPSS Statistics). To fit the same model using a multilevel approach let's start with the model we already used and then add in the two restrictions listed above. The model we used was created by executing:
+
+`implant_rs <- lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")`
+
+This model allows the effect of **interference** to vary across participants, whereas RM-ANOVA does not. So, let's restrict the model so that it retains a random intercept (overall recall can vary across participants) but not a random slope (the effect of **intervention** is constant across participants). We achieve this restriction by changing `random = ~ interference|id` to `random = ~ 1|id` (I've also changed the suffix of the model to be `_ri` for *r*andom *i*ntercept):
+
+`implant_ri <- lme(recall ~ interference, random = ~ 1|id, data = implant_tidy, method = "ML")`
+
+The second restriction is to assume that covariances across conditions are equal. We can add this restriction by including the statement `correlation = corCompSymm(form = ~ interference|id)` in the model above. This argument sets the covariance structure to have compound symmetry across the **intereference** variable (which is nested within participants). I'll change the suffix to this model to `_cs` (for *c*ompound *s*ymmetry):
+
+`implant_cs <- lme(recall ~ interference, random = ~ 1|id, data = implant_tidy, method = "ML", correlation = corCompSymm(form = ~ interference|id))`
+
+We can summarise this model with the `anova()` function. The code is already in the box below. Remember, all we have done is taken our original multilevel model and applied the two constraints present in the RM-ANOVA approach. Execute this code:
+
+```{r lme_cs, exercise = TRUE}
+implant_cs <- lme(recall ~ interference, random = ~ 1|id, data = implant_tidy, method = "ML", correlation = corCompSymm(form = ~ interference|id))
+anova(implant_cs)
+```
+
+Note that the results match the output from RM-ANOVA, which demonstrates that the RM-ANOVA approach is simply a form of the multilevel approach but with restrictive assumptions applied.
+
+## Robust models
+
+The `WRS2` package [@RN10205] wraps up a few of the many functions described by Wilcox to perform robust variants of tests [@RN5244]. The functions that compare several dependent means are:
+
+* `rmanova(y, groups, blocks, tr = 0.2)`: is a test for dependent trimmed means.
+* `rmmcp(y, groups, blocks, tr = 0.2)`: *post hoc* tests for trimmed means
+
+These functions have similar arguments:
+
+* `y`: the variable containing the outcome variable (in this case **recall**).
+* `groups`: the variable defining the different treatments (in this case **interference**).
+* `blocks`: the variable defining the variable within which scores are nested (in this case **id**).
+* `tr = 0.2`: determines the level of trim. The default is a 20% trim, which has been shown to perform well, but you could change this to 0.1 (10% trim) or any value up to 0.5. You can omit this argument if you're happy with a 20% trim.
+
+Because the functions do not allow us to specify a tibble within which variables are stored, we have to instead place `tibble_name$` in front of each variable. For example, instead of entering `recognition` we must enter `implant_tidy$recognition` so that the function knows where to find the variable. So, we'd execute:
+
+```{r echo = TRUE, eval = FALSE}
+rmanova(implant_tidy$recall, implant_tidy$interference, implant_tidy$id, tr = 0.2)
+rmmcp(implant_tidy$recall, implant_tidy$interference, implant_tidy$id, tr = 0.2)
+```
+
+Try this in the code box (leave out `tr = 0.2` if you're happy with a 20% trim, which you should be).
+
+```{r implant_wrs, exercise = TRUE}
+
+```
+
+```{r implant_wrs-solution}
+rmanova(implant_tidy$recall, implant_tidy$interference, implant_tidy$id)
+rmmcp(implant_tidy$recall, implant_tidy$interference, implant_tidy$id)
+```
+
+Based on `rmanova` we'd conclude that the group means were significantly different, $F_t(2, 4) = 9.18, p = 0.032$, with recall scores similar in the no interference and verbal conditions, $\hat{\psi} = 0.67 [-2.46, 3.79], p = 0.244$, but significantly lower in the visual condition compared to both the no-interference, $\hat{\psi} = 4.33 [1.21, 7.46], p = 0.009$, and verbal, $\hat{\psi} = 3.67 [0.544, 6.79], p = 0.012$, conditions.
+
+##Bayesian models
+### Bayes factors
+
+Like in the previous tutorial (**adventr_16**) we can use the `anovaBF()` function from the [BayesFactor package](http://bayesfactorpcl.r-forge.r-project.org/). Top recap, it takes the form:
+
+`object = anovaBF(formula = outcome ~ group_variable, data = tibble, whichModels = "withmain", rscaleFixed = "medium")`
+
+The function uses default priors that can be specified as a number or as "medium" (the default), "wide", and "ultrawide". These labels correspond to *r* scale values of 1/2, $^\sqrt{2}/_2$, and 1. These priors are explained in *adventr_11* and also read @RN9309.
+
+The main difference with repeated-measures designs is that we need to add in the effect of the individual (**id**) and also include this as a random effect by specifying `whichRandom = "name_of_id_variable"`. It's a good idea to save this model into a new object (lets call it `implant_bf`) because you can do useful things with it (we didn't do this for the `rmanova()` function, but you could).
+
+`r colFmt("Tip: if you are using a tibble (rather than a data frame) then place the tibble's name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn't accept tibbles.", cbGreen)`
+
+For our data (using the default prior) we could execute:
+
+```{r echo = T, eval = F}
+implant_tidy$id <- factor(implant_tidy$id)
+implant_tidy$interference <- factor(implant_tidy$interference)
+implant_bf <- anovaBF(formula = recall ~ interference + id, whichRandom = "id", data = data.frame(implant_tidy))
+implant_bf
+```
+
+The two lines explicitly turn the **id** and **interference** variables into factors (we need to do this because the Bayes factor package doesn't play nicely with tibbles and so is expecting a factor as the random variable). The third line creates the object `implant_bf` as described above. Note that the formula includes our participant variable as an additive effect (`+ id`) and that we have also specified this variable as a random effect (`whichRandom = "id"`). The final line prints the object for us. Try this in the code box:
+
+```{r implant_bf, exercise = TRUE}
+  
+```
+
+```{r implant_bf-solution}
+implant_tidy$id <- factor(implant_tidy$id)
+implant_tidy$interference <- factor(implant_tidy$interference)
+implant_bf <- anovaBF(formula = recall ~ interference + id, whichRandom = "id", data = data.frame(implant_tidy))
+implant_bf
+```
+
+The value of 2.40 means that the probability of the data given the alternative hypothesis is 2.4 that given the null hypothesis. Put another way, you should shift your belief in the alternative hypothesis relative to the null by a factor of 2.40. There is some evidence, but not strong evidence, for alternative hypothesis.
+
+## Other resources
+
+### Statistics
+
+* The tutorials typically follow examples described in detail in @RN10163, so for most of them there's a thorough account in there. You might also find @RN4832 useful for the **R** stuff.
+* There are free lectures and screen casts on my [YouTube channel](https://www.youtube.com/user/ProfAndyField/)
+* There are free statistical resources on my website [www.discoveringstatistics.com](http://www.discoveringstatistics.com)
+
+### R
+
+* Information on using [ggplot2](http://ggplot2.tidyverse.org/) 
+* [R for data science](http://r4ds.had.co.nz/index.html) is the open-access version of the book by tidyverse creator Hadley Wickham [@RN11404]. It covers the *tidyverse* and data management.
+* [ModernDive](http://moderndive.com/index.html) is an open-access textbook on **R** and **RStudio**
+* [RStudio cheat sheets](https://www.rstudio.com/resources/cheatsheets/)
+* [RStudio list of online resources](https://www.rstudio.com/online-learning/)
+* [SwirlStats](http://swirlstats.com/students.html) is a package for *R* that launches a bunch of interactive tutorials.
+
+## References

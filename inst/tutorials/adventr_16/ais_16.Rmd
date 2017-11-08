@@ -320,7 +320,7 @@ For now, the *Y* intercept ($b_0$) is 5, which is the value of recognition when 
 quiz(
   question("How would you interpret the information about the *F*-statistic?",
     answer("Overall recall scores can not be significantly predicted from the group means. This implies that the group means are not significantly different.", correct = T, message = "Because the *p*-value associated with *F* is 0.0967, which is more than the typical criterion of 0.05, we would conclude that using the group means does not help us to predict recall scores. In other words the group means are not significantly different."),
-    answer("Overall recall scores can be significantly predicted from the group means. This implies that the group means are significantly different.", correct = T, message = "Because the *p*-value associated with *F* is 0.0967, which is more than the typical criterion of 0.05, we would conclude that using the group means does NOT help us to predict recall scores. In other words the group means are not significantly different."),
+    answer("Overall recall scores can be significantly predicted from the group means. This implies that the group means are significantly different.", message = "Because the *p*-value associated with *F* is 0.0967, which is more than the typical criterion of 0.05, we would conclude that using the group means does NOT help us to predict recall scores. In other words the group means are not significantly different."),
     answer("Tell me a cat joke", message = "A cat walks into a bar and orders a pint of fish. The bar person says \'Sorry, but we don't serve fish\'. The cat replies \'That's OK, I'm a cat\'."),
     correct = "Correct - well done!",
     incorrect = "Good try.",

@@ -89,6 +89,8 @@ if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
 
 #setup objects for code blocks
 implant_tidy <- implant_dat %>% gather(key = "interference", value = "recall", -id)
+implant_tidy$id <- factor(implant_tidy$id)
+implant_tidy$interference <- factor(implant_tidy$interference)
 
 ```
 
@@ -191,8 +193,7 @@ You can load the file in several ways:
     - This method relies on an internet connection (and my server having not exploded!)
 
 
-## Exploring the data
-### The model
+## The model
 
 During Zach's visit to the JIG:SAW complex he visits several research buildings. In the second, he discovers experiments being conducted related to memory. One experiment aimed to see whether a failure to replace memories was due to the type of conflicting information used. Five participants engaged in three different scripted encounters with strangers during which 10 unusual things happened. After each encounter participants were asked to privately recall what had happened. During the period of recall for one encounter they were left alone (control), during the recall of another their ID chip was used to implant a verbal description of the encounter in which the 10 unusual events were replaced with different events, and during the recall of the final encounter their ID chip was used to implant visual images of 10 different things to what they actually experienced. Each participant, therefore, experienced three encounters and a different type of recall manipulation followed each one; the type of manipulation associated with a particular encounter was counterbalanced. Finally, participants recalled the event for a second time and we measured how many of the 10 unusual events that they originally experienced that they could recall. The data are in the tibble `implant_dat`, which has four variables:
 
@@ -217,6 +218,7 @@ $$
 
 Recall scores within participants (*i*) and experimental treatments (*j*) are predicted from overall recall scores ($b_0$) and participant's variation around it ($u_0i$), the overall effect of the type of interference ($b_1$) and participant's variation around that effect ($u_{1i}$), and some error ($ε_{ij}$). In other words, it is a multilevel model with random intercepts and slopes for the effect of interference. (In fact, the model will be more complex than this because interference will be split into two dummy variables.)
 
+## Preparing the data
 ### Making data 'tidy'
 
 Use the code box to inspect the `implant_dat` tibble.
@@ -257,6 +259,31 @@ implant_tidy <- implant_dat %>% gather(key = "interference", value = "recall", -
 implant_tidy
 ```
 
+###Creating factors
+
+The variables **id** and **interference** currently have the data type of character. This would be fine for a waht of what we want to do (because **R** is fairly intelligent about how it treats character variables). However, for some things (like assigning contrasts) we need these variables to be defined as factors. We can do this by using the `factor()` function, which we hae met before. For example, we could execute:
+
+```{r echo = TRUE, eval = FALSE}
+implant_tidy$id <- factor(implant_tidy$id)
+implant_tidy$interference <- factor(implant_tidy$interference)
+```
+
+Try this in the code box and then execute the name of the variables to see how **R** has converted the variables and assigned 'levels' of the factors.
+
+```{r factors, exercise = TRUE}
+           
+```
+
+```{r factors-solution}
+implant_tidy$id <- factor(implant_tidy$id)
+implant_tidy$interference <- factor(implant_tidy$interference)
+implant_tidy$id
+implant_tidy$interference
+```
+
+Note that levels have been assigned alphabetically. So, for **interference** the first level is *no_interference*, the second is *verbal* and the last *visual*. This is a sensible order for us, but if it wasn't we could use `fct_relevel()` to change the order.
+
+## Exploring the data
 ### Descriptive statistics
 
 Using what you've learnt in previous tutorials, create a tibble called `implant_summary` containing the mean recall ( and their confidence intervals) within each interference condition.
@@ -399,7 +426,6 @@ The first contrast (**Interference_vs_none** in Table 2) compares the no interfe
 We can implement these contrasts in the same way as in **adventr_16.** All that we'll be changing is the names of the contrasts and the codes that we use. So, we could execute something like:
 
 ```{r echo = TRUE, eval = FALSE}
-implant_tidy$interference <- factor(implant_tidy$interference)
 interference_vs_none <- c(-2, 1, 1)
 verbal_vs_visual <- c(0, -1, 1)
 contrasts(implant_tidy$interference) <- cbind(interference_vs_none, verbal_vs_visual)
@@ -409,7 +435,7 @@ summary(implant_rs)
 intervals(implant_rs, which = "fixed")
 ```
 
-The first line converts the variable **interference** into a factor (we need to do this to assign contrasts and currently the variable is a different data type). The second and third lines creates variables that contain the contrast codes that we want to use. The fourth line sets these contrasts for the variable **interference**, and the remaining lines repeat the model specification that we previously used. Execute these commands in the code box:
+The first and second lines creates variables that contain the contrast codes that we want to use. The fourth line sets these contrasts for the variable **interference** (this will work only if **interference** is a factor, which is why we converted it at the start of this tutorial), and the remaining lines repeat the model specification that we previously used. Execute these commands in the code box:
 
 ```{r lme_contrast, exercise = TRUE, exercise.lines = 8}
      
@@ -417,7 +443,6 @@ The first line converts the variable **interference** into a factor (we need to 
 ```
 
 ```{r lme_contrast-solution}
-implant_tidy$interference <- factor(implant_tidy$interference)
 interference_vs_none <- c(-2, 1, 1)
 verbal_vs_visual <- c(0, -1, 1)
 contrasts(implant_tidy$interference) <- cbind(interference_vs_none, verbal_vs_visual)
@@ -514,21 +539,17 @@ The main difference with repeated-measures designs is that we need to add in the
 For our data (using the default prior) we could execute:
 
 ```{r echo = T, eval = F}
-implant_tidy$id <- factor(implant_tidy$id)
-implant_tidy$interference <- factor(implant_tidy$interference)
 implant_bf <- anovaBF(formula = recall ~ interference + id, whichRandom = "id", data = data.frame(implant_tidy))
 implant_bf
 ```
 
-The two lines explicitly turn the **id** and **interference** variables into factors (we need to do this because the Bayes factor package doesn't play nicely with tibbles and so is expecting a factor as the random variable). The third line creates the object `implant_bf` as described above. Note that the formula includes our participant variable as an additive effect (`+ id`) and that we have also specified this variable as a random effect (`whichRandom = "id"`). The final line prints the object for us. Try this in the code box:
+(Remember that at the start of the tutorial we converted **id** and **interference** into factors. We needed to do this because the Bayes factor package excepts a factor, not a character variable, as the random variable). The first line creates the object `implant_bf` as described above. Note that the formula includes our participant variable as an additive effect (`+ id`) and that we have also specified this variable as a random effect (`whichRandom = "id"`). The final line prints the object for us. Try this in the code box:
 
 ```{r implant_bf, exercise = TRUE}
   
 ```
 
 ```{r implant_bf-solution}
-implant_tidy$id <- factor(implant_tidy$id)
-implant_tidy$interference <- factor(implant_tidy$interference)
 implant_bf <- anovaBF(formula = recall ~ interference + id, whichRandom = "id", data = data.frame(implant_tidy))
 implant_bf
 ```

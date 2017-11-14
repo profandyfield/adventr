@@ -261,7 +261,7 @@ implant_tidy
 
 ###Creating factors
 
-The variables **id** and **interference** currently have the data type of character. This would be fine for a waht of what we want to do (because **R** is fairly intelligent about how it treats character variables). However, for some things (like assigning contrasts) we need these variables to be defined as factors. We can do this by using the `factor()` function, which we hae met before. For example, we could execute:
+The variables **id** and **interference** currently have the data type of character. This would be fine for a lot of what we want to do (because **R** is fairly intelligent about how it treats character variables). However, for some things (like assigning contrasts) we need these variables to be defined as factors. We can do this by using the `factor()` function, which we hae met before. For example, we could execute:
 
 ```{r echo = TRUE, eval = FALSE}
 implant_tidy$id <- factor(implant_tidy$id)

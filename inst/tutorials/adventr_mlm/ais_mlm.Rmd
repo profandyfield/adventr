@@ -559,9 +559,10 @@ anova(rehab_base, rehab_ri, rehab_int, rehab_rs, rehab_gep, rehab_tse)
 
 ###Viewing the model parameters
 
-We can view the parameters of any one of our models by using `summary()` and we can get confidence intervals for the parameters by using the `intervals()` function. For example, to inspect the final model we could execute:
+We can look at *F*-statistics for the model by using the `anova()` function. To view the parameters of any one of our models use `summary()` and to get confidence intervals for the parameters use the `intervals()` function. For example, to inspect the final model we could execute:
 
 ```{r echo = T, eval = F}
+anova(rehab_tse)
 summary(rehab_tse)
 intervals(rehab_tse, 0.95)
 ```
@@ -577,9 +578,12 @@ rehab_tse <- lme(resemblance ~ intervention + gep_level + tse_months, random = ~
 ```
 
 ```{r sum_tse-solution}
+anova(rehab_tse)
 summary(rehab_tse)
 intervals(rehab_tse, 0.95)
 ```
+
+The results of the `anova()` command, show significant effect of **intervention**, *F*(1, 177) = 5.49, *p* = 0.020, **gep_level**, *F*(1, 177) = 37.98, *p* < 0.0001, and **tse_months**, *F*(1, 177) = 4848.83, *p* < 0.0001.
 
 The final model shows that gene therapy (compared to a wait list control) significantly predicted resemblance scores, *b* = 6.79 [1.51, 12.08], *t*(177) = 2.51, p = 0.0129. Both the initial intensity of the genetic enhancement programme, *b* = -4.30 [-5.37, -3.23], *t*(177) = -7.84, p < 0.001, and the time since the enhancement took place, *b* = -1.98 [-2.03, -1.92], *t*(177) = 69.63, p < 0.001, significantly reduced resemblance scores.
 

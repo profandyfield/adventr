@@ -441,8 +441,9 @@ anova(rehab_base, rehab_ri, rehab_int, rehab_rs, rehab_gep, rehab_tse)</code></p
 </div>
 <div id="section-viewing-the-model-parameters" class="section level3">
 <h3>Viewing the model parameters</h3>
-<p>We can view the parameters of any one of our models by using <code>summary()</code> and we can get confidence intervals for the parameters by using the <code>intervals()</code> function. For example, to inspect the final model we could execute:</p>
-<pre class="r"><code>summary(rehab_tse)
+<p>We can look at <em>F</em>-statistics for the model by using the <code>anova()</code> function. To view the parameters of any one of our models use <code>summary()</code> and to get confidence intervals for the parameters use the <code>intervals()</code> function. For example, to inspect the final model we could execute:</p>
+<pre class="r"><code>anova(rehab_tse)
+summary(rehab_tse)
 intervals(rehab_tse, 0.95)</code></pre>
 <p>In the <code>intervals()</code> it isn’t necessary to include 0.95 if you want 95% confidence intervals, I merely included it to make clear that you could change this to get other intervals (for example, 0.9 for 90% confidence intervals or 0.99 for 99% confidence intervals). Execute these commands in the code box.</p>
 <div class="tutorial-exercise-support" data-label="sum_tse-setup" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
@@ -452,9 +453,11 @@ intervals(rehab_tse, 0.95)</code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="sum_tse-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>summary(rehab_tse)
+<pre class="text"><code>anova(rehab_tse)
+summary(rehab_tse)
 intervals(rehab_tse, 0.95)</code></pre>
 </div>
+<p>The results of the <code>anova()</code> command, show significant effect of <strong>intervention</strong>, <em>F</em>(1, 177) = 5.49, <em>p</em> = 0.020, <strong>gep_level</strong>, <em>F</em>(1, 177) = 37.98, <em>p</em> &lt; 0.0001, and <strong>tse_months</strong>, <em>F</em>(1, 177) = 4848.83, <em>p</em> &lt; 0.0001.</p>
 <p>The final model shows that gene therapy (compared to a wait list control) significantly predicted resemblance scores, <em>b</em> = 6.79 [1.51, 12.08], <em>t</em>(177) = 2.51, p = 0.0129. Both the initial intensity of the genetic enhancement programme, <em>b</em> = -4.30 [-5.37, -3.23], <em>t</em>(177) = -7.84, p &lt; 0.001, and the time since the enhancement took place, <em>b</em> = -1.98 [-2.03, -1.92], <em>t</em>(177) = 69.63, p &lt; 0.001, significantly reduced resemblance scores.</p>
 </div>
 </div>

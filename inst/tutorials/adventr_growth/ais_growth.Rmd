@@ -1,0 +1,552 @@
+---
+title: "AAiR: Growth models"
+author: "Andy Field"
+output:
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+bibliography: adventr_bib.bib
+---
+
+```{r setup, include=FALSE}
+library(forcats)
+library(learnr)
+library(RefManageR)
+library(tidyverse)
+
+library(gmodels)
+library(nlme)
+
+knitr::opts_chunk$set(echo = FALSE)
+tutorial_options(exercise.cap = "Exercise")
+
+cbBlack<-"#000000"
+cbGrey<-"#999999"
+cbOrange<-"#E69F00"
+cbBlue<-"#56B4E9"
+cbGreen<-"#009E73"
+cbYellow<-"#F0E442"
+cbBlueDark<-"#0072B2"
+cbOrangeDark<-"#D55E00"
+cbPink<-"#CC79A7"
+cbRed<-"#DF4738"
+
+andy.theme <- function(base_size = 12, base_family = "") {
+  # Starts with theme_grey and then modify some parts
+  theme_grey(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.2)),
+      axis.title.y        = element_text(margin = margin(0, 10, 0, 0), angle = 90),
+      axis.title.x        = element_text(margin = margin(10, 0, 0, 0)),
+      axis.text           = element_text(size = rel(0.75), colour = "grey35"),
+      axis.text.x         = element_text(margin = margin(2, 0, 0, 0)),
+      axis.text.y         = element_text(margin = margin(0, 2, 0, 0)),
+      axis.ticks        = element_line(colour = "grey35"),
+      legend.key        = element_rect(colour = "white"),
+      panel.background  = element_rect(fill = "white", colour = NA),
+      panel.border      = element_rect(fill = NA, colour = "grey50"),
+      panel.grid.major  = element_line(colour = "grey90", size = 0.2),
+      panel.grid.minor  = element_line(colour = "grey98", size = 0.5),
+      strip.background  = element_rect(fill = "grey80", colour = "grey50"),
+      strip.text  = element_text(size = rel(1.4))
+    )
+}
+
+andy.dsus <- function(base_size = 12, base_family = "") {
+  andy.theme(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.6)),
+      axis.text           = element_text(size = rel(1.3), colour = "grey35"),
+      strip.background = element_rect(fill = cbBlueDark, colour = "white"),
+      strip.text  = element_text(size = rel(1.3), colour = "white")
+    )
+}
+
+colFmt = function(x,color){
+  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
+  if(outputFormat == 'latex')
+    paste("\\textcolor{",color,"}{",x,"}",sep="")
+  else if(outputFormat == 'html')
+    paste("<font color='",color,"'>",x,"</font>",sep="")
+  else
+    x
+}
+
+#Read dat files needed for the tutorial
+
+#If command tries to work out whether the code is running online (rather than a package). If online it loads the data from external source, otherwise it'll have the data anyway from the package
+
+if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
+    rehab_growth_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_growth_model.csv");
+    } else {
+    rehab_growth_dat <- adventr::rehab_growth_dat
+    }
+
+#setup objects for code blocks
+
+```
+
+```{r echo = FALSE, prepare-data}
+rehab_growth_dat$id <- factor(rehab_growth_dat$id)
+rehab_growth_dat$intervention <- factor(rehab_growth_dat$intervention)
+rehab_growth_dat$time <- factor(rehab_growth_dat$time)
+rehab_growth_dat$intervention <- fct_relevel(rehab_growth_dat$intervention, "Wait list")
+rehab_growth_dat$time <- fct_relevel(rehab_growth_dat$time, "t12", after = Inf)
+```
+
+# An Adventure in R: Growth models
+
+## Overview
+
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+
+* Who is the tutorial aimed at?
+    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+* What is covered?
+    - This tutorial gives a very basic introduction to growth models. It goes beyond what is covered in the book, but would be a useful tutorial to follow-up the tutorials on repeated measures designs from Chapters 15 and 16 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
+    - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
+    - The aim of this tutorial is to augment the theory that you already know by guiding you through fitting linear models using **R** and **RStudio** and asking you questions to test your knowledge along the way.
+    
+
+## Story précis
+
+### Why a précis?
+
+Because these tutorials accompany my book *An adventure in statistics*, which uses a fictional narrative to teach the statistics, some of the examples might not make sense unless you know something about the story. For those of you who don't have the book I begin each tutorial with a précis of the story. If you're not interested then fair enough - click past this section.
+
+### General context for the story
+
+It is the future. Zach, a rock musician and Alice, a geneticist, who have been together since high school live together in Elpis, the ‘City of Hope’.
+
+Zach and Alice were born in the wake of the Reality Revolution which occurred after a Professor Milton Gray invented the Reality Prism – a transparent pyramid worn on the head – that brought honesty to the world. Propaganda and media spin became unsustainable, religions collapsed, advertising failed. Society could no longer be lied to. Everyone could know the truth about anything that they could look at. A gift, some said, to a previously self-interested, self-obsessed society in which the collective good had been eroded. 
+
+But also a curse. For, it soon became apparent that through this Reality Prism, people could no longer kid themselves about their own puffed-up selves as they could see what they were really like – by and large, pretty ordinary. And this caused mass depression. People lost faith in themselves. Artists abandoned their pursuits, believing they were untalented and worthless. 
+
+Zach and Alice have never worn a Reality Prism and have no concept of their limitations. They were born after the World Governance Agency (WGA) destroyed all Reality Prisms, along with many other pre-revolution technologies, with the aim of restoring community and well-being. However, this has not been straightforward and in this post-Prism world, society has split into pretty much two factions
+
+* The Chippers who have had WiFi-enabled chips implanted into their brains, enabling them to record and broadcast what they see and think in real time; upload memories for future generations into a newly-created memoryBank and live-stream music and films directly into their brains. 
+* The Clocktarians, followers of the old pre-Prism ways who use steam punk style technologies, who have elected not to have chips in their brains, regarded by the Chippers as backward-looking stuck in a ‘clockwork, Victorian society’. 
+
+Everyone has a star, a limitless space on which to store their digital world.
+
+Zach and Alice are Clocktarians. Their technology consists mainly of:
+
+* A Proteus, a device made from programmable matter that can transform shape and function simply by the owners’ wishes. Zach calls his a diePad, in the shape of a tombstone in an ironic reference to an over-reliance on technology at the expense of memory. 
+* A Reality Checker, a clockwork mechanism that, at the point of critical velocity, projects an opaque human head that is linked to everything and can tell you anything. Every head has a personality and Zach’s is a handsome, laid back ‘dude’ who is like an electronic friend, who answers questions if he feels like it and often winds Zach up by giving him false information. And he often flirts with Alice.
+
+### Main Protagonists
+
+* Zach
+    - Rock musician in band called The Reality Enigma.
+    - Spellbinding performer, has huge fan-base.
+    - Only people living in Elpis get to see The Reality Enigma in the flesh. Otherwise all performances are done via an oculus riff, a multisensory headset for experiencing virtual gigs.
+    - Zach’s music has influenced and changed thousands of lives. 
+    - Wishes he had lived pre-Revolutionary times, the turn of the 21st Century, a golden age for music when bands performed in reality at festivals.
+    - Kind, gentle and self-doubting.
+    - Believes science and maths are dull and uninspiring. Creates a problem between him and Alice as she thinks that because he isn’t interested in science, he isn’t interested in her. Leads to lots of misunderstandings between them. 
+* Alice
+    - Shy, lonely, academically-gifted – estranged from the social world until she met Zach in the college library. 
+    - Serious scientist, works at the Beimeni Centre of Genetics. 
+    - At 21, won the World Science Federation’s Einstein Medal for her genetics research
+    - Desperately wants Zach to get over his fear of science so he can open his mind to the beauty of it.
+
+### How Zach's adventure begins
+
+Alice has been acting strangely, on edge for weeks, disconnected and uncommunicative, as if she is hiding something and Zach can’t get through to her. Arriving home from band practice, unusually, she already home and listening to an old album that the two of them enjoyed together, back in a simpler, less complicated time in their relationship. During an increasingly testy evening, that involves a discussion with the Head about whether or not a Proteus causes brain cancer, Alice is interrupted by an urgent call which she takes in private. She returns looking worried and is once again, distracted. She tells Zach that she has ‘a big decision to make’. Before going to bed, Zach asks her if he can help with the decision but she says he ‘already has’, thanking him for making ‘everything easier.’ He has no idea what she means and goes to sleep, uneasy.
+
+On waking, Zach senses that something is wrong. And he is right. Alice has disappeared. Her clothes, her possessions and every photo of them together have gone. He can’t get hold of any of her family or friends as their contact information is stored on her Proteus, not on his diePad. He manages to contact the Beimeni Centre but is told that no one by the name of Alice Nightingale has ever worked there. He logs into their constellation but her star has gone.  He calls her but finds that her number never existed. She has, thinks Zach, been ‘wiped from the planet.’ He summons The Head but he can’t find her either. He tells Zach that there are three possibilities: Alice has doesn’t want to be found, someone else doesn’t want her to be found or she never existed. 
+
+Zach calls his friend Nick, fellow band member and fan of the WGA-installed Repositories, vast underground repositories of actual film, books, art and music. Nick is a Chipper – solely for the purpose of promoting the band using memoryBank – and he puts the word out to their fans about Alice missing. 
+
+Thinking as hard as he can, Zach recalls the lyrics of the song she’d been playing the previous evening. Maybe they are significant? It may well be a farewell message and the Head is right. In searching for clues, he comes across a ‘memory stone’ which tells him to read what’s on there. File 1 is a research paper that Zach can’t fathom. It’s written in the ‘language of science’ and the Head offers to help Zach translate it and tells him that it looks like the results of her current work were ‘gonna blow the world’. Zach resolves to do ‘something sensible’ with the report.  
+
+Zach doesn’t want to believe that Alice has simply just left him. Rather, that someone has taken her and tried to erase her from the world. He decides to find her therapist, Dr Murali Genari and get Alice’s file. As he breaks into his office, Dr Genari comes up behind him and demands to know what he is doing. He is shaking but not with rage – with fear of Zach. Dr Genari turns out to be friendly and invites Zach to talk to him. Together they explore the possibilities of where Alice might have gone and the likelihood, rating her relationship satisfaction, that she has left him. During their discussion Zach is interrupted by a message on his diePad from someone called Milton. Zach is baffled as to who he is and how he knows that he is currently discussing reverse scoring. Out of the corner of his eye, he spots a ginger cat jumping down from the window ledge outside. The counsellor has to go but suggests that Zach and ‘his new friend Milton’ could try and work things out.
+
+## Packages and data
+### Packages
+
+This tutorial uses the following packages:
+
+* `gmodels` [@RN11408] to compute confidence intervals
+* `nlme` [@RN5102] to estimate the multilevel models
+* `tidyverse` [@RN11407] for general data processing
+
+These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in **RStudio**) then you need to make sure that the package has been installed by executing `install.packages("package_name")`, where *package_name* is the name of the package. If the package is already installed, then you need to reference it in your current session by executing `library(package_name)`, where *package_name* is the name of the package.
+
+### Data
+
+This tutorial has the data files pre-loaded so you shouldn't need to do anything to access the data from within the tutorial. However, if you want to play around with what you have learnt in this tutorial outside of the tutorial environment (i.e. in a stand-alone **RStudio** session) you will need to download the data files and then read them into your **R** session. This tutorial uses the following file:
+
+* [ais_rehab_growth_model.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_growth_model.csv).
+
+You can load the file in several ways:
+
+* Assuming that you save this file into the working directory, you can load it by executing:
+    - `rehab_growth_dat <- read_csv("ais_rehab_growth_model.csv")`
+    - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
+* To load the file using a standard dialogue box to navigate your file system, execute:
+    - `rehab_growth_dat <- read_csv(file.choose())`
+* You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
+    - `rehab_growth_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_growth_model.csv")`
+    - This method relies on an internet connection (and my server having not exploded!)
+
+
+## The model
+
+At the end of the book it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset relates to her second attempt. She obtained data from 141 code 1318 workers measured at four time points (baseline and 1, 6, and 12 month follow-up). Workers were randomly assigned to two arms of the trial (wait list vs. C-gene therapy) and the outcome was how much they resembled their pre-zombie state (as a percentage). Alice predicted that resemblance scores would increase over time in the gene therapy group relative to those on the wait list (because this would indicate that those workers' appearances would more closely resemble their pre-zombification state). The data are in the tibble `rehab_growth_dat` which has 564 rows (141 participants measured at each of 4 time points) and 5 variables:
+
+* **id**: Participant ID
+* **intervention**: character vector that codes which arm of the trial the participant was randomized to (wait list or gene therapy)}
+* **resemblance**: How closely their face resembled their pre-zombified state (100\% = the participants face is exactly like their original face, 0\% the person bears no resemblance to their pre-zombified face).
+* **time**: Character vector that expresses when resemblance was measured as "t0" (baseline), "t1" (1 month follow-up), "t6" (6-month follow up) and "t12" (12-month follow-up)
+* **time_num**: integer vector expressing time in months from baseline (0, 1, 6, 12) as a number.
+
+The data has a hierarchical structure because resemblance scores are nested within participants (Figure 1). We, therefore, need to model the individual differences in resemblance scores (random intercept) and the variance in the change in resemblance scores over time (random slopes). We also want to include the effect of treatment condition and the interaction it has with the change in resemblance over time.
+
+
+![Figure 1: The structure of thelongitudinal rehabilitation data](./images/ais_growth_data_hierarchy_small.png)
+
+The model we're fitting (expressed in composite form) is described by the following equation:
+
+$$
+\begin{aligned}
+\text{resemblance}_{ij} = &\big[\gamma_{00} + \gamma_{10}\text{time}_{ij} + \gamma_{01}\text{intervention}_i + \gamma_{11}(\text{intervention}_i \times \text{time}_{ij})\big] + \\
+& \big[\zeta_{0i} +\zeta_{1i}\text{time}_{ij} + \epsilon_{ij}\big]
+\end{aligned}
+$$
+
+Resemblance scores within participants (*i*) at times (*j*) are predicted from time, intervention group and their interaction, but we model the following too:
+
+$$
+\begin{aligned}
+\gamma_{00} &= \text{average baseline resemblance when intervention=0 (wait list)} \\
+\gamma_{10} &= \text{average rate of change in resemblance when intervention=0 (wait list)} \\
+\gamma_{01} &= \text{baseline difference between wait list and gene therapy} \\
+\gamma_{11} &= \text{difference in rate of change in resemblance between wait list and gene therapy groups} \\
+\zeta_{0i} &= \text{deviation of individual's baseline resemblance from group average} \\
+\zeta_{1i} &= \text{deviation of individual's rate of change in resemblance from group average} \\
+\epsilon_{ij} &= \text{portion individual’s resemblance score that is unpredicted at time } j
+\end{aligned}
+$$
+##Exploring the data
+### Preparing the data
+
+The data are already in *tidy* format, so we don't need to restructure them. Use the code box to inspect the `rehab_growth_dat` tibble.
+
+```{r inspect_dat, exercise = TRUE}
+     
+```
+
+```{r inspect_dat-solution}
+rehab_growth_dat   
+```
+
+However, the variables **id**, **intervention**, and **time** currently have the data type of character. This is fine for a lot of what we want to do (because **R** is fairly intelligent about how it treats character variables). However, for some things (like assigning contrasts) we need these variables to be defined as factors. We can do this by using the `factor()` function, which we have met before. For example, we could execute:
+
+```{r echo = TRUE, eval = FALSE}
+rehab_growth_dat$id <- factor(rehab_growth_dat$id)
+rehab_growth_dat$intervention <- factor(rehab_growth_dat$intervention)
+rehab_growth_dat$time <- factor(rehab_growth_dat$time)
+```
+
+Try this in the code box and then use the `levels()` function (e.g., `levels(rehab_growth_dat$time)`) on the three variables to see how **R** has assigned 'levels' of the factors.
+
+```{r factors, exercise = TRUE, exercise.lines = 6}
+           
+```
+
+```{r factors-solution}
+rehab_growth_dat$id <- factor(rehab_growth_dat$id)
+rehab_growth_dat$intervention <- factor(rehab_growth_dat$intervention)
+rehab_growth_dat$time <- factor(rehab_growth_dat$time)
+levels(rehab_growth_dat$id)
+levels(rehab_growth_dat$intervention)
+levels(rehab_growth_dat$time)
+```
+
+Note that levels have been assigned alphabetically. So, for **intervention** the first level is *Gene therapy* and the second is *Wait list*. This is a problem because the levels of **time** have been ordered as *t0*, *t1*, *t12* and *t6*, which are out of sequence (we'd want *t12* to be after *t6*), and for **intervention** it will make the interpretation of the model parameter (*b*) more straightforward if the base/first category is the wait list not the gene therapy group. We could use `fct_relevel()` from the `forcats` package to change the order (see **adventr_mlm**). For example, we could execute:
+
+```{r echo = TRUE, eval = FALSE}
+rehab_growth_dat$intervention <- fct_relevel(rehab_growth_dat$intervention, "Wait list")
+rehab_growth_dat$time <- fct_relevel(rehab_growth_dat$time, "t12", after = Inf)
+```
+
+In both case we re-create each factor from itself. In the case of **intervention**, by specifying only *Wait list* we invoke the default behaviour of moving this level to the first level (which simply swaps the order or the two levels). In the case of **time** we use `after = Inf` to move *t12* to the end of the list. Use the code box to execute these commands, but also use `levels` to inspect the order of levels of the two variables as we did before.
+
+```{r factor_2, exercise = TRUE}
+     
+```
+
+```{r factor_2-solution}
+rehab_growth_dat$intervention <- fct_relevel(rehab_growth_dat$intervention, "Wait list")
+rehab_growth_dat$time <- fct_relevel(rehab_growth_dat$time, "t12", after = Inf)
+levels(rehab_growth_dat$intervention)
+levels(rehab_growth_dat$time)
+```
+
+You should see that *Wait list* is now the first level of **intervention** and that the levels of time are now in the correct order of *t0*, *t1*, *t6*, and *t12*.
+
+### Descriptive statistics
+
+Using what you've learnt in previous tutorials, create a tibble called `growth_summary` containing the mean resemblance scores (and their confidence intervals) at each time point and within each treatment condition.
+
+`r colFmt("Hint: Use the variable called time, for time, and if you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels", cbGreen)`
+
+```{r desc, exercise = TRUE, exercise.lines = 6, exercise.setup = "prepare-data"}
+             
+```
+
+```{r desc-solution}
+growth_summary <-  rehab_growth_dat %>% group_by(intervention, time) %>% summarize(
+  mean = mean(resemblance),
+  ci_low = ci(resemblance)["CI lower"],
+  ci_upp = ci(resemblance)["CI upper"]
+)
+growth_summary              
+```
+
+
+### Plotting the data
+
+Use the code box below to create a plot with **time_num** on the *x*-axis and **resemblance** on the *y*-axis, and a line that summarizes the linear trend over time for each intervention condition as a separate colour. Some tips to help you out:
+
+* Include `colour = intervention, fill = intervention` in the initial `ggplot()` function to ensure that both the lines (colour) and their confidence intervals (fill) are coloured by intervention group.
+* Include `position = position_jitter(width = 0.1, height = 0.1)` within `geom_point()` to avoid over plotting of the raw data.
+* Include `scale_x_continuous(breaks = c(0, 1, 6, 12), labels = c("0", "1", "6", "12"))` to set breaks at each of the 4 time points and to assign them labels
+* Include `colour = "Intervention", fill = "Intervention"` in the `labs()` function to avoid getting separate legends for the colour and fill aesthetics.
+
+```{r lin_plot, exercise = TRUE, exercise.lines = 8, exercise.setup = "prepare-data"}
+     
+               
+```
+
+```{r lin_plot-solution}
+growth_plot <- ggplot(rehab_growth_dat, aes(time_num, resemblance, colour = intervention, fill = intervention))
+growth_plot +
+  geom_point(size = 1, position = position_jitter(width = 0.1, height = 0.1), alpha = 0.6) + 
+  geom_smooth(method = "lm", alpha = 0.3) +
+  scale_x_continuous(breaks = c(0, 1, 6, 12), labels = c("0", "1", "6", "12")) +
+  scale_y_continuous(breaks = seq(0, 90, 10)) +
+  coord_cartesian(ylim = c(0, 90), xlim = c(0,12)) + 
+  labs(x = "Time from baseline (months)", y = "Resemblance (%)", colour = "Intervention", fill = "Intervention") +
+  theme_bw()
+```
+
+Now let's imagine we're treating time as a categorical variable (yuk!). Use the code box below to create a plot with **time** on the *x*-axis and **resemblance** on the *y*-axis, with error bars representing means and their confidence intervals. Some tips to help you out:
+
+* Include `position = position_dodge(width = 0.5)` in the `stat_summary` function to avoid over plotting.
+* The confidence intervals will be clearer if you include `coord_cartesian(ylim = c(20, 60))` to focus in on that part of the *y*-axis.
+
+
+```{r err_bar, exercise = TRUE, exercise.lines = 8, exercise.setup = "prepare-data"}
+     
+               
+```
+
+```{r err_bar-solution}
+growth_mean_plot <- ggplot(rehab_growth_dat, aes(time, resemblance, colour = intervention))
+growth_mean_plot +
+  stat_summary(fun.data = "mean_cl_normal", size = 1, position = position_dodge(width = 0.5), alpha = 0.6) +
+  scale_y_continuous(breaks = seq(20, 60, 5)) +
+  coord_cartesian(ylim = c(20, 60)) + 
+  labs(x = "Time from baseline (months)", y = "Resemblance (%)", colour = "Intervention") +
+  theme_bw()
+```
+
+## Fitting a growth model
+###Modelling time
+
+Traditionally many people would treat the design of this study as, what's known as, a *mixed design*. It is so-called because the predictors (independent variables) are a 'mix' of repeated measures and independent measures. Specifically:
+
+* **time** is a repeated measure because every zombie provided resemblance scores at each time point.
+* **intervention** is an independent measure because each zombie was assigned to only one of the two arms of the trial (they received gene therapy or wait list but not both)
+
+The RM-ANOVA approach can be used to analyse these 'mixed' designs. Like the repeated-measures examples we've seen before (e.g., **adventr_16_rm**) the RM-ANOVA approach is a restricted model in which:
+
+* Effects are constant across participants. That is, we expect overall levels of the outcome to differ across participants, but not the effect that our experimental manipulation has. In multilevel language this is akin to assuming a random intercept but a fixed slope. In our specific example, this means that we assume that the change in resemblance over time is the same for all participants.
+* Compound symmetry: it is generally assumed that the covariances between different levels of the repeated-measures variable should be equal. In this example, that means that the covariance between resemblance scores at baseline and 1 month, should be the same as between baseline and 6 months and 12 months, and between 1 month and 6 months, 1 month and 12 months and 6 months and 12 months. Sometimes the less-restrictive assumption of sphericity is made, but let's stick with compound symmetry for now.
+
+When we're dealing with change over time, it also means that we're treating time points as equally spaced. That is, we treat time as a factor where different time points are different categories. Therefore, in our data we'd have categories of *t0*, *t1*, *t6* and *t12*. The fact that *t0* and *t1* were 1 month apart, but *t6* and *t12* were 6 months apart is ignored. The categories are assumed to be equally spaced. Clearly it's better if we represent time along a continuum that represents the actual temporal spacing of events than to lose information by converting this to categories. The variable **time_num** represents time in this way as months from baseline. As such it contains values of 0 (baseline), 1 (1 month form baseline), 6 (6 months from baseline) and 12 (12 months from baseline). Growth models allow us to treat time in this flexible way by using a numeric variable to represent time rather than a factor (i.e. categories).
+
+### Modelling time in **RStudio**
+
+To fit the model we use the `lme()` function, because we want to model the dependency between scores over time. This function is explained in the tutorial **adventr_mlm**, just to recap it takes the following general form (I've retained only the key options):
+
+`new_object <- lme(outcome ~ predictors, random = formula, data = tibble, method = "REML", na.action = na.fail)`
+
+* `new_model`: an object created that contains information about the model. We can get summary statistics for this model by executing the name of the model.
+* `outcome`: the variable that contains the scores for the outcome measure (in this case **resemblance**).
+* `predictor`: the variable that contains information about the time at which resemblance scores were measured (in this case **time_num**).
+* `random`: defines the random parts of the model. This takes a formula in the style `~ predictor|context`. In this case our context is participants, which is represented by the variable **id**. If we want only to let intercepts vary by participant we could use `~ 1|id`, but we also want to let the effect of **time_num** vary by participant so we'd use `~ time_num|id`.
+* `tibble`: the name of the tibble containing the data (in this case `rehab_growth_dat`).
+* `method`: defines which estimation method is used. By default restricted maximum likelihood is used (REML), but if you want to compare models you should override the default and use maximum likelihood (`method = "ML"`).
+* `na.action`: If you have complete data (as we have here) exclude this option, but if you have missing values (i.e., ‘NA’s in the data frame) then by default the model will fail, so include `na.action = na.exclude` to exclude cases with missing values.
+
+We might want to test formally whether the effect of time varies by individuals (i.e., a random slope of time), in which case we can specify a random intercept model, then add the random slope, and compare the two. We can do this as:
+
+```{r echo = TRUE, eval = FALSE}
+rehab_ri <- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_dat, method = "ML")
+rehab_rs <- update(rehab_ri, random = ~ time_num|id)
+anova(rehab_ri,rehab_rs)
+```
+
+The first line creates an object called `rehab_ri` which predicts resemblance scores from the effect of **time_num** and with intercepts allowed to vary across participants (I appended `_ri` to the name to remind me it is a *r*andom *i*ntercepts). The second line uses the `update()` function to update the model we just created (`rehab_ri`) to include a random slope of time (we did this by changing the random part of the model to be `random = ~ time_num|id`). I named this model `rehab_rs` with the `_rs` to remind me it is a *r*andom *s*lopes model. The final line uses the `anova()` function to compare the two models. Try executing these commands in the code box.
+
+```{r lme_1, exercise = TRUE}
+     
+```
+
+```{r lme_1-solution}
+rehab_ri <- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_dat, method = "ML")
+rehab_rs <- update(rehab_ri, random = ~ time_num|id)
+anova(rehab_ri,rehab_rs)
+```
+
+The output shows that adding the random slope of **time_num** (i.e., allowing the change in resemblance scores over time to differ across participants) significantly improves the fit of the model, $\chi^2(2) = 36.52, p < 0.0001$. This finding should not surprise us given that we'd expect different changes for zombies who had gene therapy to those on the wait list.
+
+We can also model more complex changes over time, such as a second-order polynomial or quadratic trend (i.e. a curvilinear trend). To do this, we can replace the predictor **time_num** with `poly(time_num, 2)`. This action creates a power polynomial up to the order of 2 (because we put 2 in the function). In effect this creates two variables that represent linear (order 1) and quadratic (order 2) trends over time. The advantage of this method is that the resulting predictors for the two trends are independent from each other. We can again use `update()` to create a new model (`rehab_quad`) that adds the quadratic term to the previous, random-slope, model (`rehab_rs`):
+
+```{r echo = TRUE, eval = FALSE}
+rehab_quad <- update(rehab_rs, .~ poly(time_num, 2))
+anova(rehab_ri,rehab_rs, rehab_quad)
+```
+
+The first line creates an object called `rehab_quad` using the `update()` function to update the random slope model (`rehab_rs`) to include the quadratic trend of time. We did this by changing the formula so that it included the previous outcome but **not** any of the previous predictors (that's what the `.~` does, and note that there is no dot after the tilde, which means that we're excluding all predictors from the model we're updating). We add the linear and quadratic trends using the `poly()` function (`poly(time_num, 2)`). I named this model `rehab_quad` with the `_quad` to remind me it contains the quadratic trend of time. The second line uses the `anova()` function to compare the three models we have created. Try executing these commands in the code box.
+
+```{r lme_2-setup}
+rehab_ri <- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_dat, method = "ML")
+rehab_rs <- lme(resemblance ~ time_num, random = ~  time_num|id, data = rehab_growth_dat, method = "ML")
+```
+
+```{r lme_2, exercise = TRUE}
+     
+```
+
+```{r lme_2-solution}
+rehab_quad <- update(rehab_rs, .~ poly(time_num, 2))
+anova(rehab_ri,rehab_rs, rehab_quad)
+```
+
+The output shows that adding the quadratic trend of **time_num** (i.e., allowing a curvilinear change in resemblance scores over time significantly improves the fit of the model, $\chi^2(1) = 8.67, p = 0.0032$. This finding suggests we should retain this curvilinear trend.
+
+### Modelling the effect of the intervention
+
+We expect the change over time to be moderated by the intervention condition (we'd predict greater change for those in the gene therapy group than the wait list. In effect we're predicting an interaction between **intervention** and **time_num**. To test this interaction we need to add the fixed effect of **intervention** as a predictor and also its interaction with **time_num**. Remember that we have two terms representing time so we need to include both of their interactions with **intervention**. To specify an interaction in **R** we use a colon. For example, to specify the interaction between **time_num** and **intervention** we would use `time_num:intervention`. We, therefore, need to add these terms to the model:
+
+* `intervention`, which is the main effect of intervention
+* `poly(time_num, 2):intervention`, which specifies the intervention × linear trend and intervention × quadratic trend interactions
+
+We could add each term individually and compare to previous models, but this doesn't make sense because to evaluate the interactions we need the main effect of **intervention** in the model, so let's add them all in one hit.
+
+```{r echo = TRUE, eval = FALSE}
+rehab_mod <- update(rehab_quad, .~. + intervention + poly(time_num, 2):intervention)
+anova(rehab_ri,rehab_rs, rehab_quad, rehab_mod)
+```
+
+The first line creates an object called `rehab_mod` using the `update()` function to update the quadratic trend model (`rehab_quad`) to include the effects of **intervention** and its interactions with time. We did this by changing the formula so that it included all previous outcomes and predictors (that's what the `.~.` does) but adding in the new effects (`+ intervention + poly(time_num, 2):intervention`). I named this model `rehab_mod`. The second line uses the `anova()` function to compare the three models we have created. Try executing these commands in the code box.
+
+```{r lme_3-setup}
+rehab_ri <- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_dat, method = "ML")
+rehab_rs <- lme(resemblance ~ time_num, random = ~  time_num|id, data = rehab_growth_dat, method = "ML")
+rehab_quad <- lme(resemblance ~ poly(time_num, 2), random = ~  time_num|id, data = rehab_growth_dat, method = "ML")
+```
+
+```{r lme_3, exercise = TRUE}
+     
+```
+
+```{r lme_3-solution}
+rehab_mod <- update(rehab_quad, .~. + intervention + poly(time_num, 2):intervention)
+anova(rehab_ri,rehab_rs, rehab_quad, rehab_mod)
+```
+
+The output shows that adding the main effect of **intervention** and its interactions with the trends over time (i.e., allowing the change in resemblance scores over time to be moderated by the treatment condition) significantly improves the fit of the model, $\chi^2(3) = 49.37, p < 0.0001$. We can inspect the model by using `anova()` to get *F*-statistics for each fixed effect, `summary()` to see the model parameters and their significance tests, and `intercals()` to get the confidence intervals for the parameters for the fixed effects. We have used these functions in **adventr_mlm**.
+
+```{r echo = TRUE, eval = FALSE}
+anova(rehab_mod)
+summary(rehab_mod)
+intervals(rehab_mod, which = "fixed")
+```
+
+Try these commands in the code box.
+
+```{r sum_rehab-setup}
+rehab_mod <- lme(resemblance ~ poly(time_num, 2) + intervention + poly(time_num, 2):intervention, random = ~  time_num|id, data = rehab_growth_dat, method = "ML")
+```
+
+```{r sum_rehab, exercise = TRUE}
+     
+```
+
+```{r sum_rehab-solution}
+anova(rehab_mod)
+summary(rehab_mod)
+intervals(rehab_mod, which = "fixed")
+```
+
+The results of the `anova()` command, show significant effects for the overall linear and quadratic change over time, *F*(2, 419) = 7.30, *p* = 0.0008 and the interaction between intervention condition and the change over time, *F*(1, 419) = 28.03, *p* < 0.001. The main effect of **intervention** was not significant, *F*(1, 419) = 0.22, *p* = 0.641. As such the main hypothesis was supported that the change over time would be different for those in the gene therapy group compared to the wait list. The graph (see earlier) tells us that resemblance scores increased over time in the gene therapy group by decreased for the wait list.
+
+The model summary and confidence intervals shows that:
+
+* There was significant linear change in resemblance scores over time, $\gamma = 67.21 [47.34, 87.08], p < 0.001$
+* There was significant quadratic change in resemblance scores over time, $\gamma = -30.27 [-45.70, -14.84], p < 0.001$.
+* There was no significant main effect of intervention group, $\gamma = -2.80 [-5.97, 0.37], p = 0.084$.
+* The linear change in resemblance scores over time was significantly different across intervention groups, $\gamma = -104.40 [-133.23, -75.58], p < 0.001$.
+* The quadratic change in resemblance scores over time was significantly different across intervention groups, $\gamma = 27.82 [5.43, 50.21], p = 0.016$.
+
+
+## Optional learning exercise
+
+This section is entirely unnecessary other than as a learning exercise to demonstrate how the multilevel model approach to repeated measures designs is a more flexible version of the analysis of variance approach (which, I'll refer to as RM-ANOVA). Skip to the end if you're not interested.
+
+Anyway, in case, you come across a mixed design and you're unconvinced by using a multilevel model (or you have a small sample) I'll show you how to analyse the current example using RM-ANOVA. We'd execute (trust me):
+
+```{r rm_anova, exercise = TRUE, exercise.setup = "prepare-data"}
+rehab_aov <- aov(resemblance ~ time*intervention + Error(id), data = rehab_growth_dat)
+summary(rehab_aov)
+```
+
+Note that we use the `aov()` function (which is essentially the `lm()` function but spews the model information out in a more *F*-statistic based way). We specify the model as `resemblance ~ time*intervention`, which means that we're predicting resemblance scores from the effects of **time**, **intervention** and the interaction between the two **time:intervention**. We also include `+ Error(id)` in the formula to tell **R** to compute an error term from within the **id** variable. Execute the code in the box and look at the output.
+
+To fit the same model using a multilevel approach let's start with a random slopes model. To mimic what the ANOVA does (i.e. treat time as a categorical variable) we'll use **time** rather than **time_num** (which we used in our growth models). We'd define this model as in the code box:
+
+```{r lme_anova, exercise = TRUE, exercise.setup = "prepare-data"}
+rehab_lme <- lme(resemblance ~ time*intervention, random = ~ intervention|id, data = rehab_growth_dat)
+anova(rehab_lme)
+```
+
+Execute the code in the box and see that the results of the *F*-statistics and their significance values are not too dissimilar to the RM-ANOVA model, but not exactly the same. The growth model allows the effect of **intervention** to vary across participants, whereas RM-ANOVA does not. So, let's restrict the model so that it retains a random intercept (overall recall can vary across participants) but not a random slope (the effect of **intervention** is constant across participants). We achieve this restriction by changing `random = ~ intervention|id` to `random = ~ 1|id` (I've also added the suffix `_ri` for *r*andom *i*ntercept):
+
+```{r ri_anova, exercise = TRUE, exercise.setup = "prepare-data"}
+rehab_lme_ri <- lme(resemblance ~ time*intervention, random = ~ 1|id, data = rehab_growth_dat)
+anova(rehab_lme_ri)
+```
+
+Execute the code and see that the results are basically the same as the RM-ANOVA now (probably because there wasn't a major deviation from the assumption of compound symmetry). The second restriction is to assume that covariances across conditions are equal. We can add this restriction by including the statement `correlation = corCompSymm(form = ~ intervention|id)` in the model above. This argument sets the covariance structure to have compound symmetry across the **intervention** variable (which is nested within participants). I'll change the suffix to this model to `_cs` (for *c*ompound *s*ymmetry):
+
+```{r cs_anova, exercise = TRUE, exercise.setup = "prepare-data"}
+rehab_lme_cs<- lme(resemblance ~ time*intervention, random = ~ 1|id, data = rehab_growth_dat, correlation = corCompSymm(form = ~ intervention|id))
+anova(rehab_lme_cs)
+```
+
+Execute the code and see that in this case this additional restriction hasn't affected the *F*-statistics and their significance values, which again match the RM-ANOVA.
+
+
+## Other resources
+
+### Statistics
+
+* The tutorials typically follow examples described in detail in @RN10163, so for most of them there's a thorough account in there. You might also find @RN4832 useful for the **R** stuff.
+* There are free lectures and screen casts on my [YouTube channel](https://www.youtube.com/user/ProfAndyField/)
+* There are free statistical resources on my website [www.discoveringstatistics.com](http://www.discoveringstatistics.com)
+
+### R
+
+* Information on using [ggplot2](http://ggplot2.tidyverse.org/) 
+* [R for data science](http://r4ds.had.co.nz/index.html) is the open-access version of the book by tidyverse creator Hadley Wickham [@RN11404]. It covers the *tidyverse* and data management.
+* [ModernDive](http://moderndive.com/index.html) is an open-access textbook on **R** and **RStudio**
+* [RStudio cheat sheets](https://www.rstudio.com/resources/cheatsheets/)
+* [RStudio list of online resources](https://www.rstudio.com/online-learning/)
+* [SwirlStats](http://swirlstats.com/students.html) is a package for *R* that launches a bunch of interactive tutorials.
+
+## References

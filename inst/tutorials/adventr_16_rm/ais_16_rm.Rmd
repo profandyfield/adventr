@@ -281,7 +281,7 @@ implant_tidy$id
 implant_tidy$interference
 ```
 
-Note that levels have been assigned alphabetically. So, for **interference** the first level is *no_interference*, the second is *verbal* and the last *visual*. This is a sensible order for us, but if it wasn't we could use `fct_relevel()` to change the order.
+Note that levels have been assigned alphabetically. So, for **interference** the first level is *no_interference*, the second is *verbal* and the last *visual*. This is a sensible order for us, but if it wasn't we could use `fct_relevel()` from the `forcats` package to change the order (see **adventr_mlm**).
 
 ## Exploring the data
 ### Descriptive statistics

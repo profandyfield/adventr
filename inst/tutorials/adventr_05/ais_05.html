@@ -264,7 +264,7 @@ strength_sum</code></pre>
 <h2>Plotting grouped data</h2>
 <div id="section-boxplots" class="section level3">
 <h3>Boxplots</h3>
-<p>Figure 5.6 in <em>An adventure in statistics</em> shows a boxplot of <strong>footspeed</strong> split by **employee*This is easy to create in <code>ggplot</code> using the <code>geom_boxplot()</code> function. We could set up the plot with this command:</p>
+<p>Figure 5.6 in <em>An adventure in statistics</em> shows a boxplot of <strong>footspeed</strong> split by <strong>employee</strong>. This is easy to create in <code>ggplot</code> using the <code>geom_boxplot()</code> function. We could set up the plot with this command:</p>
 <pre class="r"><code>speed_box &lt;- ggplot(jig_dat, aes(employee, footspeed))
 speed_box +
   geom_boxplot() +

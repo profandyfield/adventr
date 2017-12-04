@@ -308,3 +308,23 @@
 #' @source \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 
 "rehab_growth_dat"
+
+
+#' Zombie recovery data
+#'
+#' A dataset not from Field, A. P. (2016). An adventure in statistics: the reality enigma. London: Sage, but continuing the theme of the story. At the end of the book
+#' it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset relates to her third attempt. It contains data from 400 code 1318 workers.
+#' Workers were randomly assigned to two arms of a trial (C-gene therapy and C-gene therapy with a toggle switch). They were also given one of five different doses of C-gene: 0 (no dose) or 1, 2, 3, or 4 doses.
+#' The outcome was whether (or not) the worker had fully recovered after the treatment.
+#'
+#'
+#' @format A tibble with 400 rows and 4 variables:
+#' \describe{
+#'   \item{id}{Participant ID}
+#'   \item{treatment}{character vector that codes which arm of the trial the participant was randomized to (no toggle switch or toggle switch)}
+#'   \item{dose}{The dose of C-gene used during treatment (0 doses, 1, 2, 3, or 4 doses)}
+#'   \item{recovered}{Character vector that expresses whether or not the participant had recovered following treatment (Recovered or Not Recovered)}
+#' }
+#' @source \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
+
+"recovery_dat"

@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Andy Field" />
+
+
+<meta name="progressive" content="true" />
+<meta name="allow-skip" content="false" />
+
+<title>AAiR: Categorical outcomes</title>
+
+
+<!-- highlightjs -->
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+</head>
+
+<body>
+
+
+
+<div class="pageContent band">
+<div class="bandContent page">
+
+<div class="topics">
+
+<div class="tutorial-exercise-support" data-label="prepare-data" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>recovery_dat$id &lt;- as_factor(recovery_dat$id)
+recovery_dat$treatment &lt;- as_factor(recovery_dat$treatment) %&gt;% fct_relevel(&quot;No toggle switch&quot;)
+recovery_dat$recovered &lt;- as_factor(recovery_dat$recovered) %&gt;% fct_relevel(&quot;Not recovered&quot;)
+
+recovery_freq &lt;- recovery_dat %&gt;%
+  group_by(treatment, dose, recovered) %&gt;%
+  summarize(n = n()) %&gt;% 
+  group_by(treatment, dose) %&gt;% 
+  mutate(
+    rel_freq = n / sum(n),
+    perc = rel_freq*100
+  )
+
+recovery_mod&lt;- glm(recovered ~ treatment*dose, data = recovery_dat, family = binomial())</code></pre>
+</div>
+<div id="section-an-adventure-in-r-categorical-outcomes" class="section level1">
+<h1>An Adventure in R: Categorical outcomes</h1>
+<div id="section-overview" class="section level2">
+<h2>Overview</h2>
+<p>This tutorial is one of a series that accompanies <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> <span class="citation">(Field 2016)</span> and <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(Field, Miles, and Field 2012)</span> by <a href="https://en.wikipedia.org/wiki/Andy_Field_(academic)">me</a>. These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>,<a href="#section-fn1" class="footnoteRef" id="section-fnref1"><sup>1</sup></a></p>
+<ul>
+<li>Who is the tutorial aimed at?
+<ul>
+<li>Primarily students enrolled on my <em>Linear models in statistics</em> module at the University of Sussex, but anyone teaching from or reading <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> or <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(Field, Miles, and Field 2012)</span> may find them useful.</li>
+</ul></li>
+<li>What is covered?
+<ul>
+<li>This tutorial looks at how to fit a linear model with one and more predictor variables when the outcome is a categorical dichotomy. In other words it introduces generalized linear models (specifically logistic regression). We look at robust variants of the model. It would be a useful tutorial as a follow up to chapter 17 of <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a>.</li>
+<li>This tutorial <em>does not</em> teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else’s)</li>
+<li>The aim of this tutorial is to augment the theory that you already know by guiding you through fitting linear models using <strong>R</strong> and <strong>RStudio</strong> and asking you questions to test your knowledge along the way.</li>
+</ul></li>
+</ul>
+</div>
+<div id="section-story-precis" class="section level2">
+<h2>Story précis</h2>
+<div id="section-why-a-precis" class="section level3">
+<h3>Why a précis?</h3>
+<p>Because these tutorials accompany my book <em>An adventure in statistics</em>, which uses a fictional narrative to teach the statistics, some of the examples might not make sense unless you know something about the story. For those of you who don’t have the book I begin each tutorial with a précis of the story. If you’re not interested then fair enough - click past this section.</p>
+</div>
+<div id="section-general-context-for-the-story" class="section level3">
+<h3>General context for the story</h3>
+<p>It is the future. Zach, a rock musician and Alice, a geneticist, who have been together since high school live together in Elpis, the ‘City of Hope’.</p>
+<p>Zach and Alice were born in the wake of the Reality Revolution which occurred after a Professor Milton Gray invented the Reality Prism – a transparent pyramid worn on the head – that brought honesty to the world. Propaganda and media spin became unsustainable, religions collapsed, advertising failed. Society could no longer be lied to. Everyone could know the truth about anything that they could look at. A gift, some said, to a previously self-interested, self-obsessed society in which the collective good had been eroded.</p>
+<p>But also a curse. For, it soon became apparent that through this Reality Prism, people could no longer kid themselves about their own puffed-up selves as they could see what they were really like – by and large, pretty ordinary. And this caused mass depression. People lost faith in themselves. Artists abandoned their pursuits, believing they were untalented and worthless.</p>
+<p>Zach and Alice have never worn a Reality Prism and have no concept of their limitations. They were born after the World Governance Agency (WGA) destroyed all Reality Prisms, along with many other pre-revolution technologies, with the aim of restoring community and well-being. However, this has not been straightforward and in this post-Prism world, society has split into pretty much two factions</p>
+<ul>
+<li>The Chippers who have had WiFi-enabled chips implanted into their brains, enabling them to record and broadcast what they see and think in real time; upload memories for future generations into a newly-created memoryBank and live-stream music and films directly into their brains.</li>
+<li>The Clocktarians, followers of the old pre-Prism ways who use steam punk style technologies, who have elected not to have chips in their brains, regarded by the Chippers as backward-looking stuck in a ‘clockwork, Victorian society’.</li>
+</ul>
+<p>Everyone has a star, a limitless space on which to store their digital world.</p>
+<p>Zach and Alice are Clocktarians. Their technology consists mainly of:</p>
+<ul>
+<li>A Proteus, a device made from programmable matter that can transform shape and function simply by the owners’ wishes. Zach calls his a diePad, in the shape of a tombstone in an ironic reference to an over-reliance on technology at the expense of memory.</li>
+<li>A Reality Checker, a clockwork mechanism that, at the point of critical velocity, projects an opaque human head that is linked to everything and can tell you anything. Every head has a personality and Zach’s is a handsome, laid back ‘dude’ who is like an electronic friend, who answers questions if he feels like it and often winds Zach up by giving him false information. And he often flirts with Alice.</li>
+</ul>
+</div>
+<div id="section-main-protagonists" class="section level3">
+<h3>Main Protagonists</h3>
+<ul>
+<li>Zach
+<ul>
+<li>Rock musician in band called The Reality Enigma.</li>
+<li>Spellbinding performer, has huge fan-base.</li>
+<li>Only people living in Elpis get to see The Reality Enigma in the flesh. Otherwise all performances are done via an oculus riff, a multisensory headset for experiencing virtual gigs.</li>
+<li>Zach’s music has influenced and changed thousands of lives.</li>
+<li>Wishes he had lived pre-Revolutionary times, the turn of the 21st Century, a golden age for music when bands performed in reality at festivals.</li>
+<li>Kind, gentle and self-doubting.</li>
+<li>Believes science and maths are dull and uninspiring. Creates a problem between him and Alice as she thinks that because he isn’t interested in science, he isn’t interested in her. Leads to lots of misunderstandings between them.</li>
+</ul></li>
+<li>Alice
+<ul>
+<li>Shy, lonely, academically-gifted – estranged from the social world until she met Zach in the college library.</li>
+<li>Serious scientist, works at the Beimeni Centre of Genetics.</li>
+<li>At 21, won the World Science Federation’s Einstein Medal for her genetics research</li>
+<li>Desperately wants Zach to get over his fear of science so he can open his mind to the beauty of it.</li>
+</ul></li>
+</ul>
+</div>
+<div id="section-how-zachs-adventure-begins" class="section level3">
+<h3>How Zach’s adventure begins</h3>
+<p>Alice has been acting strangely, on edge for weeks, disconnected and uncommunicative, as if she is hiding something and Zach can’t get through to her. Arriving home from band practice, unusually, she already home and listening to an old album that the two of them enjoyed together, back in a simpler, less complicated time in their relationship. During an increasingly testy evening, that involves a discussion with the Head about whether or not a Proteus causes brain cancer, Alice is interrupted by an urgent call which she takes in private. She returns looking worried and is once again, distracted. She tells Zach that she has ‘a big decision to make’. Before going to bed, Zach asks her if he can help with the decision but she says he ‘already has’, thanking him for making ‘everything easier.’ He has no idea what she means and goes to sleep, uneasy.</p>
+<p>On waking, Zach senses that something is wrong. And he is right. Alice has disappeared. Her clothes, her possessions and every photo of them together have gone. He can’t get hold of any of her family or friends as their contact information is stored on her Proteus, not on his diePad. He manages to contact the Beimeni Centre but is told that no one by the name of Alice Nightingale has ever worked there. He logs into their constellation but her star has gone. He calls her but finds that her number never existed. She has, thinks Zach, been ‘wiped from the planet.’ He summons The Head but he can’t find her either. He tells Zach that there are three possibilities: Alice has doesn’t want to be found, someone else doesn’t want her to be found or she never existed.</p>
+<p>Zach calls his friend Nick, fellow band member and fan of the WGA-installed Repositories, vast underground repositories of actual film, books, art and music. Nick is a Chipper – solely for the purpose of promoting the band using memoryBank – and he puts the word out to their fans about Alice missing.</p>
+<p>Thinking as hard as he can, Zach recalls the lyrics of the song she’d been playing the previous evening. Maybe they are significant? It may well be a farewell message and the Head is right. In searching for clues, he comes across a ‘memory stone’ which tells him to read what’s on there. File 1 is a research paper that Zach can’t fathom. It’s written in the ‘language of science’ and the Head offers to help Zach translate it and tells him that it looks like the results of her current work were ‘gonna blow the world’. Zach resolves to do ‘something sensible’ with the report.</p>
+<p>Zach doesn’t want to believe that Alice has simply just left him. Rather, that someone has taken her and tried to erase her from the world. He decides to find her therapist, Dr Murali Genari and get Alice’s file. As he breaks into his office, Dr Genari comes up behind him and demands to know what he is doing. He is shaking but not with rage – with fear of Zach. Dr Genari turns out to be friendly and invites Zach to talk to him. Together they explore the possibilities of where Alice might have gone and the likelihood, rating her relationship satisfaction, that she has left him. During their discussion Zach is interrupted by a message on his diePad from someone called Milton. Zach is baffled as to who he is and how he knows that he is currently discussing reverse scoring. Out of the corner of his eye, he spots a ginger cat jumping down from the window ledge outside. The counsellor has to go but suggests that Zach and ‘his new friend Milton’ could try and work things out.</p>
+</div>
+</div>
+<div id="section-packages-and-data" class="section level2">
+<h2>Packages and data</h2>
+<div id="section-packages" class="section level3">
+<h3>Packages</h3>
+<p>This tutorial uses the following packages:</p>
+<ul>
+<li><code>effects</code> <span class="citation">(Fox 2003)</span> to get plots for logistic regression models</li>
+<li><code>forcats</code> <span class="citation">(Wickham 2017a)</span> for processing categorical variables</li>
+<li><code>gmodels</code> <span class="citation">(Warnes et al. 2015)</span> to compute confidence intervals</li>
+<li><code>tidyverse</code> <span class="citation">(Wickham 2017b)</span> for general data processing</li>
+</ul>
+<p>These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in <strong>RStudio</strong>) then you need to make sure that the package has been installed by executing <code>install.packages(&quot;package_name&quot;)</code>, where <em>package_name</em> is the name of the package. If the package is already installed, then you need to reference it in your current session by executing <code>library(package_name)</code>, where <em>package_name</em> is the name of the package.</p>
+</div>
+<div id="section-data" class="section level3">
+<h3>Data</h3>
+<p>This tutorial has the data files pre-loaded so you shouldn’t need to do anything to access the data from within the tutorial. However, if you want to play around with what you have learnt in this tutorial outside of the tutorial environment (i.e. in a stand-alone <strong>RStudio</strong> session) you will need to download the data files and then read them into your <strong>R</strong> session. This tutorial uses the following file:</p>
+<ul>
+<li><a href="http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_log.csv">ais_rehab_log.csv</a>.</li>
+</ul>
+<p>You can load the file in several way:</p>
+<ul>
+<li>Assuming that you save this file into the working directory, you can load it by executing:
+<ul>
+<li><code>recovery_dat &lt;- read_csv(&quot;ais_rehab_log.csv&quot;)</code></li>
+<li>If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called <em>adventr_02</em>)</li>
+</ul></li>
+<li>To load the file using a standard dialogue box to navigate your file system, execute:
+<ul>
+<li><code>recovery_dat &lt;- read_csv(file.choose())</code></li>
+</ul></li>
+<li>You can load the file direct from the URL (i.e., you don’t need to download it first) by executing:
+<ul>
+<li><code>recovery_dat &lt;- read_csv(&quot;http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_log.csv&quot;)</code></li>
+<li>This method relies on an internet connection (and my server having not exploded!)</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="section-recovered-zombies-a-generalized-linear-model" class="section level2">
+<h2>Recovered zombies! A generalized linear model</h2>
+<div id="section-the-model" class="section level3">
+<h3>The model</h3>
+<p>At the end of the story it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset relates to her final attempt. It contains data from 400 code 1318 workers. Workers were randomly assigned to two arms of a trial (C-gene therapy and C-gene therapy with a toggle switch). They were also given one of five different doses of C-gene: 0 (no dose) or 1, 2, 3, or 4 doses. The outcome was whether (or not) the worker had fully recovered after the treatment. The data are in the tibble <code>recovery_dat</code>, which has five variables:</p>
+<ul>
+<li><strong>id</strong>: Participant ID</li>
+<li><strong>treatment</strong>: character vector that codes which arm of the trial the participant was randomized to (no toggle switch or toggle switch)</li>
+<li><strong>dose</strong>: The dose of C-gene used during treatment (0 doses, 1, 2, 3, or 4 doses)</li>
+<li><strong>recovered</strong>: Character vector that expresses whether or not the participant had recovered following treatment (Recovered or Not Recovered)</li>
+</ul>
+<p>The model we’re fitting is described by the following equation:</p>
+<p><span class="math display">\[
+\begin{aligned}
+p(Y_i) &amp;= \frac{1}{1 + e^{-(b_0 + b_1X_{1i} + b_2X_{2i} + b_3X_{1i}X_{2i})}} \\
+p(\text{recovered}_i) &amp;= \frac{1}{1 + e^{-(b_0 + b_1\text{treatment}_i + b_2\text{dose}_i + b_3\text{treatment}\times\text{dose}_i)}} \\
+\end{aligned}
+\]</span></p>
+</div>
+</div>
+<div id="section-exploring-the-data" class="section level2">
+<h2>Exploring the data</h2>
+<div id="section-preparing-the-data" class="section level3">
+<h3>Preparing the data</h3>
+<p>The data are already in <em>tidy</em> format, so we don’t need to restructure them. Use the code box to inspect the <code>recovery_dat</code> tibble.</p>
+<div class="tutorial-exercise" data-label="inspect_dat" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="inspect_dat-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>recovery_dat  </code></pre>
+</div>
+<p>However, the variables <strong>id</strong>, <strong>treatment</strong>, and <strong>recovered</strong> currently have the data type of character. This is fine (because <strong>R</strong> is fairly intelligent about how it treats character variables). However, it does obscure how dummy coding will be applied. It’s generally good practice to be explicit about which category you want to act as a baseline (i.e. be coded as zero). One way to achieve this is to convert these variables to factors and relevel them such that the baseline category is first. In previous tutorials we have done this using the <code>factor()</code> function, but for variety, we can also use the <code>as_factor()</code> function from the <code>forcats</code> package (which has a more <em>tidyverse</em> flavour). We also want to specify the baseline category for each factor. In previous tutorials we did this in two steps, but we can combine the tasks using a pipe:</p>
+<pre class="r"><code>library(forcats); library(tidyverse) #Not nessesary inside this tutorial
+
+recovery_dat$id &lt;- as_factor(recovery_dat$id)
+
+recovery_dat$treatment &lt;- as_factor(recovery_dat$treatment) %&gt;%
+  fct_relevel(&quot;No toggle switch&quot;)
+
+recovery_dat$recovered &lt;- as_factor(recovery_dat$recovered) %&gt;%
+  fct_relevel(&quot;Not recovered&quot;)</code></pre>
+<p>Outside of the tutorial we’d load the libraries <code>forcats</code> and <code>tidyverse</code>. The next line re-creates <strong>id</strong> from itself but as a factor. The remaining lines do the same for <strong>treatment</strong> and <strong>recovered</strong> but also use <code>fct_relevel()</code> to specify the category to be used as the baseline (first) category. In the case of <strong>treatment</strong> we’re asking to use the <em>No toggle switch</em> condition as the first level. Finally, we do much the same for <strong>recovered</strong> specifying “Not recovered” as the first category. (Be careful to check the spelling and use of upper case letters when you specify the first category - it needs to exactly match what is in the variable.)</p>
+<p>Try the above code in the box and then use the <code>levels()</code> function (e.g., <code>levels(recovery_dat$recovered)</code>) on <strong>treatment</strong> and <strong>recovered</strong> to see how <strong>R</strong> has assigned ‘levels’ of the factors.</p>
+<div class="tutorial-exercise" data-label="factors" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="6">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="factors-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>recovery_dat$id &lt;- as_factor(recovery_dat$id)
+recovery_dat$treatment &lt;- as_factor(recovery_dat$treatment) %&gt;% fct_relevel(&quot;No toggle switch&quot;)
+recovery_dat$recovered &lt;- as_factor(recovery_dat$recovered) %&gt;% fct_relevel(&quot;Not recovered&quot;)
+levels(recovery_dat$treatment)
+levels(recovery_dat$recovered)</code></pre>
+</div>
+<p>Note that levels have been assigned as requested: “No toggle switch” is the first category for <strong>treatment</strong> and “Not recovered” is the base category for <strong>recovered</strong>.</p>
+</div>
+<div id="section-descriptive-statistics" class="section level3">
+<h3>Descriptive statistics</h3>
+<p>Our outcome variable is categorical so there is little sense in looking at means. Instead we want to look at frequencies, or counts (that is, how many cases fall into different categories). We can do this using the <code>xtabs()</code> function built into <strong>R</strong>. It has the following form:</p>
+<p><code>xtabs(~ row_variable + column_variable + table_variable, data = tibble)</code></p>
+<p>Essentially we list any variables that we want to decompose the data by, and specify the tibble containing the data. The order in which we list variables determines whether they form rows, columns or different tables. For example, to look at the table of frequencies for the variables of <strong>recovered</strong> and <strong>treatment</strong> we’d execute:</p>
+<p><code>recovery_xtab &lt;- xtabs(~ treatment + recovered, data = recovery_dat)</code></p>
+<p>The result would be a 2 × 2 contingency tables with the rows representing different levels of <strong>treatment</strong> and the columns the different levels of <strong>recovered</strong>. We could create 5 different versions of this 2 × 2 table, one for each level of <strong>dose</strong>, by including it as a third variable in the formula:</p>
+<p><code>recovery_full_xtab &lt;- xtabs(~ treatment + recovered + dose, data = recovery_dat)</code></p>
+<p>Try both of these commands in the code box, and inspect the results. You could try changing the order of variables to see how this affects which variables are presented in the rows and columns of the tables.</p>
+<div class="tutorial-exercise" data-label="xtab" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="6">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="xtab-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>recovery_xtab &lt;- xtabs(~ treatment + recovered, data = recovery_dat)
+recovery_full_xtab &lt;- xtabs(~ treatment + recovered + dose, data = recovery_dat)
+recovery_xtab
+recovery_full_xtab</code></pre>
+</div>
+<p>A different approach is to use the <code>dplyr</code> functions from <code>tidyverse</code> and a pipe. This is good practice for seeing the power of the pipe, and allows us to compute relative frequencies (which are useful to plot). However, it is quite complicated so feel free to skip ahead. I’ll show you the pipe and then explain it line by line:</p>
+<pre class="r"><code>recovery_freq &lt;- recovery_dat %&gt;%
+  group_by(treatment, dose, recovered) %&gt;%
+  summarize(n = n()) %&gt;% 
+  group_by(treatment, dose) %&gt;% 
+  mutate(
+    rel_freq = n / sum(n),
+    perc = rel_freq*100
+  )</code></pre>
+<p>Let’s look at each line:</p>
+<ol style="list-style-type: decimal">
+<li>This creates an object <code>recovery_freq</code>. We begin by passing the <code>recovery_dat</code> tibble into the pipe.</li>
+<li>This groups the data by all combinations of <strong>treatment</strong>, <strong>dose</strong> and <strong>recovered</strong>. It effectively creates 20 cells (2 treatments × 5 doses × 2 categories of recovery).</li>
+<li>Uses the <code>summarize()</code> function to create a variable called <strong>n</strong> using the function <code>n()</code>. Because in the previous line we grouped the data by all combinations of variables, line 3, in effect counts the number of observations in each of the 20 cells. In effect, up to this point we have calculated the cell frequencies for all combinations of <strong>treatment</strong>, <strong>dose</strong> and <strong>recovered</strong>. It can be instructive to execute the pipe only up to this point to see what has been done so far.</li>
+<li>Up to this point we have a tibble containing all 20 combinations of <strong>treatment</strong>, <strong>dose</strong> and <strong>recovered</strong> and a variable called <strong>n</strong> that contains the cell frequencies. Line 4 now groups this tibble by <strong>treatment</strong> and <strong>dose</strong>. Any subsequent calculations will therefore be conducted on the 10 combinations of <strong>treatment</strong> and <strong>dose</strong>.</li>
+<li>Initiates the mutate function, which adds new variables to a tibble.</li>
+<li>The first variable we add to the tibble is called <strong>rel_freq</strong> and it is calculated by by taking the cell count (<strong>n</strong>) and diving by <code>sum(n)</code>. What is <code>sum(n)</code>? It is all the values of <strong>n</strong> added up. However, because in the previous line we grouped by <strong>treatment</strong> and <strong>dose</strong>, the sum will be computed separately for each combination of <strong>treatment</strong> and <strong>dose</strong>. In other words, <code>sum(n)</code> adds together the value of <strong>n</strong> for the <em>recovered</em> cells and the value of <strong>n</strong> for the <em>Not recovered</em> cell. The new variable <strong>freq</strong> is, therefore, expressing each value of <em>n</em> as the relative frequency of recovered to not recovered cases. When you inspect the final product, you’ll see, for example, when the dose was 0 and there was no toggle switch, there were 27 not recovered cases and 3 recovered. The sum of these (<code>sum(n)</code>) will be 27 + 3 = 30. The resulting frequencies are for recovered cases 27/30 = 0.9, or 90%, and 3/30 = 0.1, or 10%, for recovered cases. In other words, for those with a 0 dose of C-gene and no toggle switch 10% recovered but 90% did not.</li>
+<li>Creates a variable <strong>perc</strong> that expresses the variable <strong>rel_freq</strong> as a percentage by multiplying it by 100.</li>
+<li>Closes the <code>mutate()</code> function.</li>
+</ol>
+<p>As I said, it can be useful to execute parts of the pipe to see how it builds up, or even to break it into separate smaller pipes to help you understand what it is doing. Use the code box to execute the pipe and inspect the resulting tibble.</p>
+<p><font color='#009E73'>Hint: If you’re doing this outside of the tutorial remember to load the package tidyverse (or dplyr)</font></p>
+<div class="tutorial-exercise" data-label="freqs" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="9">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="freqs-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>recovery_freq &lt;- recovery_dat %&gt;%
+  group_by(treatment, dose, recovered) %&gt;%
+  summarize(n = n()) %&gt;% 
+  group_by(treatment, dose) %&gt;% 
+  mutate(
+    rel_freq = n / sum(n),
+    perc = rel_freq*100
+  )
+recovery_freq</code></pre>
+</div>
+<p>You should see a tibble with 20 rows representing the different combinations of <strong>treatment</strong>, <strong>dose</strong> and <strong>recovered</strong>, a variable (<strong>n</strong>) containing their cell counts, a variable called <strong>rel_freq</strong> expressing the relative frequency of recovered to non-recovered cases for each combination of <strong>treatment</strong> and <strong>dose</strong>, and a variable <strong>perc</strong> that expressed that relative frequency as a percentage.</p>
+</div>
+<div id="section-plotting-the-data" class="section level3">
+<h3>Plotting the data</h3>
+<p>The first plot we’ll do uses the original data and plots the number recovered over the top of the number not recovered. We’ll plot the <strong>dose</strong> along the <em>x</em>-axis and create different panels for the two treatment conditions. This is the code:</p>
+<pre class="r"><code>recovery_plot &lt;- ggplot(recovery_dat, aes(dose, fill = recovered, colour = recovered))
+recovery_plot +
+  geom_histogram(binwidth = 1, position = &quot;identity&quot;, alpha = 0.6) +
+  scale_colour_manual(values = c(&quot;#DF4738&quot;, &quot;#009E73&quot;)) +
+  facet_wrap(~ treatment) +
+  labs(x = &quot;Dose of C-gene&quot;, y = &quot;Frequency&quot;, fill = &quot;Recovery status&quot;, colour = &quot;Recovery status&quot;) +
+  theme_bw()</code></pre>
+<p>Let’s explore this command line by line:</p>
+<ol style="list-style-type: decimal">
+<li>Creates an object <code>recovery_plot</code> using the <code>ggplot()</code> function. Within this function we specify the data as the tibble called <code>recovery_dat</code>, then within <code>aes()</code> we set <strong>dose</strong> along the <em>x</em>-axis, and then set the fill and colour to both vary by the variable <strong>recovered</strong>. This will ensure we get different coloured/filled bars for recovered and non-recovered cases.</li>
+<li>We start adding layers to the <code>recovery_plot</code> object.</li>
+<li>The first layer we add is a histogram. We set the binwidth to 1 to ensure that we get a bar for each level of <strong>dose</strong>, and set the alpha to 0.6 to make the bars transparent (otherwise the recovered bars will obscure the not recovered bars and vice versa). By default ggplot with stack the recovered and non recovered bars on top of each other (which you might like) but by setting the position to “identity” we force ggplot to overlay the bars. I find this easier to read because all bars start at zero on the scale but if you prefer stacked bars then remove ‘position = “identity”’ (and probably also the ‘alpha = 0.6’).</li>
+<li>This line is optional: it over-rides the default colours to be a red and green that I like to use because they are colour-blind friendly (apparently).</li>
+<li>Uses <code>facet_wrap()</code> to create separate plots for the toggle switch and no toggle switch conditions.</li>
+<li>Adds labels to the <em>x</em> and <em>y</em> axes. Note that by including <code>fill = &quot;Recovery status&quot;, colour = &quot;Recovery status&quot;</code> and making their labels identical we get a single legend representing both the fill and colour.</li>
+<li>Adds a black and white theme.</li>
+</ol>
+<p>Use the code box to draw this plot. Try deleting lines and observing the effect it has on the plot.</p>
+<p><font color='#009E73'>Hint: If you’re doing this outside of the tutorial remember to load the tidyverse (or ggplot2) package</font></p>
+<div class="tutorial-exercise" data-label="plot_1" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="7">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="plot_1-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>recovery_plot &lt;- ggplot(recovery_dat, aes(dose, fill = recovered, colour = recovered))
+recovery_plot +
+  geom_histogram(binwidth = 1, position = &quot;identity&quot;, alpha = 0.6) +
+  scale_colour_manual(values = c(&quot;#DF4738&quot;, &quot;#009E73&quot;)) +
+  facet_wrap(~ treatment) +
+  labs(x = &quot;Dose of C-gene&quot;, y = &quot;Frequency&quot;, fill = &quot;Recovery status&quot;, colour = &quot;Recovery status&quot;) +
+  theme_bw()</code></pre>
+</div>
+<p>An alternative plot that I used in the lecture was one that plotted the percentage recovered by <strong>dose</strong> and <strong>treatment</strong>. To do this plot we need to use the <code>recovery_freq</code> object we created earlier which has the percentages stored. However, we want to ignore all of the non-recovered cases (because we’re just plotted the percentage recovered). First, then, we might create a new tibble <code>recover_percent</code> that is based on the tibble we created earlier that contains the relative frequencies and percentages (<code>recovery_freq</code>) but filters out the not recovered cases by including only cases where the variable <strong>recovered</strong> has the value “Recovered”:</p>
+<p><code>recover_percent &lt;- recovery_freq %&gt;% filter(recovered == &quot;Recovered&quot;)</code></p>
+<p>We plot data from this tibble:</p>
+<pre class="r"><code>percent_plot &lt;- ggplot(recover_percent, aes(dose, perc, colour = treatment))
+percent_plot +
+  geom_line(size = 1) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_colour_manual(values = c(&quot;#DF4738&quot;, &quot;#009E73&quot;)) +
+  coord_cartesian(ylim = c(0, 100)) +
+  scale_y_continuous(breaks = seq(0, 100, 10)) +
+  labs(x = &quot;Dose of C-gene&quot;, y = &quot;Percent recovered&quot;, colour = &quot;Treatment group&quot;) +
+  theme_bw()</code></pre>
+<p>Let’s explore this command line by line:</p>
+<ol style="list-style-type: decimal">
+<li>Creates an object <code>percent_plot</code> using the <code>ggplot()</code> function. Within this function we specify the data as the tibble called <code>recover_percent</code>, then within <code>aes()</code> we set <strong>dose</strong> along the <em>x</em>-axis, and then set the colour to vary by the variable <strong>treatment</strong>. This will ensure we get different coloured lines/points for the toggle switch and no toggle switch groups.</li>
+<li>We start adding layers to the <code>percent_plot</code> object.</li>
+<li>The first layer we add is a line connecting the values. We set the size to be 1.</li>
+<li>We then add a layer that plots dots on top of the lines.We set the size to be 3 and the transparency to be 0.7.</li>
+<li>This line is optional: it over-rides the default colours to be a red and green that I like to use because they are colour-blind friendly.</li>
+<li>Uses <code>coord_cartesian()</code> to set the limits of the <em>y</em>-axis to 0 and 100 (because we’re plotting percentages).</li>
+<li>Uses <code>scale_y_continuous()</code> to set the breaks on the <em>y</em>-axis to be a sequence from 0 to 100 in steps of 10 (i.e. 0, 10, 20, 30 40 …).</li>
+<li>Adds labels to the <em>x</em> and <em>y</em> axes. Note that by including <code>fill = &quot;Recovery status&quot;, colour = &quot;Recovery status&quot;</code> and making their labels identical we get a single legend representing both the fill and colour.</li>
+<li>Adds a black and white theme.</li>
+</ol>
+<p>Use the code box to draw this plot. Try deleting lines and observing the effect it has on the plot.</p>
+<p><font color='#009E73'>Hint: Remember that you need to create the recover_percent tibble first</font></p>
+<div class="tutorial-exercise" data-label="plot_2" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="10">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="plot_2-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>recover_percent &lt;- recovery_freq %&gt;% filter(recovered == &quot;Recovered&quot;)
+
+percent_plot &lt;- ggplot(recover_percent, aes(dose, perc, colour = treatment))
+percent_plot +
+  geom_line(size = 1) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_colour_manual(values = c(&quot;#DF4738&quot;, &quot;#009E73&quot;)) +
+  coord_cartesian(ylim = c(0, 100)) +
+  scale_y_continuous(breaks = seq(0, 100, 10)) +
+  labs(x = &quot;Dose of C-gene&quot;, y = &quot;Percent recovered&quot;, colour = &quot;Treatment group&quot;) +
+  theme_bw()</code></pre>
+</div>
+</div>
+</div>
+<div id="section-fitting-the-model" class="section level2">
+<h2>Fitting the model</h2>
+<div id="section-the-glm-function" class="section level3">
+<h3>The <code>glm()</code> function</h3>
+<p>To fit the model we use the function <code>glm()</code> which stands for ‘generalized linear model’. The function takes the same form as <code>lm()</code>, which we have used many times before, except that it also allows you to specify a specific distribution for the errors in the model. When the outcome is a dichotomy (categorical with two categories) we need to specify the family as <code>binomial()</code> giving us a general form of the function as follows:</p>
+<p><code>glm(outcome ~ predictor(s), data, subset, family = binomial(), na.action = na.fail)</code></p>
+<p>Let’s remind ourselves of these arguments:</p>
+<ul>
+<li><code>outcome ~ predictor(s)</code>: the way we specify the model is basically to write out the model equation but ignoring the <em>b</em> values and using a tilde (~) instead of =. For example, if we want the model to predict <strong>recovered</strong> from the variable <strong>treatment</strong> we write the model as <code>recovered ~ treatment</code>. If, we want to add <strong>dose</strong> into the mix as a second predictor then we could fit this model by specifying <code>recovered ~ treatment + dose</code>. If we want to include the interaction term as well, we could specify <code>recovered ~ treatment + dose + treatment:dose</code> or use the equivalent expression of <code>recovered ~ treatment*dose</code>. The model specification maps onto the equation describing the model we’re fitting.</li>
+<li><code>data</code>: you use this argument to specify the tibble containing the data (e.g., <code>data = recovery_dat</code>). If you’re using <code>glm()</code> within a pipe where you’ve previously input a tibble then remember you use <code>data = .</code></li>
+<li><code>subset</code>: this argument allows you to specify a condition by which you subset data (a bit like you might use in the <code>filter()</code> function). For example, we will fit separate models for the toggle switch and no toggle switch groups using <code>subset = treatment == &quot;Toggle switch&quot;</code>. Of course, you can also achieve the same thing using a pipe (<code>recovery_dat %&gt;% treatment == &quot;Toggle switch&quot; %&gt;% glm(recovered ~ treatment*dose, data = ., family = binomial())</code>)</li>
+<li><code>na.action</code>: this option determines how to treat missing values. By default it is set to <code>na.fail</code> which means that the model fails (it is not fit). If you have missing values then set this option to <code>na.omit</code> which removes cases, or <code>na.exclude</code> which excluded cases from the model (but does not remove them). See <strong>adventr_14</strong> for more detail.</li>
+<li><code>family = guassian()</code> determines the distribution of errors. By default the family is set to <code>guassian()</code> (a posh word for ‘normal’) and the function will fit a standard linear model. However, we have changed it to <code>binomial()</code> because we want a logistic linear model.</li>
+</ul>
+<p>We could fit our model by executing:</p>
+<p><code>recovery_mod&lt;- glm(recovered ~ treatment*dose, data = recovery_dat, family = binomial())</code></p>
+<p>and summarize it using the <code>summary()</code> function to get the model parameters and <code>anova()</code> to get deviance statistics for each step of the model. Try these commands in the code box below.</p>
+<div class="tutorial-exercise" data-label="recovery_mod_sum" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="recovery_mod_sum-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>recovery_mod&lt;- glm(recovered ~ treatment*dose, data = recovery_dat, family = binomial())
+summary(recovery_mod)
+anova(recovery_mod)</code></pre>
+</div>
+</div>
+<div id="section-model-parameters" class="section level3">
+<h3>Model parameters</h3>
+<p>We can see that the main effect of treatment, <em>b</em> = -0.20, <em>SE</em> = 0.52, <em>z</em> = -0.38, <em>p</em> = 0.701, was not significant, nor was the main effect of dose, <em>b</em> = 0.08, <em>SE</em> = 0.17, <em>z</em> = 0.48, <em>p</em> = 0.629. However, the treatment × dose interaction was significant, <em>b</em> = 1.03, <em>SE</em> = 0.23, <em>z</em> = 4.45, <em>p</em> &lt; 0.001. The raw <em>b</em>-values are difficult to interpret because they tell us about the change in the log odds of the outcome associated with a unit change in the predictor. People’s brains just don’t work in terms of log odds. Odds are hard enough. Log odds, forget it. Instead, it is better to convert these model parameters to odds ratios, which we’ll do in a minute. But first …</p>
+</div>
+<div id="section-deviance-statistics" class="section level3">
+<h3>Deviance statistics</h3>
+<p>The deviance statistics (the -2LL) can be used to tell us whether adding predictors to the model improves the fit. If the residual deviance is decreasing then the fit is improving. The column in the output labelled <em>Deviance</em> shows the change in the residual deviance at each step. For example, the residual deviance for the null model is 529.25, when <strong>treatment</strong> is added as a predictor this decreases to 460.49, which is a change of 529.25 - 460.49 = 68.76. The corresponding change in the residual degrees of freedom is 399 - 398 = 1, which is the value in the column <em>Df</em>. When <strong>dose</strong> is added the residual deviance decreases to 410.70, which is a change of 460.49 - 410.7 = 49.79 with a corresponding degrees of freedom of 1 (398 - 397). And so on for the interaction term.</p>
+<p>We can test whether these changes are significant using the <code>pchisq(x, df, lower.tail = TRUE)</code> function, which returns the value of <em>x</em> from the probability density function of the chi-square distribution with degrees of freedom equal to <em>df</em>. In other words, you enter into the function a chi-square value, and a value for the degrees of freedom, and (by default) it returns the probability of obtaining a value as large as the value entered or smaller (i.e. the lower tail of the distribution, hence <code>lower.tail = TRUE</code>). Remember that the <em>p</em>-value is the probability of getting a value as big as the one observed <em>or larger</em> so to convert the output of <code>pchisq()</code> to a <em>p</em>-value we need to include <code>lower.tail = FALSE</code> to return the upper tail of the distribution.</p>
+<p>The question is, what values do we enter into the function? Notice that the object returned by <code>anova(recovery_mod)</code> is a table with a column called <em>Deviance</em> containing the change in the deviance statistic at each stage of the model, and a column called <code>Df</code> that contains the corresponding degrees of freedom. We can use these columns as the <em>x</em> and <em>df</em> that we input into <code>pchisq()</code>. We could do this in a single line of code, but I’m going to break it down to make it a bit easier to explain:</p>
+<pre class="r"><code>model_dev &lt;- as_tibble(anova(recovery_mod))
+model_dev %&gt;% mutate(
+  chi_p = pchisq(Deviance, Df, lower.tail = FALSE)
+)</code></pre>
+<p>The first line uses the <code>as_tibble()</code> function to force the table of deviances returned by <code>anova(recovery_mod)</code> to be a tibble. I’ve stored the resulting tibble as an object called <code>model_dev</code>. In the next line I take this tibble, and use <code>mutate()</code> to add a column to it. I call this column <code>chi_p</code> and the values in it are created by entered the value from the <strong>Deviance</strong> variable (already in the <code>model_dev</code> tibble) as the chi-square value, the corresponding value from the <strong>Df</strong> variable (also in the <code>model_dev</code> tibble) as the df value, and asking for the probability from the upper tail by setting <code>lower.tail = FALSE</code>. The result will be the same table that the <code>anova()</code> function returned but with an additional column containing the <em>p</em>-values. (You could combine the two lines of code into 1 if you prefer, and there are other ways to achieve the same goal too.) Try the code above in the code box.</p>
+<div class="tutorial-exercise" data-label="dev_p" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="dev_p-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>model_dev &lt;- as_tibble(anova(recovery_mod))
+model_dev %&gt;% mutate(
+  chi_p = pchisq(Deviance, Df, lower.tail = FALSE)
+)</code></pre>
+</div>
+</div>
+</div>
+<div id="section-odds-ratios-expb" class="section level2">
+<h2>Odds ratios: exp(<em>b</em>)</h2>
+<p>To convert the model parameters to odds ratios we can use the function <code>exp()</code>, which returns the exponent, <span class="math inline">\(e^x\)</span> (the reverse of the natural log). The resulting value tells us about the change in the odds (rather than the log odds) of the outcome associated with a unit change in the predictor. In other words it returns the odds ratio for the predictor. As with many things in <strong>R</strong> there are a few ways we could go about this. Before we get into this, here are the functions we will use:</p>
+<ul>
+<li><code>coef()</code>: returns the <em>b</em>-values for a model (i.e. it returns the values in the column labelled <em>Estimate</em> in the output from <code>summary()</code></li>
+<li><code>confint()</code>: returns the confidence intervals for a model (we’ve used this function before in <strong>adventr_14</strong>).</li>
+<li><code>cbind()</code> or <code>bind_cols()</code>: both bind columns together</li>
+</ul>
+<p>Possibly the quickest way to get the odds ratios and their confidence intervals would be to execute something like this (you could do this as a single line of code by nesting the right-hand side of the first line inside <code>exp()</code> but I’m trying to avoid too many of functions nested within other functions):</p>
+<pre class="r"><code>b_ci &lt;- cbind(coef(recovery_mod), confint(recovery_mod))
+exp(b_ci)</code></pre>
+<p>The first line creates an object called <code>b_ci</code> which used <code>coef()</code> to extract the <em>b</em>-values from <code>recovery_mod</code>, and <code>confint()</code> to get the corresponding confidence intervals, and then binds these columns together (to effectively create a table). The second line returns the exponent of all of the values in <code>b_ci</code>. In other words it will return the odds ratios and their confidence intervals. Try this out in the code box:</p>
+<div class="tutorial-exercise" data-label="or" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="or-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>b_ci &lt;- cbind(coef(recovery_mod), confint(recovery_mod))
+exp(b_ci)</code></pre>
+</div>
+<p>An alternative might be to do something a little more ‘tidyverse’ and use a pipe. Some people find this easier to get to grips with than nested functions Again, we could do the below as a single pipe, but I’ve broken it down to make things simpler:</p>
+<pre class="r"><code>b_values &lt;- coef(recovery_mod) %&gt;% as_tibble()
+b_ci &lt;- confint(recovery_mod) %&gt;% as_tibble()
+b_values %&gt;% bind_cols(b_ci) %&gt;% exp() %&gt;% rename(&quot;odds ratio&quot; = value)</code></pre>
+<p>The first line creates an object called <code>b_values</code> by using <code>coef()</code> to extract the <em>b</em>-values from <code>recovery_mod</code> and then converting the results to a tibble using <code>as_tibble()</code>. The second line does the same to create a tibble called <code>b_ci</code> by using <code>confint()</code> to extract the 95% confidence intervals for the <em>b</em>-values from <code>recovery_mod</code>. The final line takes the object <code>b_values</code> and binds the columns from <code>b_ci</code> to it, which gives us a table containing the values of the <em>b</em>s and their confidence intervals. These are then passed into <code>exp()</code> to convert them to odds ratios. The <em>b</em>-values are stored in a variable called <strong>value</strong> so to make the tibble a little more friendly we use <code>rename()</code> to rename the variable <strong>value</strong> as <strong>odds ratio</strong>. Try this out in the code box:</p>
+<div class="tutorial-exercise" data-label="or_tidy" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="or_tidy-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>b_values &lt;- coef(recovery_mod) %&gt;% as_tibble()
+b_ci &lt;- confint(recovery_mod) %&gt;% as_tibble()
+b_values %&gt;% bind_cols(b_ci) %&gt;% exp() %&gt;% rename(&quot;odds ratio&quot; = value)</code></pre>
+</div>
+<p>If the value of the odds ratio is greater than 1 then it indicates that as the predictor increases, the odds of the outcome occurring increase. Conversely, a value less than 1 indicates that as the predictor increases, the odds of the outcome occurring decrease. The important thing about the confidence intervals is whether they cross 1. This is important because values greater than 1 mean that as the predictor variable increases, so do the odds of (in this case) being cured. Values less than 1 mean the opposite: as the predictor variable increases, the odds of being cured decrease. Assuming our confidence intervals are from the 95% of samples that contain the population value, then if the interval contains 1 it means that the population value could reflect an effect in one direction, but could also reflect an effect in the opposite direction, or even no effect at all (an odds ratio of 1).</p>
+<p>The odds ratio for the main effect of treatment is 0.82 [0.30, 2.30], which means that the odds of a patient who has a toggle switch being cured are 0.82 times higher than those of a patient who did not get the toggle switch. This value is close to 1 indicating that the odds of being cured are basically the same in the no toggle switch or toggle switch groups.</p>
+<div class="panel panel-default">
+<div class="panel-heading tutorial-panel-heading">Quiz</div>
+<table class="table quiz-table">
+<tr>
+<td>
+
+<div id="htmlwidget-b460225567b213a98c31" style="width:100%;height:auto;", class = "quiz html-widget">
+<div class="panel panel-default">
+<div class="panel-body quizArea">
+</div>
+</div>
+</div>
+
+<script type="application/json" data-for="htmlwidget-b460225567b213a98c31">{"x":{"question":"How would you interpret the odds ratio for the effect of <strong>dose<\/strong>?","answers":[{"option":"As the dose increase by 1 standard deviation, recovery increased by 1 standard deviation","correct":false,"message":null},{"option":"As the dose increase by 1 unit, recovery increased by 1 unit","correct":false,"message":null},{"option":"As the dose increase by 1 unit, the odds of recovery change by 1.08","correct":true,"message":null},{"option":"As the dose increase by 1 unit, the log odds of recovery change by 1.08","correct":false,"message":null}],"label":"quiz_dose_ex1-1","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"How would you interpret the odds ratio for the effect of <strong>dose<\/strong>?","a":[{"option":"As the dose increase by 1 standard deviation, recovery increased by 1 standard deviation","correct":false,"message":null},{"option":"As the dose increase by 1 unit, recovery increased by 1 unit","correct":false,"message":null},{"option":"As the dose increase by 1 unit, the odds of recovery change by 1.08","correct":true,"message":null},{"option":"As the dose increase by 1 unit, the log odds of recovery change by 1.08","correct":false,"message":null}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+</td>
+</tr>
+</table>
+</div>
+<p>For the interaction, which was significant, the odds ratio is 2.79 [1.79, 4.43], which means that the <em>odds ratio</em>b*-value for dose is 2.79 times higher in the intervention group than the control. To see what this value of 2.79 represents, let’s use the subset argument to run the same model separately for the no toggle switch or toggle switch groups.</p>
+<pre class="r"><code>no_toggle_mod &lt;- glm(recovered ~ dose, data = recovery_dat, family = binomial(), subset = treatment == &quot;No toggle switch&quot;)
+toggle_mod &lt;- glm(recovered ~ dose, data = recovery_dat, family = binomial(), subset = treatment == &quot;Toggle switch&quot;)
+
+no_tog_dose_or &lt;- no_toggle_mod %&gt;% coef() %&gt;% exp()
+tog_dose_or &lt;- toggle_mod %&gt;% coef() %&gt;% exp()
+
+tog_dose_or/no_tog_dose_or</code></pre>
+<p>The first line creates an object called <code>no_toggle_mod</code> which predicts recovery from only <strong>dose</strong> and uses <code>subset = treatment == &quot;No toggle switch&quot;</code> to restrict the model to the group that received no toggle switch. Line 2 does the same but creates an object called <code>toggle_mod</code> to fit the same model to the group that <em>did</em> receive a toggle switch.</p>
+<p>The next two lines create objects called <code>no_tog_dose_or</code> and <code>tog_dose_or</code> respectively, which take the models created above, extract the <em>b</em>-values using <code>coef()</code> and then converts them to odds ratios by applying <code>exp()</code>. So within these objects we have the odds ratios for the effect of <strong>dose</strong> in the no toggle switch group and the toggle switch group. If you inspect the objects you will find that in the no toggle switch group, the odds ratio for <strong>dose</strong> is 1.084, and in the toggle switch group it is 3.030. The final line takes the odds ratio for the toggle switch group and divides it by the odds ratio for the no toggle switch group. The result is 3.030/1.084 = 2.79, the odds ratio for the interaction! So, the interaction odds ratio tells us that the odds ratio for <strong>dose</strong> is 2.79 times larger in the toggle switch group than the no toggle switch group. Try the above code in the code box:</p>
+<div class="tutorial-exercise" data-label="or_int" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="or_int-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>no_toggle_mod &lt;- glm(recovered ~ dose, data = recovery_dat, family = binomial(), subset = treatment == &quot;No toggle switch&quot;)
+toggle_mod &lt;- glm(recovered ~ dose, data = recovery_dat, family = binomial(), subset = treatment == &quot;Toggle switch&quot;)
+no_tog_dose_or &lt;- no_toggle_mod %&gt;% coef() %&gt;% exp()
+tog_dose_or &lt;- toggle_mod %&gt;% coef() %&gt;% exp()
+tog_dose_or/no_tog_dose_or</code></pre>
+</div>
+</div>
+<div id="section-plots" class="section level2">
+<h2>Plots</h2>
+<p>We can plot the interaction effect using the <code>allEffects()</code> function from the package <code>effects</code> <span class="citation">(Fox 2003)</span>. The code box shows a pipe to make the plot. First we put the model we created earlier <code>recovery_mod</code> into the <code>allEffects()</code> function to create the data we want to plot, we then push this data into the <code>plot()</code> function. The resulting plot shows that in the no toggle switch group the effect of <strong>dose</strong> is basically non-existent (the line is flat) which we know already from the odds ratio of 1 that we computed in the previous section. In the toggle switch group, however, the effect of <strong>dose</strong> is positive (the line slopes upwards to indicate that higher dose is associated with a greater probability of recovery) which we also knew from the odds ratio of 3 that we computed in the previous section.</p>
+<div class="tutorial-exercise" data-label="plot_int" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>allEffects(recovery_mod) %&gt;% plot()           </code></pre>
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="plot_int-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>allEffects(recovery_mod) %&gt;% plot()</code></pre>
+</div>
+</div>
+<div id="section-robust-logistic-regression" class="section level2">
+<h2>Robust logistic regression</h2>
+<p>It is also possible to create a robust model using the <code>glmRob()</code> function from the <code>robust</code> package. This takes the same form as the <code>glm()</code> function but returns robust estimates of parameters and associated standard errors and <em>p</em>-values. To create a robust variant of the model we would execute:</p>
+<p><code>recovery_rob &lt;- glmRob(recovered ~ treatment*dose, data = recovery_dat, family = binomial())</code></p>
+<p>which creates an object <code>recovery_rob</code> that contains robust model parameters. We can summarise it with <code>summary()</code>. Try this in the code box below and compare the resulting model to the one you created earlier. Basically, the parameter estimates (<em>b</em>s) don’t change much and the conclusions of the model stay largely the same. Having generated a robust model you would, of course, compute odds ratios (but not confidence intervals). Try doing this too by adapting the code you used earlier.</p>
+<div class="tutorial-exercise" data-label="robust_mod" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="robust_mod-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>recovery_rob&lt;- glmRob(recovered ~ treatment*dose, data = recovery_dat, family = binomial())
+summary(recovery_rob)
+
+coef(recovery_rob) %&gt;% exp()</code></pre>
+</div>
+</div>
+<div id="section-other-resources" class="section level2">
+<h2>Other resources</h2>
+<div id="section-statistics" class="section level3">
+<h3>Statistics</h3>
+<ul>
+<li>The tutorials typically follow examples described in detail in <span class="citation">Field (2016)</span>, so for most of them there’s a thorough account in there. You might also find <span class="citation">Field, Miles, and Field (2012)</span> useful for the <strong>R</strong> stuff.</li>
+<li>There are free lectures and screen casts on my <a href="https://www.youtube.com/user/ProfAndyField/">YouTube channel</a></li>
+<li>There are free statistical resources on my website <a href="http://www.discoveringstatistics.com">www.discoveringstatistics.com</a></li>
+</ul>
+</div>
+<div id="section-r" class="section level3">
+<h3>R</h3>
+<ul>
+<li>Information on using <a href="http://ggplot2.tidyverse.org/">ggplot2</a></li>
+<li><a href="http://r4ds.had.co.nz/index.html">R for data science</a> is the open-access version of the book by tidyverse creator Hadley Wickham <span class="citation">(Wickham and Grolemund 2017)</span>. It covers the <em>tidyverse</em> and data management.</li>
+<li><a href="http://moderndive.com/index.html">ModernDive</a> is an open-access textbook on <strong>R</strong> and <strong>RStudio</strong></li>
+<li><a href="https://www.rstudio.com/resources/cheatsheets/">RStudio cheat sheets</a></li>
+<li><a href="https://www.rstudio.com/online-learning/">RStudio list of online resources</a></li>
+<li><a href="http://swirlstats.com/students.html">SwirlStats</a> is a package for <em>R</em> that launches a bunch of interactive tutorials.</li>
+</ul>
+</div>
+</div>
+<div id="section-references" class="section level2">
+<h2>References</h2>
+
+<script type="application/shiny-prerendered" data-context="server-start">
+library(learnr)
+library(RefManageR)
+library(tidyverse)
+library(forcats)
+library(robust)
+library(effects)
+
+
+
+knitr::opts_chunk$set(echo = FALSE)
+tutorial_options(exercise.cap = "Exercise")
+
+cbBlack<-"#000000"
+cbGrey<-"#999999"
+cbOrange<-"#E69F00"
+cbBlue<-"#56B4E9"
+cbGreen<-"#009E73"
+cbYellow<-"#F0E442"
+cbBlueDark<-"#0072B2"
+cbOrangeDark<-"#D55E00"
+cbPink<-"#CC79A7"
+cbRed<-"#DF4738"
+
+andy.theme <- function(base_size = 12, base_family = "") {
+  # Starts with theme_grey and then modify some parts
+  theme_grey(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.2)),
+      axis.title.y        = element_text(margin = margin(0, 10, 0, 0), angle = 90),
+      axis.title.x        = element_text(margin = margin(10, 0, 0, 0)),
+      axis.text           = element_text(size = rel(0.75), colour = "grey35"),
+      axis.text.x         = element_text(margin = margin(2, 0, 0, 0)),
+      axis.text.y         = element_text(margin = margin(0, 2, 0, 0)),
+      axis.ticks        = element_line(colour = "grey35"),
+      legend.key        = element_rect(colour = "white"),
+      panel.background  = element_rect(fill = "white", colour = NA),
+      panel.border      = element_rect(fill = NA, colour = "grey50"),
+      panel.grid.major  = element_line(colour = "grey90", size = 0.2),
+      panel.grid.minor  = element_line(colour = "grey98", size = 0.5),
+      strip.background  = element_rect(fill = "grey80", colour = "grey50"),
+      strip.text  = element_text(size = rel(1.4))
+    )
+}
+
+andy.dsus <- function(base_size = 12, base_family = "") {
+  andy.theme(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.6)),
+      axis.text           = element_text(size = rel(1.3), colour = "grey35"),
+      strip.background = element_rect(fill = cbBlueDark, colour = "white"),
+      strip.text  = element_text(size = rel(1.3), colour = "white")
+    )
+}
+
+colFmt = function(x,color){
+  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
+  if(outputFormat == 'latex')
+    paste("\\textcolor{",color,"}{",x,"}",sep="")
+  else if(outputFormat == 'html')
+    paste("<font color='",color,"'>",x,"<\u002ffont>",sep="")
+  else
+    x
+}
+
+#Read dat files needed for the tutorial
+
+#If command tries to work out whether the code is running online (rather than a package). If online it loads the data from external source, otherwise it'll have the data anyway from the package
+
+if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
+    recovery_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_log.csv");
+    } else {
+    recovery_dat <- adventr::recovery_dat
+    }
+
+#setup objects for code blocks
+
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+learnr:::register_http_handlers(session, metadata = NULL)
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-inspect_dat-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-inspect_dat-code-editor`)), session)
+output$`tutorial-exercise-inspect_dat-output` <- renderUI({
+  `tutorial-exercise-inspect_dat-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-factors-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-factors-code-editor`)), session)
+output$`tutorial-exercise-factors-output` <- renderUI({
+  `tutorial-exercise-factors-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-xtab-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-xtab-code-editor`)), session)
+output$`tutorial-exercise-xtab-output` <- renderUI({
+  `tutorial-exercise-xtab-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-freqs-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-freqs-code-editor`)), session)
+output$`tutorial-exercise-freqs-output` <- renderUI({
+  `tutorial-exercise-freqs-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-plot_1-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-plot_1-code-editor`)), session)
+output$`tutorial-exercise-plot_1-output` <- renderUI({
+  `tutorial-exercise-plot_1-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-plot_2-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-plot_2-code-editor`)), session)
+output$`tutorial-exercise-plot_2-output` <- renderUI({
+  `tutorial-exercise-plot_2-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-recovery_mod_sum-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-recovery_mod_sum-code-editor`)), session)
+output$`tutorial-exercise-recovery_mod_sum-output` <- renderUI({
+  `tutorial-exercise-recovery_mod_sum-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-dev_p-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-dev_p-code-editor`)), session)
+output$`tutorial-exercise-dev_p-output` <- renderUI({
+  `tutorial-exercise-dev_p-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-or-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-or-code-editor`)), session)
+output$`tutorial-exercise-or-output` <- renderUI({
+  `tutorial-exercise-or-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-or_tidy-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-or_tidy-code-editor`)), session)
+output$`tutorial-exercise-or_tidy-output` <- renderUI({
+  `tutorial-exercise-or_tidy-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-or_int-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-or_int-code-editor`)), session)
+output$`tutorial-exercise-or_int-output` <- renderUI({
+  `tutorial-exercise-or_int-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-plot_int-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-plot_int-code-editor`)), session)
+output$`tutorial-exercise-plot_int-output` <- renderUI({
+  `tutorial-exercise-plot_int-result`()
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+`tutorial-exercise-robust_mod-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-robust_mod-code-editor`)), session)
+output$`tutorial-exercise-robust_mod-output` <- renderUI({
+  `tutorial-exercise-robust_mod-result`()
+})
+</script>
+ <!--html_preserve-->
+<script type="application/shiny-prerendered" data-context="dependencies">
+{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery-1.11.3"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap-3.3.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/cerulean.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["pagedtable"]},{"type":"character","attributes":{},"value":["1.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/pagedtable-1.1"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/pagedtable.js"]},{"type":"character","attributes":{},"value":["css/pagedtable.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["highlightjs"]},{"type":"character","attributes":{},"value":["1.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/highlightjs-1.1"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["highlight.js"]},{"type":"character","attributes":{},"value":["textmate.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-format"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmarkdown/templates/tutorial/resources"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-format.js"]},{"type":"character","attributes":{},"value":["tutorial-format.css","rstudio-theme.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery-1.11.3"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["font-awesome"]},{"type":"character","attributes":{},"value":["4.5.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/font-awesome-4.5.0"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/font-awesome.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootbox"]},{"type":"character","attributes":{},"value":["4.4.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/bootbox"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["bootbox.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["localforage"]},{"type":"character","attributes":{},"value":["1.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/localforage"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["localforage.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["0.8"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["quiz-binding"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["quiz.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[false]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery-1.11.3"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap-3.3.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/bootstrap.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootbox"]},{"type":"character","attributes":{},"value":["4.4.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/bootbox"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["bootbox.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["localforage"]},{"type":"character","attributes":{},"value":["1.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/localforage"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["localforage.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial.js"]},{"type":"character","attributes":{},"value":["tutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-autocompletion"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-autocompletion.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["tutorial-diagnostics"]},{"type":"character","attributes":{},"value":["0.9"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/tutorial"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["tutorial-diagnostics.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["slickquiz"]},{"type":"character","attributes":{},"value":["1.5.20"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/slickquiz"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/slickQuiz.js"]},{"type":"character","attributes":{},"value":["css/slickQuiz.css","css/slickQuizTutorial.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ace"]},{"type":"character","attributes":{},"value":["1.2.6"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/ace"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["ace.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["clipboardjs"]},{"type":"character","attributes":{},"value":["1.5.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/clipboardjs"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["clipboard.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["learnr"]},{"type":"logical","attributes":{},"value":[true]}]}]}
+</script>
+<!--/html_preserve-->
+<div id="section-refs" class="references">
+<div id="section-ref-RN10163">
+<p>Field, Andy P. 2016. <em>An Adventure in Statistics: The Reality Enigma</em>. Book. London: Sage.</p>
+</div>
+<div id="section-ref-RN4832">
+<p>Field, Andy P., Jeremy N. V. Miles, and Zoe C. Field. 2012. <em>Discovering Statistics Using R: And Sex and Drugs and Rock ’N’ Roll</em>. Book. London: Sage.</p>
+</div>
+<div id="section-ref-RN11414">
+<p>Fox, John. 2003. “Effect Displays in R for Generalised Linear Models.” Journal Article. <em>Journal of Statistical Software</em> 8(15) (1): 1–27. doi:<a href="https://doi.org/  http://www.jstatsoft.org/v08/i15/.">  http://www.jstatsoft.org/v08/i15/.</a></p>
+</div>
+<div id="section-ref-RN11408">
+<p>Warnes, Gregory R., Ben Bolker, Thomas Lumley, and Randall C Johnson. 2015. “Gmodels: Various R Programming Tools for Model Fitting.” Journal Article. <em>R Package Version 2.16.2.</em> <a href="  https://CRAN.R-project.org/package=gmodels">https://CRAN.R-project.org/package=gmodels</a>.</p>
+</div>
+<div id="section-ref-RN11418">
+<p>Wickham, Hadley. 2017a. “Forcats: Tools for Working with Categorical Variables (Factors).” Journal Article. <em>R Package Version 0.2.0.</em> <a href="  https://CRAN.R-project.org/package=forcats">https://CRAN.R-project.org/package=forcats</a>.</p>
+</div>
+<div id="section-ref-RN11407">
+<p>———. 2017b. “Tidyverse: Easily Install and Load ’Tidyverse’ Packages.” Journal Article. <em>R Package Version 1.1.1.</em> <a href="https://CRAN.R-project.org/package=tidyverse" class="uri">https://CRAN.R-project.org/package=tidyverse</a>.</p>
+</div>
+<div id="section-ref-RN11404">
+<p>Wickham, Hadley, and G. Grolemund. 2017. <em>R for Data Science</em>. Book. Sebastopol, CA: O’Reilly.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="section-fn1"><p>Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.<a href="#section-fnref1">↩</a></p></li>
+</ol>
+</div>
+
+</div> <!-- topics -->
+
+<div class="topicsContainer">
+<div class="topicsPositioner">
+<div class="band">
+<div class="bandContent topicsListContainer">
+
+<!-- begin doc-metadata -->
+<div id="doc-metadata">
+<h2 class="title toc-ignore" style="display:none;">AAiR: Categorical outcomes</h2>
+<h4 class="author"><em>Andy Field</em></h4>
+</div>
+<!-- end doc-metadata -->
+
+</div> <!-- bandContent.topicsListContainer -->
+</div> <!-- band -->
+</div> <!-- topicsPositioner -->
+</div> <!-- topicsContainer -->
+
+
+</div> <!-- bandContent page -->
+</div> <!-- pageContent band -->
+
+
+
+
+<script>
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+</script>
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+
+</html>

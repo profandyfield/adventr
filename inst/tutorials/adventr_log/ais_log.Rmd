@@ -1,0 +1,657 @@
+---
+title: "AAiR: Categorical outcomes"
+author: "Andy Field"
+output:
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+bibliography: ../../doc/adventr_bib.bib
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(RefManageR)
+library(tidyverse)
+library(forcats)
+library(robust)
+library(effects)
+
+
+
+knitr::opts_chunk$set(echo = FALSE)
+tutorial_options(exercise.cap = "Exercise")
+
+cbBlack<-"#000000"
+cbGrey<-"#999999"
+cbOrange<-"#E69F00"
+cbBlue<-"#56B4E9"
+cbGreen<-"#009E73"
+cbYellow<-"#F0E442"
+cbBlueDark<-"#0072B2"
+cbOrangeDark<-"#D55E00"
+cbPink<-"#CC79A7"
+cbRed<-"#DF4738"
+
+andy.theme <- function(base_size = 12, base_family = "") {
+  # Starts with theme_grey and then modify some parts
+  theme_grey(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.2)),
+      axis.title.y        = element_text(margin = margin(0, 10, 0, 0), angle = 90),
+      axis.title.x        = element_text(margin = margin(10, 0, 0, 0)),
+      axis.text           = element_text(size = rel(0.75), colour = "grey35"),
+      axis.text.x         = element_text(margin = margin(2, 0, 0, 0)),
+      axis.text.y         = element_text(margin = margin(0, 2, 0, 0)),
+      axis.ticks        = element_line(colour = "grey35"),
+      legend.key        = element_rect(colour = "white"),
+      panel.background  = element_rect(fill = "white", colour = NA),
+      panel.border      = element_rect(fill = NA, colour = "grey50"),
+      panel.grid.major  = element_line(colour = "grey90", size = 0.2),
+      panel.grid.minor  = element_line(colour = "grey98", size = 0.5),
+      strip.background  = element_rect(fill = "grey80", colour = "grey50"),
+      strip.text  = element_text(size = rel(1.4))
+    )
+}
+
+andy.dsus <- function(base_size = 12, base_family = "") {
+  andy.theme(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      axis.title          = element_text(size = rel(1.6)),
+      axis.text           = element_text(size = rel(1.3), colour = "grey35"),
+      strip.background = element_rect(fill = cbBlueDark, colour = "white"),
+      strip.text  = element_text(size = rel(1.3), colour = "white")
+    )
+}
+
+colFmt = function(x,color){
+  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
+  if(outputFormat == 'latex')
+    paste("\\textcolor{",color,"}{",x,"}",sep="")
+  else if(outputFormat == 'html')
+    paste("<font color='",color,"'>",x,"</font>",sep="")
+  else
+    x
+}
+
+#Read dat files needed for the tutorial
+
+#If command tries to work out whether the code is running online (rather than a package). If online it loads the data from external source, otherwise it'll have the data anyway from the package
+
+if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
+    recovery_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_log.csv");
+    } else {
+    recovery_dat <- adventr::recovery_dat
+    }
+
+#setup objects for code blocks
+
+```
+
+```{r echo = FALSE, prepare-data}
+recovery_dat$id <- as_factor(recovery_dat$id)
+recovery_dat$treatment <- as_factor(recovery_dat$treatment) %>% fct_relevel("No toggle switch")
+recovery_dat$recovered <- as_factor(recovery_dat$recovered) %>% fct_relevel("Not recovered")
+
+recovery_freq <- recovery_dat %>%
+  group_by(treatment, dose, recovered) %>%
+  summarize(n = n()) %>% 
+  group_by(treatment, dose) %>% 
+  mutate(
+    rel_freq = n / sum(n),
+    perc = rel_freq*100
+  )
+
+recovery_mod<- glm(recovered ~ treatment*dose, data = recovery_dat, family = binomial())
+```
+
+# An Adventure in R: Categorical outcomes
+
+## Overview
+
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+
+* Who is the tutorial aimed at?
+    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+* What is covered?
+    - This tutorial looks at how to fit a linear model with one and more predictor variables when the outcome is a categorical dichotomy. In other words it introduces generalized linear models (specifically logistic regression). We look at robust variants of the model. It would be a useful tutorial as a follow up to chapter 17 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
+    - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
+    - The aim of this tutorial is to augment the theory that you already know by guiding you through fitting linear models using **R** and **RStudio** and asking you questions to test your knowledge along the way.
+    
+
+## Story précis
+
+### Why a précis?
+
+Because these tutorials accompany my book *An adventure in statistics*, which uses a fictional narrative to teach the statistics, some of the examples might not make sense unless you know something about the story. For those of you who don't have the book I begin each tutorial with a précis of the story. If you're not interested then fair enough - click past this section.
+
+### General context for the story
+
+It is the future. Zach, a rock musician and Alice, a geneticist, who have been together since high school live together in Elpis, the ‘City of Hope’.
+
+Zach and Alice were born in the wake of the Reality Revolution which occurred after a Professor Milton Gray invented the Reality Prism – a transparent pyramid worn on the head – that brought honesty to the world. Propaganda and media spin became unsustainable, religions collapsed, advertising failed. Society could no longer be lied to. Everyone could know the truth about anything that they could look at. A gift, some said, to a previously self-interested, self-obsessed society in which the collective good had been eroded. 
+
+But also a curse. For, it soon became apparent that through this Reality Prism, people could no longer kid themselves about their own puffed-up selves as they could see what they were really like – by and large, pretty ordinary. And this caused mass depression. People lost faith in themselves. Artists abandoned their pursuits, believing they were untalented and worthless. 
+
+Zach and Alice have never worn a Reality Prism and have no concept of their limitations. They were born after the World Governance Agency (WGA) destroyed all Reality Prisms, along with many other pre-revolution technologies, with the aim of restoring community and well-being. However, this has not been straightforward and in this post-Prism world, society has split into pretty much two factions
+
+* The Chippers who have had WiFi-enabled chips implanted into their brains, enabling them to record and broadcast what they see and think in real time; upload memories for future generations into a newly-created memoryBank and live-stream music and films directly into their brains. 
+* The Clocktarians, followers of the old pre-Prism ways who use steam punk style technologies, who have elected not to have chips in their brains, regarded by the Chippers as backward-looking stuck in a ‘clockwork, Victorian society’. 
+
+Everyone has a star, a limitless space on which to store their digital world.
+
+Zach and Alice are Clocktarians. Their technology consists mainly of:
+
+* A Proteus, a device made from programmable matter that can transform shape and function simply by the owners’ wishes. Zach calls his a diePad, in the shape of a tombstone in an ironic reference to an over-reliance on technology at the expense of memory. 
+* A Reality Checker, a clockwork mechanism that, at the point of critical velocity, projects an opaque human head that is linked to everything and can tell you anything. Every head has a personality and Zach’s is a handsome, laid back ‘dude’ who is like an electronic friend, who answers questions if he feels like it and often winds Zach up by giving him false information. And he often flirts with Alice.
+
+### Main Protagonists
+
+* Zach
+    - Rock musician in band called The Reality Enigma.
+    - Spellbinding performer, has huge fan-base.
+    - Only people living in Elpis get to see The Reality Enigma in the flesh. Otherwise all performances are done via an oculus riff, a multisensory headset for experiencing virtual gigs.
+    - Zach’s music has influenced and changed thousands of lives. 
+    - Wishes he had lived pre-Revolutionary times, the turn of the 21st Century, a golden age for music when bands performed in reality at festivals.
+    - Kind, gentle and self-doubting.
+    - Believes science and maths are dull and uninspiring. Creates a problem between him and Alice as she thinks that because he isn’t interested in science, he isn’t interested in her. Leads to lots of misunderstandings between them. 
+* Alice
+    - Shy, lonely, academically-gifted – estranged from the social world until she met Zach in the college library. 
+    - Serious scientist, works at the Beimeni Centre of Genetics. 
+    - At 21, won the World Science Federation’s Einstein Medal for her genetics research
+    - Desperately wants Zach to get over his fear of science so he can open his mind to the beauty of it.
+
+### How Zach's adventure begins
+
+Alice has been acting strangely, on edge for weeks, disconnected and uncommunicative, as if she is hiding something and Zach can’t get through to her. Arriving home from band practice, unusually, she already home and listening to an old album that the two of them enjoyed together, back in a simpler, less complicated time in their relationship. During an increasingly testy evening, that involves a discussion with the Head about whether or not a Proteus causes brain cancer, Alice is interrupted by an urgent call which she takes in private. She returns looking worried and is once again, distracted. She tells Zach that she has ‘a big decision to make’. Before going to bed, Zach asks her if he can help with the decision but she says he ‘already has’, thanking him for making ‘everything easier.’ He has no idea what she means and goes to sleep, uneasy.
+
+On waking, Zach senses that something is wrong. And he is right. Alice has disappeared. Her clothes, her possessions and every photo of them together have gone. He can’t get hold of any of her family or friends as their contact information is stored on her Proteus, not on his diePad. He manages to contact the Beimeni Centre but is told that no one by the name of Alice Nightingale has ever worked there. He logs into their constellation but her star has gone.  He calls her but finds that her number never existed. She has, thinks Zach, been ‘wiped from the planet.’ He summons The Head but he can’t find her either. He tells Zach that there are three possibilities: Alice has doesn’t want to be found, someone else doesn’t want her to be found or she never existed. 
+
+Zach calls his friend Nick, fellow band member and fan of the WGA-installed Repositories, vast underground repositories of actual film, books, art and music. Nick is a Chipper – solely for the purpose of promoting the band using memoryBank – and he puts the word out to their fans about Alice missing. 
+
+Thinking as hard as he can, Zach recalls the lyrics of the song she’d been playing the previous evening. Maybe they are significant? It may well be a farewell message and the Head is right. In searching for clues, he comes across a ‘memory stone’ which tells him to read what’s on there. File 1 is a research paper that Zach can’t fathom. It’s written in the ‘language of science’ and the Head offers to help Zach translate it and tells him that it looks like the results of her current work were ‘gonna blow the world’. Zach resolves to do ‘something sensible’ with the report.  
+
+Zach doesn’t want to believe that Alice has simply just left him. Rather, that someone has taken her and tried to erase her from the world. He decides to find her therapist, Dr Murali Genari and get Alice’s file. As he breaks into his office, Dr Genari comes up behind him and demands to know what he is doing. He is shaking but not with rage – with fear of Zach. Dr Genari turns out to be friendly and invites Zach to talk to him. Together they explore the possibilities of where Alice might have gone and the likelihood, rating her relationship satisfaction, that she has left him. During their discussion Zach is interrupted by a message on his diePad from someone called Milton. Zach is baffled as to who he is and how he knows that he is currently discussing reverse scoring. Out of the corner of his eye, he spots a ginger cat jumping down from the window ledge outside. The counsellor has to go but suggests that Zach and ‘his new friend Milton’ could try and work things out.
+
+## Packages and data
+### Packages
+
+This tutorial uses the following packages:
+
+* `effects` [@RN11414] to get plots for logistic regression models
+* `forcats` [@RN11418] for processing categorical variables
+* `gmodels` [@RN11408] to compute confidence intervals
+* `tidyverse` [@RN11407] for general data processing
+
+
+These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in **RStudio**) then you need to make sure that the package has been installed by executing `install.packages("package_name")`, where *package_name* is the name of the package. If the package is already installed, then you need to reference it in your current session by executing `library(package_name)`, where *package_name* is the name of the package.
+
+### Data
+
+This tutorial has the data files pre-loaded so you shouldn't need to do anything to access the data from within the tutorial. However, if you want to play around with what you have learnt in this tutorial outside of the tutorial environment (i.e. in a stand-alone **RStudio** session) you will need to download the data files and then read them into your **R** session. This tutorial uses the following file:
+
+* [ais_rehab_log.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_log.csv).
+
+You can load the file in several way:
+
+* Assuming that you save this file into the working directory, you can load it by executing:
+    - `recovery_dat <- read_csv("ais_rehab_log.csv")`
+    - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
+* To load the file using a standard dialogue box to navigate your file system, execute:
+    - `recovery_dat <- read_csv(file.choose())`
+* You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
+    - `recovery_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_log.csv")`
+    - This method relies on an internet connection (and my server having not exploded!)
+
+
+## Recovered zombies! A generalized linear model
+### The model
+
+At the end of the story it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset relates to her final attempt. It contains data from 400 code 1318 workers. Workers were randomly assigned to two arms of a trial (C-gene therapy and C-gene therapy with a toggle switch). They were also given one of five different doses of C-gene: 0 (no dose) or 1, 2, 3, or 4 doses. The outcome was whether (or not) the worker had fully recovered after the treatment. The data are in the tibble `recovery_dat`, which has five variables:
+
+* **id**: Participant ID
+* **treatment**: character vector that codes which arm of the trial the participant was randomized to (no toggle switch or toggle switch)
+* **dose**: The dose of C-gene used during treatment (0 doses, 1, 2, 3, or 4 doses)
+* **recovered**: Character vector that expresses whether or not the participant had recovered following treatment (Recovered or Not Recovered)
+
+The model we're fitting is described by the following equation:
+
+$$
+\begin{aligned}
+p(Y_i) &= \frac{1}{1 + e^{-(b_0 + b_1X_{1i} + b_2X_{2i} + b_3X_{1i}X_{2i})}} \\
+p(\text{recovered}_i) &= \frac{1}{1 + e^{-(b_0 + b_1\text{treatment}_i + b_2\text{dose}_i + b_3\text{treatment}\times\text{dose}_i)}} \\
+\end{aligned}
+$$
+
+## Exploring the data
+### Preparing the data
+
+The data are already in *tidy* format, so we don't need to restructure them. Use the code box to inspect the `recovery_dat` tibble.
+
+```{r inspect_dat, exercise = TRUE}
+     
+```
+
+```{r inspect_dat-solution}
+recovery_dat  
+```
+
+However, the variables **id**, **treatment**, and **recovered** currently have the data type of character. This is fine (because **R** is fairly intelligent about how it treats character variables). However, it does obscure how dummy coding will be applied. It's generally good practice to be explicit about which category you want to act as a baseline (i.e. be coded as zero). One way to achieve this is to convert these variables to factors and relevel them such that the baseline category is first. In previous tutorials we have done this using the `factor()` function, but for variety, we can also use the `as_factor()` function from the `forcats` package (which has a more *tidyverse* flavour). We also want to specify the baseline category for each factor. In previous tutorials we did this in two steps, but we can combine the tasks using a pipe:
+
+```{r echo = TRUE, eval = FALSE}
+library(forcats); library(tidyverse) #Not nessesary inside this tutorial
+
+recovery_dat$id <- as_factor(recovery_dat$id)
+
+recovery_dat$treatment <- as_factor(recovery_dat$treatment) %>%
+  fct_relevel("No toggle switch")
+
+recovery_dat$recovered <- as_factor(recovery_dat$recovered) %>%
+  fct_relevel("Not recovered")
+```
+
+Outside of the tutorial we'd load the libraries `forcats` and `tidyverse`. The next line re-creates **id** from itself but as a factor. The remaining lines do the same for **treatment** and **recovered** but also use `fct_relevel()` to specify the category to be used as the baseline (first) category. In the case of **treatment** we're asking to use the *No toggle switch* condition as the first level. Finally, we do much the same for **recovered** specifying "Not recovered" as the first category. (Be careful to check the spelling and use of upper case letters when you specify the first category - it needs to exactly match what is in the variable.)
+
+Try the above code in the box and then use the `levels()` function (e.g., `levels(recovery_dat$recovered)`) on **treatment** and **recovered** to see how **R** has assigned 'levels' of the factors.
+
+```{r factors, exercise = TRUE, exercise.lines = 6}
+           
+```
+
+```{r factors-solution}
+recovery_dat$id <- as_factor(recovery_dat$id)
+recovery_dat$treatment <- as_factor(recovery_dat$treatment) %>% fct_relevel("No toggle switch")
+recovery_dat$recovered <- as_factor(recovery_dat$recovered) %>% fct_relevel("Not recovered")
+levels(recovery_dat$treatment)
+levels(recovery_dat$recovered)
+```
+
+Note that levels have been assigned as requested: "No toggle switch" is the first category for **treatment** and "Not recovered" is the base category for **recovered**.
+
+### Descriptive statistics
+
+Our outcome variable is categorical so there is little sense in looking at means. Instead we want to look at frequencies, or counts (that is, how many cases fall into different categories). We can do this using the `xtabs()` function built into **R**. It has the following form:
+
+`xtabs(~ row_variable + column_variable + table_variable, data = tibble)`
+
+Essentially we list any variables that we want to decompose the data by, and specify the tibble containing the data. The order in which we list variables determines whether they form rows, columns or different tables. For example, to look at the table of frequencies for the variables of **recovered** and **treatment** we'd execute:
+
+`recovery_xtab <- xtabs(~ treatment + recovered, data = recovery_dat)`
+
+The result would be a 2 × 2 contingency tables with the rows representing different levels of **treatment** and the columns the different levels of **recovered**. We could create 5 different versions of this 2 × 2 table, one for each level of **dose**, by including it as a third variable in the formula:
+
+`recovery_full_xtab <- xtabs(~ treatment + recovered + dose, data = recovery_dat)`
+
+Try both of these commands in the code box, and inspect the results. You could try changing the order of variables to see how this affects which variables are presented in the rows and columns of the tables.
+
+```{r xtab, exercise = TRUE, exercise.lines = 6, exercise.setup = "prepare-data"}
+             
+```
+
+```{r xtab-solution}
+recovery_xtab <- xtabs(~ treatment + recovered, data = recovery_dat)
+recovery_full_xtab <- xtabs(~ treatment + recovered + dose, data = recovery_dat)
+recovery_xtab
+recovery_full_xtab
+```
+
+A different approach is to use the `dplyr` functions from `tidyverse` and a pipe. This is good practice for seeing the power of the pipe, and allows us to compute relative frequencies (which are useful to plot). However, it is quite complicated so feel free to skip ahead. I'll show you the pipe and then explain it line by line:
+
+```{r echo = TRUE, eval = FALSE}
+recovery_freq <- recovery_dat %>%
+  group_by(treatment, dose, recovered) %>%
+  summarize(n = n()) %>% 
+  group_by(treatment, dose) %>% 
+  mutate(
+    rel_freq = n / sum(n),
+    perc = rel_freq*100
+  )
+```
+
+Let's look at each line:
+
+1. This creates an object `recovery_freq`. We begin by passing the `recovery_dat` tibble into the pipe.
+2. This groups the data by all combinations of **treatment**, **dose** and **recovered**. It effectively creates 20 cells (2 treatments × 5 doses × 2 categories of recovery).
+3. Uses the `summarize()` function to create a variable called **n** using the function `n()`. Because in the previous line we grouped the data by all combinations of variables, line 3, in effect counts the number of observations in each of the 20 cells. In effect, up to this point we have calculated the cell frequencies for all combinations of **treatment**, **dose** and **recovered**. It can be instructive to execute the pipe only up to this point to see what has been done so far.
+4. Up to this point we have a tibble containing all 20 combinations of **treatment**, **dose** and **recovered** and a variable called **n** that contains the cell frequencies. Line 4 now groups this tibble by **treatment** and **dose**. Any subsequent calculations will therefore be conducted on the 10 combinations of **treatment** and **dose**.
+5. Initiates the mutate function, which adds new variables to a tibble.
+6. The first variable we add to the tibble is called **rel_freq** and it is calculated by by taking the cell count (**n**) and diving by `sum(n)`. What is `sum(n)`? It is all the values of **n** added up. However, because in the previous line we grouped by **treatment** and **dose**, the sum will be computed separately for each combination of **treatment** and **dose**. In other words, `sum(n)` adds together the value of **n** for the *recovered* cells and the value of **n** for the *Not recovered* cell. The new variable **freq** is, therefore, expressing each value of *n* as the relative frequency of recovered to not recovered cases. When you inspect the final product, you'll see, for example, when the dose was 0 and there was no toggle switch, there were 27 not recovered cases and 3 recovered. The sum of these (`sum(n)`) will be 27 + 3 = 30. The resulting frequencies are for recovered cases 27/30 = 0.9, or 90%, and 3/30 = 0.1, or 10%, for recovered cases. In other words, for those with a 0 dose of C-gene and no toggle switch 10% recovered but 90% did not.
+7. Creates a variable **perc** that expresses the variable **rel_freq** as a percentage by multiplying it by 100.
+8. Closes the `mutate()` function.
+
+As I said, it can be useful to execute parts of the pipe to see how it builds up, or even to break it into separate smaller pipes to help you understand what it is doing. Use the code box to execute the pipe and inspect the resulting tibble.
+
+`r colFmt("Hint: If you're doing this outside of the tutorial remember to load the package tidyverse (or dplyr)", cbGreen)`
+
+
+```{r freqs, exercise = TRUE, exercise.lines = 9, exercise.setup = "prepare-data"}
+             
+```
+
+```{r freqs-solution}
+recovery_freq <- recovery_dat %>%
+  group_by(treatment, dose, recovered) %>%
+  summarize(n = n()) %>% 
+  group_by(treatment, dose) %>% 
+  mutate(
+    rel_freq = n / sum(n),
+    perc = rel_freq*100
+  )
+recovery_freq
+```
+
+You should see a tibble with 20 rows representing the different combinations of **treatment**, **dose** and **recovered**, a variable (**n**) containing their cell counts, a variable called **rel_freq** expressing the relative frequency of recovered to non-recovered cases for each combination of **treatment** and **dose**, and a variable **perc** that expressed that relative frequency as a percentage.
+
+### Plotting the data
+
+The first plot we'll do uses the original data and plots the number recovered over the top of the number not recovered. We'll plot the **dose** along the *x*-axis and create different panels for the two treatment conditions. This is the code:
+
+```{r echo = TRUE, eval = FALSE}
+recovery_plot <- ggplot(recovery_dat, aes(dose, fill = recovered, colour = recovered))
+recovery_plot +
+  geom_histogram(binwidth = 1, position = "identity", alpha = 0.6) +
+  scale_colour_manual(values = c("#DF4738", "#009E73")) +
+  facet_wrap(~ treatment) +
+  labs(x = "Dose of C-gene", y = "Frequency", fill = "Recovery status", colour = "Recovery status") +
+  theme_bw()
+```
+
+Let's explore this command line by line:
+
+1. Creates an object `recovery_plot` using the `ggplot()` function. Within this function we specify the data as the tibble called `recovery_dat`, then within `aes()` we set **dose** along the *x*-axis, and then set the fill and colour to both vary by the variable **recovered**. This will ensure we get different coloured/filled bars for recovered and non-recovered cases.
+2. We start adding layers to the `recovery_plot` object.
+3. The first layer we add is a histogram. We set the binwidth to 1 to ensure that we get a bar for each level of **dose**, and set the alpha to 0.6 to make the bars transparent (otherwise the recovered bars will obscure the not recovered bars and vice versa). By default ggplot with stack the recovered and non recovered bars on top of each other (which you might like) but by setting the position to "identity" we force ggplot to overlay the bars. I find this easier to read because all bars start at zero on the scale but if you prefer stacked bars then remove 'position = "identity"' (and probably also the 'alpha = 0.6').
+4. This line is optional: it over-rides the default colours to be a red and green that I like to use because they are colour-blind friendly (apparently).
+5. Uses `facet_wrap()` to create separate plots for the toggle switch and no toggle switch conditions.
+6. Adds labels to the *x* and *y* axes. Note that by including `fill = "Recovery status", colour = "Recovery status"` and making their labels identical we get a single legend representing both the fill and colour.
+7. Adds a black and white theme.
+
+Use the code box to draw this plot. Try deleting lines and observing the effect it has on the plot.
+
+`r colFmt("Hint: If you're doing this outside of the tutorial remember to load the tidyverse (or ggplot2) package", cbGreen)`
+
+```{r plot_1, exercise = TRUE, exercise.lines = 7, exercise.setup = "prepare-data"}
+             
+```
+
+```{r plot_1-solution}
+recovery_plot <- ggplot(recovery_dat, aes(dose, fill = recovered, colour = recovered))
+recovery_plot +
+  geom_histogram(binwidth = 1, position = "identity", alpha = 0.6) +
+  scale_colour_manual(values = c("#DF4738", "#009E73")) +
+  facet_wrap(~ treatment) +
+  labs(x = "Dose of C-gene", y = "Frequency", fill = "Recovery status", colour = "Recovery status") +
+  theme_bw()
+```
+
+An alternative plot that I used in the lecture was one that plotted the percentage recovered by **dose** and **treatment**. To do this plot we need to use the `recovery_freq` object we created earlier which has the percentages stored. However, we want to ignore all of the non-recovered cases (because we're just plotted the percentage recovered). First, then, we might create a new tibble `recover_percent` that is based on the tibble we created earlier that contains the relative frequencies and percentages (`recovery_freq`) but filters out the not recovered cases by including only cases where the variable **recovered** has the value "Recovered":
+
+`recover_percent <- recovery_freq %>% filter(recovered == "Recovered")`
+
+We plot data from this tibble:
+
+```{r echo = TRUE, eval = FALSE}
+percent_plot <- ggplot(recover_percent, aes(dose, perc, colour = treatment))
+percent_plot +
+  geom_line(size = 1) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_colour_manual(values = c("#DF4738", "#009E73")) +
+  coord_cartesian(ylim = c(0, 100)) +
+  scale_y_continuous(breaks = seq(0, 100, 10)) +
+  labs(x = "Dose of C-gene", y = "Percent recovered", colour = "Treatment group") +
+  theme_bw()
+```
+
+Let's explore this command line by line:
+
+1. Creates an object `percent_plot` using the `ggplot()` function. Within this function we specify the data as the tibble called `recover_percent`, then within `aes()` we set **dose** along the *x*-axis, and then set the colour to vary by the variable **treatment**. This will ensure we get different coloured lines/points for the toggle switch and no toggle switch groups.
+2. We start adding layers to the `percent_plot` object.
+3. The first layer we add is a line connecting the values. We set the size to be 1.
+4. We then add a layer that plots dots on top of the lines.We set the size to be 3 and the transparency to be 0.7.
+5. This line is optional: it over-rides the default colours to be a red and green that I like to use because they are colour-blind friendly.
+6. Uses `coord_cartesian()` to set the limits of the *y*-axis to 0 and 100 (because we're plotting percentages).
+7. Uses `scale_y_continuous()` to set the breaks on the *y*-axis to be a sequence from 0 to 100 in steps of 10 (i.e. 0, 10, 20, 30 40 ...).
+8. Adds labels to the *x* and *y* axes. Note that by including `fill = "Recovery status", colour = "Recovery status"` and making their labels identical we get a single legend representing both the fill and colour.
+9. Adds a black and white theme.
+
+Use the code box to draw this plot. Try deleting lines and observing the effect it has on the plot.
+
+`r colFmt("Hint: Remember that you need to create the recover_percent tibble first", cbGreen)`
+
+
+```{r plot_2, exercise = TRUE, exercise.lines = 10, exercise.setup = "prepare-data"}
+             
+```
+
+```{r plot_2-solution}
+recover_percent <- recovery_freq %>% filter(recovered == "Recovered")
+
+percent_plot <- ggplot(recover_percent, aes(dose, perc, colour = treatment))
+percent_plot +
+  geom_line(size = 1) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_colour_manual(values = c("#DF4738", "#009E73")) +
+  coord_cartesian(ylim = c(0, 100)) +
+  scale_y_continuous(breaks = seq(0, 100, 10)) +
+  labs(x = "Dose of C-gene", y = "Percent recovered", colour = "Treatment group") +
+  theme_bw()
+```
+
+## Fitting the model
+### The `glm()` function
+
+To fit the model we use the function `glm()` which stands for 'generalized linear model'. The function takes the same form as `lm()`, which we have used many times before, except that it also allows you to specify a specific distribution for the errors in the model. When the outcome is a dichotomy (categorical with two categories) we need to specify the family as `binomial()` giving us a general form of the function as follows:
+
+`glm(outcome ~ predictor(s), data, subset, family = binomial(), na.action = na.fail)`
+
+Let's remind ourselves of these arguments:
+
+* `outcome ~ predictor(s)`: the way we specify the model is basically to write out the model equation but ignoring the *b* values and using a tilde (~) instead of =. For example, if we want the model to predict **recovered** from the variable **treatment** we write the model as `recovered ~ treatment`. If, we want to add **dose** into the mix as a second predictor then we could fit this model by specifying `recovered ~ treatment + dose`. If we want to include the interaction term as well, we could specify `recovered ~ treatment + dose + treatment:dose` or use the equivalent expression of `recovered ~ treatment*dose`. The model specification maps onto the equation describing the model we're fitting.
+* `data`: you use this argument to specify the tibble containing the data (e.g., `data = recovery_dat`). If you're using `glm()` within a pipe where you've previously input a tibble then remember you use `data = .`
+* `subset`: this argument allows you to specify a condition by which you subset data (a bit like you might use in the `filter()` function). For example, we will fit separate models for the toggle switch and no toggle switch groups using `subset = treatment == "Toggle switch"`. Of course, you can also achieve the same thing using a pipe (`recovery_dat %>% treatment == "Toggle switch" %>% glm(recovered ~ treatment*dose, data = ., family = binomial())`)
+* `na.action`: this option determines how to treat missing values. By default it is set to `na.fail` which means that the model fails (it is not fit). If you have missing values then set this option to `na.omit` which removes cases, or `na.exclude` which excluded cases from the model (but does not remove them). See **adventr_14** for more detail.
+* `family = guassian()` determines the distribution of errors. By default the family is set to `guassian()` (a posh word for 'normal') and the function will fit a standard linear model. However, we have changed it to `binomial()` because we want a logistic linear model.
+
+We could fit our model by executing:
+
+`recovery_mod<- glm(recovered ~ treatment*dose, data = recovery_dat, family = binomial())`
+
+and summarize it using the `summary()` function to get the model parameters and `anova()` to get deviance statistics for each step of the model. Try these commands in the code box below.
+
+```{r recovery_mod_sum, exercise = TRUE, exercise.setup = "prepare-data"}
+     
+            
+```
+
+```{r recovery_mod_sum-solution}
+recovery_mod<- glm(recovered ~ treatment*dose, data = recovery_dat, family = binomial())
+summary(recovery_mod)
+anova(recovery_mod)
+```
+
+### Model parameters
+
+We can see that the main effect of treatment, *b* = -0.20, *SE* = 0.52, *z* = -0.38, *p* = 0.701, was not significant, nor was the main effect of dose, *b* = 0.08, *SE* = 0.17, *z* = 0.48, *p* = 0.629. However, the treatment × dose interaction was significant, *b* = 1.03, *SE* = 0.23, *z* = 4.45, *p* < 0.001. The raw *b*-values are difficult to interpret because they tell us about the change in the log odds of the outcome associated with a unit change in the predictor. People's brains just don't work in terms of log odds. Odds are hard enough. Log odds, forget it. Instead, it is better to convert these model parameters to odds ratios, which we'll do in a minute. But first ...
+
+
+### Deviance statistics
+
+The deviance statistics (the -2LL) can be used to tell us whether adding predictors to the model improves the fit. If the residual deviance is decreasing then the fit is improving. The column in the output labelled *Deviance* shows the change in the residual deviance at each step. For example, the residual deviance for the null model is 529.25, when **treatment** is added as a predictor this decreases to 460.49, which is a change of 529.25 - 460.49 = 68.76. The corresponding change in the residual degrees of freedom is 399 - 398 = 1, which is the value in the column *Df*. When **dose** is added the residual deviance decreases to 410.70, which is a change of 460.49 - 410.7 = 49.79 with a corresponding degrees of freedom of 1 (398 - 397). And so on for the interaction term.
+
+We can test whether these changes are significant using the `pchisq(x, df, lower.tail = TRUE)` function, which returns the value of *x* from the probability density function of the chi-square distribution with degrees of freedom equal to *df*. In other words, you enter into the function a chi-square value, and a value for the degrees of freedom, and (by default) it returns the probability of obtaining a value as large as the value entered or smaller (i.e. the lower tail of the distribution, hence `lower.tail = TRUE`). Remember that the *p*-value is the probability of getting a value as big as the one observed *or larger* so to convert the output of `pchisq()` to a *p*-value we need to include `lower.tail = FALSE` to return the upper tail of the distribution.
+
+The question is, what values do we enter into the function? Notice that the object returned by `anova(recovery_mod)` is a table with a column called *Deviance* containing the change in the deviance statistic at each stage of the model, and a column called `Df` that contains the corresponding degrees of freedom. We can use these columns as the *x* and *df* that we input into `pchisq()`. We could do this in a single line of code, but I'm going to break it down to make it a bit easier to explain:
+
+```{r echo = TRUE, eval = FALSE}
+model_dev <- as_tibble(anova(recovery_mod))
+model_dev %>% mutate(
+  chi_p = pchisq(Deviance, Df, lower.tail = FALSE)
+)
+```
+
+The first line uses the `as_tibble()` function to force the table of deviances returned by `anova(recovery_mod)` to be a tibble. I've stored the resulting tibble as an object called `model_dev`. In the next line I take this tibble, and use `mutate()` to add a column to it. I call this column `chi_p` and the values in it are created by entered the value from the **Deviance** variable (already in the `model_dev` tibble) as the chi-square value, the corresponding value from the **Df** variable (also in the `model_dev` tibble) as the df value, and asking for the probability from the upper tail by setting `lower.tail = FALSE`. The result will be the same table that the `anova()` function returned but with an additional column containing the *p*-values. (You could combine the two lines of code into 1 if you prefer, and there are other ways to achieve the same goal too.) Try the code above in the code box.
+
+```{r dev_p, exercise = TRUE, exercise.setup = "prepare-data"}
+     
+            
+```
+
+```{r dev_p-solution}
+model_dev <- as_tibble(anova(recovery_mod))
+model_dev %>% mutate(
+  chi_p = pchisq(Deviance, Df, lower.tail = FALSE)
+)
+```
+
+## Odds ratios: exp(*b*)
+
+To convert the model parameters to odds ratios we can use the function `exp()`, which returns the exponent, $e^x$ (the reverse of the natural log). The resulting value tells us about the change in the odds (rather than the log odds) of the outcome associated with a unit change in the predictor. In other words it returns the odds ratio for the predictor. As with many things in **R** there are a few ways we could go about this. Before we get into this, here are the functions we will use:
+
+* `coef()`: returns the *b*-values for a model (i.e. it returns the values in the column labelled *Estimate* in the output from `summary()`
+* `confint()`: returns the confidence intervals for a model (we've used this function before in **adventr_14**).
+* `cbind()` or `bind_cols()`: both bind columns together
+
+Possibly the quickest way to get the odds ratios and their confidence intervals would be to execute something like this (you could do this as a single line of code by nesting the right-hand side of the first line inside `exp()` but I'm trying to avoid too many of functions nested within other functions):
+
+```{r echo = TRUE, eval = FALSE}
+b_ci <- cbind(coef(recovery_mod), confint(recovery_mod))
+exp(b_ci)
+```
+
+The first line creates an object called `b_ci` which used `coef()` to extract the *b*-values from `recovery_mod`, and `confint()` to get the corresponding confidence intervals, and then binds these columns together (to effectively create a table). The second line returns the exponent of all of the values in `b_ci`. In other words it will return the odds ratios and their confidence intervals. Try this out in the code box:
+
+
+```{r or, exercise = TRUE, exercise.setup = "prepare-data"}
+     
+            
+```
+
+```{r or-solution}
+b_ci <- cbind(coef(recovery_mod), confint(recovery_mod))
+exp(b_ci)
+```
+
+An alternative might be to do something a little more 'tidyverse' and use a pipe. Some people find this easier to get to grips with than nested functions Again, we could do the below as a single pipe, but I've broken it down to make things simpler:
+
+```{r echo = TRUE, eval = FALSE}
+b_values <- coef(recovery_mod) %>% as_tibble()
+b_ci <- confint(recovery_mod) %>% as_tibble()
+b_values %>% bind_cols(b_ci) %>% exp() %>% rename("odds ratio" = value)
+```
+
+The first line creates an object called `b_values` by using `coef()` to extract the *b*-values from `recovery_mod` and then converting the results to a tibble using `as_tibble()`. The second line does the same to create a tibble called `b_ci` by using `confint()` to extract the 95% confidence intervals for the *b*-values from `recovery_mod`. The final line takes the object `b_values` and binds the columns from `b_ci` to it, which gives us a table containing the values of the *b*s and their confidence intervals. These are then passed into `exp()` to convert them to odds ratios. The *b*-values are stored in a variable called **value** so to make the tibble a little more friendly we use `rename()` to rename the variable **value** as **odds ratio**. Try this out in the code box:
+
+
+```{r or_tidy, exercise = TRUE, exercise.setup = "prepare-data"}
+     
+            
+```
+
+```{r or_tidy-solution}
+b_values <- coef(recovery_mod) %>% as_tibble()
+b_ci <- confint(recovery_mod) %>% as_tibble()
+b_values %>% bind_cols(b_ci) %>% exp() %>% rename("odds ratio" = value)
+```
+
+If the value of the odds ratio is greater than 1 then it indicates that as the predictor increases, the odds of the outcome occurring increase. Conversely, a value less than 1 indicates that as the predictor increases, the odds of the outcome occurring decrease. The important thing about the confidence intervals is whether they cross 1. This is important because values greater than 1 mean that as the predictor variable increases, so do the odds of (in this case) being cured. Values less than 1 mean the opposite: as the predictor variable increases, the odds of being cured decrease. Assuming our confidence intervals are from the 95% of samples that contain the population value, then if the interval contains 1 it means that the population value could reflect an effect in one direction, but could also reflect an effect in the opposite direction, or even no effect at all (an odds ratio of 1).
+
+The odds ratio for the main effect of treatment is 0.82 [0.30, 2.30], which means that the odds of a patient who has a toggle switch being cured are 0.82 times higher than those of a patient who did not get the toggle switch. This value is close to 1 indicating that the odds of being cured are basically the same in the no toggle switch or toggle switch groups.
+
+```{r quiz_dose_ex1}
+quiz(
+  question(sprintf("How would you interpret the odds ratio for the effect of **dose**?"),
+    answer("As the dose increase by 1 standard deviation, recovery increased by 1 standard deviation"),
+    answer("As the dose increase by 1 unit, recovery increased by 1 unit"),
+    answer("As the dose increase by 1 unit, the odds of recovery change by 1.08", correct = TRUE),
+    answer("As the dose increase by 1 unit, the log odds of recovery change by 1.08"),
+    correct = "Correct - well done!",
+    random_answer_order = TRUE,
+    allow_retry = T
+  )
+)
+
+```
+
+
+For the interaction, which was significant, the odds ratio is 2.79 [1.79, 4.43], which means that the *odds ratio*b*-value for dose is 2.79 times higher in the intervention group than the control. To see what this value of 2.79 represents, let's use the subset argument to run the same model separately for the no toggle switch or toggle switch groups.
+
+```{r echo = TRUE, eval = FALSE}
+no_toggle_mod <- glm(recovered ~ dose, data = recovery_dat, family = binomial(), subset = treatment == "No toggle switch")
+toggle_mod <- glm(recovered ~ dose, data = recovery_dat, family = binomial(), subset = treatment == "Toggle switch")
+
+no_tog_dose_or <- no_toggle_mod %>% coef() %>% exp()
+tog_dose_or <- toggle_mod %>% coef() %>% exp()
+
+tog_dose_or/no_tog_dose_or
+```
+
+The first line creates an object called `no_toggle_mod` which predicts recovery from only **dose** and uses `subset = treatment == "No toggle switch"` to restrict the model to the group that received no toggle switch. Line 2 does the same but creates an object called `toggle_mod` to fit the same model to the group that *did* receive a toggle switch.
+
+The next two lines create objects called `no_tog_dose_or` and `tog_dose_or` respectively, which take the models created above, extract the *b*-values using `coef()` and then converts them to odds ratios by applying `exp()`. So within these objects we have the odds ratios for the effect of **dose** in the no toggle switch group and the toggle switch group. If you inspect the objects you will find that in the no toggle switch group, the odds ratio for **dose** is 1.084, and in the toggle switch group it is 3.030. The final line takes the odds ratio for the toggle switch group and divides it by the odds ratio for the no toggle switch group. The result is 3.030/1.084 = 2.79, the odds ratio for the interaction! So, the interaction odds ratio tells us that the odds ratio for **dose** is 2.79 times larger in the toggle switch group than the no toggle switch group. Try the above code in the code box:
+
+
+```{r or_int, exercise = TRUE, exercise.setup = "prepare-data"}
+     
+            
+```
+
+```{r or_int-solution}
+no_toggle_mod <- glm(recovered ~ dose, data = recovery_dat, family = binomial(), subset = treatment == "No toggle switch")
+toggle_mod <- glm(recovered ~ dose, data = recovery_dat, family = binomial(), subset = treatment == "Toggle switch")
+no_tog_dose_or <- no_toggle_mod %>% coef() %>% exp()
+tog_dose_or <- toggle_mod %>% coef() %>% exp()
+tog_dose_or/no_tog_dose_or
+```
+
+
+## Plots
+
+We can plot the interaction effect using the `allEffects()` function from the package `effects` [@RN11414]. The code box shows a pipe to make the plot. First we put the model we created earlier `recovery_mod` into the `allEffects()` function to create the data we want to plot, we then push this data into the `plot()` function. The resulting plot shows that in the no toggle switch group the effect of **dose** is basically non-existent (the line is flat) which we know already from the odds ratio of 1 that we computed in the previous section. In the toggle switch group, however, the effect of **dose** is positive (the line slopes upwards to indicate that higher dose is associated with a greater probability of recovery) which we also knew from the odds ratio of 3 that we computed in the previous section.
+
+```{r plot_int, exercise = TRUE, exercise.setup = "prepare-data"}
+allEffects(recovery_mod) %>% plot()           
+```
+
+```{r plot_int-solution}
+allEffects(recovery_mod) %>% plot()
+```
+
+
+## Robust logistic regression
+
+It is also possible to create a robust model using the `glmRob()` function from the `robust` package. This takes the same form as the `glm()` function but returns robust estimates of parameters and associated standard errors and *p*-values. To create a robust variant of the model we would execute:
+
+`recovery_rob <- glmRob(recovered ~ treatment*dose, data = recovery_dat, family = binomial())`
+
+which creates an object `recovery_rob` that contains robust model parameters. We can summarise it with `summary()`. Try this in the code box below and compare the resulting model to the one you created earlier. Basically, the parameter estimates (*b*s) don't change much and the conclusions of the model stay largely the same. Having generated a robust model you would, of course, compute odds ratios (but not confidence intervals). Try doing this too by adapting the code you used earlier.
+
+
+```{r robust_mod, exercise = TRUE, exercise.setup = "prepare-data"}
+         
+```
+
+```{r robust_mod-solution}
+recovery_rob<- glmRob(recovered ~ treatment*dose, data = recovery_dat, family = binomial())
+summary(recovery_rob)
+
+coef(recovery_rob) %>% exp()
+```
+
+
+## Other resources
+
+### Statistics
+
+* The tutorials typically follow examples described in detail in @RN10163, so for most of them there's a thorough account in there. You might also find @RN4832 useful for the **R** stuff.
+* There are free lectures and screen casts on my [YouTube channel](https://www.youtube.com/user/ProfAndyField/)
+* There are free statistical resources on my website [www.discoveringstatistics.com](http://www.discoveringstatistics.com)
+
+### R
+
+* Information on using [ggplot2](http://ggplot2.tidyverse.org/) 
+* [R for data science](http://r4ds.had.co.nz/index.html) is the open-access version of the book by tidyverse creator Hadley Wickham [@RN11404]. It covers the *tidyverse* and data management.
+* [ModernDive](http://moderndive.com/index.html) is an open-access textbook on **R** and **RStudio**
+* [RStudio cheat sheets](https://www.rstudio.com/resources/cheatsheets/)
+* [RStudio list of online resources](https://www.rstudio.com/online-learning/)
+* [SwirlStats](http://swirlstats.com/students.html) is a package for *R* that launches a bunch of interactive tutorials.
+
+## References

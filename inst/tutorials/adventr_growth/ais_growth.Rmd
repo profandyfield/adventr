@@ -228,7 +228,8 @@ $$
 \epsilon_{ij} &= \text{portion individual’s resemblance score that is unpredicted at time } j
 \end{aligned}
 $$
-##Exploring the data
+
+## Exploring the data
 ### Preparing the data
 
 The data are already in *tidy* format, so we don't need to restructure them. Use the code box to inspect the `rehab_growth_dat` tibble.

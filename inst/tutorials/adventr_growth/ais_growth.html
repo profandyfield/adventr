@@ -194,7 +194,12 @@ rehab_growth_dat$time &lt;- fct_relevel(rehab_growth_dat$time, &quot;t12&quot;, 
 \zeta_{1i} &amp;= \text{deviation of individual&#39;s rate of change in resemblance from group average} \\
 \epsilon_{ij} &amp;= \text{portion individual’s resemblance score that is unpredicted at time } j
 \end{aligned}
-\]</span> ##Exploring the data ### Preparing the data</p>
+\]</span></p>
+</div>
+<div id="section-exploring-the-data" class="section level2">
+<h2>Exploring the data</h2>
+<div id="section-preparing-the-data" class="section level3">
+<h3>Preparing the data</h3>
 <p>The data are already in <em>tidy</em> format, so we don’t need to restructure them. Use the code box to inspect the <code>rehab_growth_dat</code> tibble.</p>
 <div class="tutorial-exercise" data-label="inspect_dat" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
@@ -232,6 +237,7 @@ levels(rehab_growth_dat$intervention)
 levels(rehab_growth_dat$time)</code></pre>
 </div>
 <p>You should see that <em>Wait list</em> is now the first level of <strong>intervention</strong> and that the levels of time are now in the correct order of <em>t0</em>, <em>t1</em>, <em>t6</em>, and <em>t12</em>.</p>
+</div>
 <div id="section-descriptive-statistics" class="section level3">
 <h3>Descriptive statistics</h3>
 <p>Using what you’ve learnt in previous tutorials, create a tibble called <code>growth_summary</code> containing the mean resemblance scores (and their confidence intervals) at each time point and within each treatment condition.</p>

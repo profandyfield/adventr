@@ -451,14 +451,14 @@ b_values %&gt;% bind_cols(b_ci) %&gt;% exp() %&gt;% rename(&quot;odds ratio&quot
 <tr>
 <td>
 
-<div id="htmlwidget-b460225567b213a98c31" style="width:100%;height:auto;", class = "quiz html-widget">
+<div id="htmlwidget-2a5ebad353a50f5bd85a" style="width:100%;height:auto;", class = "quiz html-widget">
 <div class="panel panel-default">
 <div class="panel-body quizArea">
 </div>
 </div>
 </div>
 
-<script type="application/json" data-for="htmlwidget-b460225567b213a98c31">{"x":{"question":"How would you interpret the odds ratio for the effect of <strong>dose<\/strong>?","answers":[{"option":"As the dose increase by 1 standard deviation, recovery increased by 1 standard deviation","correct":false,"message":null},{"option":"As the dose increase by 1 unit, recovery increased by 1 unit","correct":false,"message":null},{"option":"As the dose increase by 1 unit, the odds of recovery change by 1.08","correct":true,"message":null},{"option":"As the dose increase by 1 unit, the log odds of recovery change by 1.08","correct":false,"message":null}],"label":"quiz_dose_ex1-1","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"How would you interpret the odds ratio for the effect of <strong>dose<\/strong>?","a":[{"option":"As the dose increase by 1 standard deviation, recovery increased by 1 standard deviation","correct":false,"message":null},{"option":"As the dose increase by 1 unit, recovery increased by 1 unit","correct":false,"message":null},{"option":"As the dose increase by 1 unit, the odds of recovery change by 1.08","correct":true,"message":null},{"option":"As the dose increase by 1 unit, the log odds of recovery change by 1.08","correct":false,"message":null}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-2a5ebad353a50f5bd85a">{"x":{"question":"How would you interpret the odds ratio for the effect of <strong>dose<\/strong>?","answers":[{"option":"As the dose increase by 1 standard deviation, recovery increased by 1 standard deviation","correct":false,"message":null},{"option":"As the dose increase by 1 unit, recovery increased by 1 unit","correct":false,"message":null},{"option":"As the dose increase by 1 unit, the odds of recovery change by 1.08","correct":true,"message":null},{"option":"As the dose increase by 1 unit, the log odds of recovery change by 1.08","correct":false,"message":null}],"label":"quiz_dose_ex1-1","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"How would you interpret the odds ratio for the effect of <strong>dose<\/strong>?","a":[{"option":"As the dose increase by 1 standard deviation, recovery increased by 1 standard deviation","correct":false,"message":null},{"option":"As the dose increase by 1 unit, recovery increased by 1 unit","correct":false,"message":null},{"option":"As the dose increase by 1 unit, the odds of recovery change by 1.08","correct":true,"message":null},{"option":"As the dose increase by 1 unit, the log odds of recovery change by 1.08","correct":false,"message":null}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
 </td>
 </tr>
 </table>
@@ -488,11 +488,13 @@ tog_dose_or/no_tog_dose_or</code></pre>
 <h2>Plots</h2>
 <p>We can plot the interaction effect using the <code>allEffects()</code> function from the package <code>effects</code> <span class="citation">(Fox 2003)</span>. The code box shows a pipe to make the plot. First we put the model we created earlier <code>recovery_mod</code> into the <code>allEffects()</code> function to create the data we want to plot, we then push this data into the <code>plot()</code> function. The resulting plot shows that in the no toggle switch group the effect of <strong>dose</strong> is basically non-existent (the line is flat) which we know already from the odds ratio of 1 that we computed in the previous section. In the toggle switch group, however, the effect of <strong>dose</strong> is positive (the line slopes upwards to indicate that higher dose is associated with a greater probability of recovery) which we also knew from the odds ratio of 3 that we computed in the previous section.</p>
 <div class="tutorial-exercise" data-label="plot_int" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>allEffects(recovery_mod) %&gt;% plot()           </code></pre>
+<pre class="text"><code>library(effects)
+allEffects(recovery_mod) %&gt;% plot()           </code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="plot_int-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>allEffects(recovery_mod) %&gt;% plot()</code></pre>
+<pre class="text"><code>library(effects)
+allEffects(recovery_mod) %&gt;% plot()</code></pre>
 </div>
 </div>
 <div id="section-robust-logistic-regression" class="section level2">
@@ -541,8 +543,7 @@ library(RefManageR)
 library(tidyverse)
 library(forcats)
 library(robust)
-library(effects)
-
+#library(effects)
 
 
 knitr::opts_chunk$set(echo = FALSE)

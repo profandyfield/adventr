@@ -7,24 +7,24 @@ Maintainer: Andy Field <andyf@sussex.ac.uk>
 Description: This package contains a series of tutorials written using the learnr
     package that are intended to augment the textbook An Adventure in Statistics.
 License: GPL-3
-Depends: R (>= 3.1.0)
+Depends:
+  R (>= 3.1.0),
+  learnr,
+  tidyverse
 LazyData: true
 Imports:
-    BayesFactor,
-    car,
-    effects,
-    effsize,
-    forcats,
-    GGally,
-    gmodels,
-    Hmisc,
-    learnr,
-    lm.beta,
-    RefManageR,
-    robust,
-    sjstats,
-    tidyverse,
-    WRS2
+  BayesFactor,
+  car,
+  effsize,
+  forcats,
+  GGally,
+  gmodels,
+  Hmisc,
+  lm.beta,
+  RefManageR,
+  robust,
+  sjstats,
+  WRS2
 RoxygenNote: 6.0.1
 Suggests: knitr,
     rmarkdown

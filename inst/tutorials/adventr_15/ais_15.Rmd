@@ -24,48 +24,6 @@ library(WRS2)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-cbBlack<-"#000000"
-cbGrey<-"#999999"
-cbOrange<-"#E69F00"
-cbBlue<-"#56B4E9"
-cbGreen<-"#009E73"
-cbYellow<-"#F0E442"
-cbBlueDark<-"#0072B2"
-cbOrangeDark<-"#D55E00"
-cbPink<-"#CC79A7"
-cbRed<-"#DF4738"
-
-andy.theme <- function(base_size = 12, base_family = "") {
-  # Starts with theme_grey and then modify some parts
-  theme_grey(base_size = base_size, base_family = base_family) %+replace%
-    theme(
-      axis.title          = element_text(size = rel(1.2)),
-      axis.title.y        = element_text(margin = margin(0, 10, 0, 0), angle = 90),
-      axis.title.x        = element_text(margin = margin(10, 0, 0, 0)),
-      axis.text           = element_text(size = rel(0.75), colour = "grey35"),
-      axis.text.x         = element_text(margin = margin(2, 0, 0, 0)),
-      axis.text.y         = element_text(margin = margin(0, 2, 0, 0)),
-      axis.ticks        = element_line(colour = "grey35"),
-      legend.key        = element_rect(colour = "white"),
-      panel.background  = element_rect(fill = "white", colour = NA),
-      panel.border      = element_rect(fill = NA, colour = "grey50"),
-      panel.grid.major  = element_line(colour = "grey90", size = 0.2),
-      panel.grid.minor  = element_line(colour = "grey98", size = 0.5),
-      strip.background  = element_rect(fill = "grey80", colour = "grey50"),
-      strip.text  = element_text(size = rel(1.4))
-    )
-}
-
-andy.dsus <- function(base_size = 12, base_family = "") {
-  andy.theme(base_size = base_size, base_family = base_family) %+replace%
-    theme(
-      axis.title          = element_text(size = rel(1.6)),
-      axis.text           = element_text(size = rel(1.3), colour = "grey35"),
-      strip.background = element_rect(fill = cbBlueDark, colour = "white"),
-      strip.text  = element_text(size = rel(1.3), colour = "white")
-    )
-}
-
 colFmt = function(x,color){
   outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
   if(outputFormat == 'latex')
@@ -78,15 +36,7 @@ colFmt = function(x,color){
 
 #Read dat files needed for the tutorial
 
-#If command tries to work out whether the code is running online (rather than a package). If online it loads the data from external source, otherwise it'll have the data anyway from the package
-
-if (commandArgs()[1] == "/usr/lib/R/bin/exec/R" ){
-    mask_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_15_masks.csv");
-    mask_dat$mask <- forcats::as_factor(mask_dat$mask) 
-    } else {
-    mask_dat <- adventr::mask_dat
-    }
-
+mask_dat <- adventr::mask_dat
 
 #setup objects for code blocks
 

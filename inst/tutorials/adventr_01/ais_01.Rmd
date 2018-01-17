@@ -9,53 +9,8 @@ bibliography: ../../doc/adventr_bib.bib
 ---
 
 ```{r setup, include=FALSE}
-library(learnr)
-library(RefManageR)
-library(tidyverse)
 knitr::opts_chunk$set(echo = FALSE)
-
-cbBlack<-"#000000"
-cbGrey<-"#999999"
-cbOrange<-"#E69F00"
-cbBlue<-"#56B4E9"
-cbGreen<-"#009E73"
-cbYellow<-"#F0E442"
-cbBlueDark<-"#0072B2"
-cbOrangeDark<-"#D55E00"
-cbPink<-"#CC79A7"
-cbRed<-"#DF4738"
-
-andy.theme <- function(base_size = 12, base_family = "") {
-  # Starts with theme_grey and then modify some parts
-  theme_grey(base_size = base_size, base_family = base_family) %+replace%
-    theme(
-      axis.title          = element_text(size = rel(1.2)),
-      axis.title.y        = element_text(margin = margin(0, 10, 0, 0), angle = 90),
-      axis.title.x        = element_text(margin = margin(10, 0, 0, 0)),
-      axis.text           = element_text(size = rel(0.75), colour = "grey35"),
-      axis.text.x         = element_text(margin = margin(2, 0, 0, 0)),
-      axis.text.y         = element_text(margin = margin(0, 2, 0, 0)),
-      axis.ticks        = element_line(colour = "grey35"),
-      legend.key        = element_rect(colour = "white"),
-      panel.background  = element_rect(fill = "white", colour = NA),
-      panel.border      = element_rect(fill = NA, colour = "grey50"),
-      panel.grid.major  = element_line(colour = "grey90", size = 0.2),
-      panel.grid.minor  = element_line(colour = "grey98", size = 0.5),
-      strip.background  = element_rect(fill = "grey80", colour = "grey50"),
-      strip.text  = element_text(size = rel(1.4))
-    )
-}
-
-andy.dsus <- function(base_size = 12, base_family = "") {
-  andy.theme(base_size = base_size, base_family = base_family) %+replace%
-    theme(
-      axis.title          = element_text(size = rel(1.6)),
-      axis.text           = element_text(size = rel(1.3), colour = "grey35"),
-      strip.background = element_rect(fill = cbBlueDark, colour = "white"),
-      strip.text  = element_text(size = rel(1.3), colour = "white")
-    )
-}
-
+library(RefManageR)
 ```
 
 # An Adventure in R: Setting up **R** and **RStudio**
@@ -84,21 +39,21 @@ The CRAN is central to using **R**: it is the place from where you download the 
 You can use **R** as a standalone piece of software but it doesn't have the most pleasant user interface. This is where **RStudio** comes in. **RStudio** is a free integrated development environment (IDE) for **R**. In plain English, this means that it is a user interface through which to use **R**. So, you can use **R** without **RStudio** but you can't use **RStudio** without **R**. **RStudio** has functionality that make working with **R** easier, more efficient, and generally more pleasant than working in **R** alone. That's why I base my teaching within **RStudio**.
 
 ```{r cran_quiz}
-quiz(
-  question("What is the CRAN?",
-    answer("A repository from which you download **R** and install packages", correct = TRUE),
-    answer("The part of **R** that processes commands"),
-    answer("The place from where you download **RStudio**"),
-    answer("The institutions where people develop packages for **R**"),
+learnr::quiz(
+  learnr::question("What is the CRAN?",
+    learnr::answer("A repository from which you download **R** and install packages", correct = TRUE),
+    learnr::answer("The part of **R** that processes commands"),
+    learnr::answer("The place from where you download **RStudio**"),
+    learnr::answer("The institutions where people develop packages for **R**"),
     correct = "Correct - well done!",
     incorrect = "Sorry, that's incorrect. Try again.",
     random_answer_order = TRUE,
     allow_retry = T
   ),
-  question("What is a package?",
-    answer("A bunch of code that when installed and loaded into **R** provides additional functionality", correct = TRUE),
-    answer("An exact copy of the CRAN at a specific location on the planet", message = "This answer describes a 'mirror'."),
-    answer("A repository from which you download **R** and install packages", message = "This answer describes the CRAN"),
+  learnr::question("What is a package?",
+    learnr::answer("A bunch of code that when installed and loaded into **R** provides additional functionality", correct = TRUE),
+    learnr::answer("An exact copy of the CRAN at a specific location on the planet", message = "This answer describes a 'mirror'."),
+    learnr::answer("A repository from which you download **R** and install packages", message = "This answer describes the CRAN"),
     correct = "Correct - well done!",
     random_answer_order = TRUE,
     allow_retry = T
@@ -175,12 +130,12 @@ There are three main ways to work in *RStudio*:
     
     
 ```{r script_quiz}
-quiz(
-  question("Which of these is **not** an advantage of working with script files?",
-    answer("You can generate a word file of your code and output.", correct = TRUE, message = "This is an advantage of using **R** markdown, not a script file, so this is the answer that is *not* an advantage of script files."),
-    answer("You can easily reproduce your analyses."),
-    answer("You can use past code to speed up writing new code."),
-    answer("It is easy for others to see how you fit your models and processed your data."),
+learnr::quiz(
+  learnr::question("Which of these is **not** an advantage of working with script files?",
+    learnr::answer("You can generate a word file of your code and output.", correct = TRUE, message = "This is an advantage of using **R** markdown, not a script file, so this is the answer that is *not* an advantage of script files."),
+    learnr::answer("You can easily reproduce your analyses."),
+    learnr::answer("You can use past code to speed up writing new code."),
+    learnr::answer("It is easy for others to see how you fit your models and processed your data."),
     correct = "Correct - well done!",
     incorrect = "Sorry, that's incorrect. Try again.",
     random_answer_order = TRUE,
@@ -210,42 +165,42 @@ The **RStudio** environment is shown in Figure 6. By default there are four pane
 
 
 ```{r pane_quiz}
-quiz(
-  question("In what pane do you view, edit and execute script (or **R** Markdown) files?",
-    answer("Source", correct = TRUE),
-    answer("Console"),
-    answer("Workspace"),
-    answer("Files"),
+learnr::quiz(
+  learnr::question("In what pane do you view, edit and execute script (or **R** Markdown) files?",
+    learnr::answer("Source", correct = TRUE),
+    learnr::answer("Console"),
+    learnr::answer("Workspace"),
+    learnr::answer("Files"),
     correct = "Correct - well done!",
     incorrect = "Sorry, that's incorrect. Try again.",
     random_answer_order = TRUE,
     allow_retry = T
   ),
-  question("In what pane do you view the output of commands executed from a script file?",
-    answer("Source"),
-    answer("Console", correct = TRUE),
-    answer("Workspace"),
-    answer("Files"),
+  learnr::question("In what pane do you view the output of commands executed from a script file?",
+    learnr::answer("Source"),
+    learnr::answer("Console", correct = TRUE),
+    learnr::answer("Workspace"),
+    learnr::answer("Files"),
     correct = "Correct - well done!",
     incorrect = "Sorry, that's incorrect. Try again.",
     random_answer_order = TRUE,
     allow_retry = T
   ),
- question("In what pane do you view plots of data?",
-    answer("Source"),
-    answer("Console"),
-    answer("Workspace"),
-    answer("Files", correct = TRUE),
+ learnr::question("In what pane do you view plots of data?",
+    learnr::answer("Source"),
+    learnr::answer("Console"),
+    learnr::answer("Workspace"),
+    learnr::answer("Files", correct = TRUE),
     correct = "Correct - well done!",
     incorrect = "Sorry, that's incorrect. Try again.",
     random_answer_order = TRUE,
     allow_retry = T
   ),
-question("In what pane do you view the objects that you have created in **R**?",
-    answer("Source"),
-    answer("Console"),
-    answer("Workspace", correct = TRUE),
-    answer("Files"),
+learnr::question("In what pane do you view the objects that you have created in **R**?",
+    learnr::answer("Source"),
+    learnr::answer("Console"),
+    learnr::answer("Workspace", correct = TRUE),
+    learnr::answer("Files"),
     correct = "Correct - well done!",
     incorrect = "Sorry, that's incorrect. Try again.",
     random_answer_order = TRUE,

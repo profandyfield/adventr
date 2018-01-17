@@ -19,8 +19,8 @@ recovery_dat
 }
 \description{
 A dataset not from Field, A. P. (2016). An adventure in statistics: the reality enigma. London: Sage, but continuing the theme of the story. At the end of the book
-it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset relates to her third attempt. It contains data from
-400 code 1318 workers. Workers were randomly assigned to two arms of a trial (C-gene therapy and C-gene therapy with a toggle switch). they were also given one of 5 doses of C-gene (0, 1, 2, 3, or 4). The outcome was
-whether (or not) they had fully recovered after the treatment.
+it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset relates to her third attempt. It contains data from 400 code 1318 workers.
+Workers were randomly assigned to two arms of a trial (C-gene therapy and C-gene therapy with a toggle switch). They were also given one of five different doses of C-gene: 0 (no dose) or 1, 2, 3, or 4 doses.
+The outcome was whether (or not) the worker had fully recovered after the treatment.
 }
 \keyword{datasets}

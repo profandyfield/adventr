@@ -33,15 +33,29 @@ To run a tutorial execute:
 
 replacing \emph{name_of_tutorial} with the name of the tutorial (see below). For example, to run the tutorial on data basics execute:
 
-\code{learnr::run_tutorial("adventr_01", package = "adventr")}
+\code{learnr::run_tutorial("adventr_02", package = "adventr")}
 }
 
 \section{A list of tutorials}{
 
 
 \itemize{
-       \item \strong{adventr_00}: This tutorial looks at how to download, install, and setup R and RStudio, although if you're reading this then presumably you've already downloaded, installed and setup R amd RStudio!
-       \item \strong{adventr_01}: This tutorial looks at the basic concepts in R, such as installing packages, setting the working directory, getting help, getting data into R, creating variables, creating data frames and tibbles, reading in data files, manipulating variables within a tibble/data frame.
+       \item \strong{adventr_02}: Data basics in R and RStudio. This tutorial looks at the basic concepts in R, such as installing packages, setting the working directory, getting help, getting data into R, creating variables, creating data frames and tibbles, reading in data files, manipulating variables within a tibble/data frame.
+       \item \strong{adventr_03}: Summarizing data (introducing ggplot2)
+       \item \strong{adventr_04}: Fitting models (central tendency)
+       \item \strong{adventr_05}: Presenting data (summarizing groups and more ggplot2)
+       \item \strong{adventr_08}: Inferential statistics and robust estimation (covers Chapter 9 too)
+       \item \strong{adventr_11} Hypothesis testing
+       \item \strong{adventr_14}: The general linear model
+       \item \strong{adventr_15}: Comparing two means
+       \item \strong{adventr_15_rm}: Comparing two means (repeated measures)
+       \item \strong{adventr_16}: Comparing several means
+       \item \strong{adventr_16_rm}: Comparing several means (repeated measures)
+       \item \strong{adventr_17}: Factorial designs
+       \item \strong{adventr_mlm}: Multilevel models (not covered in the book)
+       \item \strong{adventr_growth}: Growth models (not covered in the book)
+       \item \strong{adventr_log}: Logistic regression (not covered in the book)
+
 }
 }
 

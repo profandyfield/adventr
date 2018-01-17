@@ -5,7 +5,7 @@ output:
   learnr::tutorial:
     progressive: true
 runtime: shiny_prerendered
-bibliography: ../../doc/adventr_bib.bib
+bibliography: adventr_bib.bib
 ---
 
 ```{r setup, include=FALSE}

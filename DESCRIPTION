@@ -16,6 +16,7 @@ Imports:
   BayesFactor,
   car,
   effsize,
+  effects,
   forcats,
   GGally,
   gmodels,

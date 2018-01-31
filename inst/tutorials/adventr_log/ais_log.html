@@ -451,14 +451,14 @@ b_values %&gt;% bind_cols(b_ci) %&gt;% exp() %&gt;% rename(&quot;odds ratio&quot
 <tr>
 <td>
 
-<div id="htmlwidget-96440bebe61a01eeefb2" style="width:100%;height:auto;", class = "quiz html-widget">
+<div id="htmlwidget-da4d94343294c4ede28b" style="width:100%;height:auto;", class = "quiz html-widget">
 <div class="panel panel-default">
 <div class="panel-body quizArea">
 </div>
 </div>
 </div>
 
-<script type="application/json" data-for="htmlwidget-96440bebe61a01eeefb2">{"x":{"question":"How would you interpret the odds ratio for the effect of <strong>dose<\/strong>?","answers":[{"option":"As the dose increase by 1 standard deviation, recovery increased by 1 standard deviation","correct":false,"message":null},{"option":"As the dose increase by 1 unit, recovery increased by 1 unit","correct":false,"message":null},{"option":"As the dose increase by 1 unit, the odds of recovery change by 1.08","correct":true,"message":null},{"option":"As the dose increase by 1 unit, the log odds of recovery change by 1.08","correct":false,"message":null}],"label":"quiz_dose_ex1-1","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"How would you interpret the odds ratio for the effect of <strong>dose<\/strong>?","a":[{"option":"As the dose increase by 1 standard deviation, recovery increased by 1 standard deviation","correct":false,"message":null},{"option":"As the dose increase by 1 unit, recovery increased by 1 unit","correct":false,"message":null},{"option":"As the dose increase by 1 unit, the odds of recovery change by 1.08","correct":true,"message":null},{"option":"As the dose increase by 1 unit, the log odds of recovery change by 1.08","correct":false,"message":null}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-da4d94343294c4ede28b">{"x":{"question":"How would you interpret the odds ratio for the effect of <strong>dose<\/strong>?","answers":[{"option":"As the dose increase by 1 standard deviation, recovery increased by 1 standard deviation","correct":false,"message":null},{"option":"As the dose increase by 1 unit, recovery increased by 1 unit","correct":false,"message":null},{"option":"As the dose increase by 1 unit, the odds of recovery change by 1.08","correct":true,"message":null},{"option":"As the dose increase by 1 unit, the log odds of recovery change by 1.08","correct":false,"message":null}],"label":"quiz_dose_ex1-1","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"How would you interpret the odds ratio for the effect of <strong>dose<\/strong>?","a":[{"option":"As the dose increase by 1 standard deviation, recovery increased by 1 standard deviation","correct":false,"message":null},{"option":"As the dose increase by 1 unit, recovery increased by 1 unit","correct":false,"message":null},{"option":"As the dose increase by 1 unit, the odds of recovery change by 1.08","correct":true,"message":null},{"option":"As the dose increase by 1 unit, the log odds of recovery change by 1.08","correct":false,"message":null}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
 </td>
 </tr>
 </table>
@@ -539,11 +539,10 @@ coef(recovery_rob) %&gt;% exp()</code></pre>
 
 <script type="application/shiny-prerendered" data-context="server-start">
 library(learnr)
-library(RefManageR)
 library(tidyverse)
 library(forcats)
 library(robust)
-#library(effects)
+library(effects)
 
 
 knitr::opts_chunk$set(echo = FALSE)

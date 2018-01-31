@@ -10,7 +10,6 @@ bibliography: adventr_bib.bib
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-library(RefManageR)
 ```
 
 # An Adventure in R: Setting up **R** and **RStudio**

@@ -10,7 +10,6 @@ bibliography: adventr_bib.bib
 
 ```{r setup, include=FALSE}
 library(learnr)
-library(RefManageR)
 library(tidyverse)
 library(BayesFactor)
 library(boot)

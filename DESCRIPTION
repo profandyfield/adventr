@@ -22,6 +22,7 @@ Imports:
   gmodels,
   Hmisc,
   lm.beta,
+  RefManageR,
   robust,
   sjstats,
   WRS2

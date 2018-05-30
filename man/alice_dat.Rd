@@ -19,7 +19,7 @@ alice_dat
 }
 \description{
 A dataset relating to the following fictitious experiment:
-Participants who had facial burns were recruited. One-week pre-test, a gene C–10XFMG (the so-called chameleon gene)
+Participants who had facial burns were recruited. One-week pre-test, a gene C-10XFMG (the so-called chameleon gene)
 was introduced into all participants.Two days prior to test, a genetic toggle switch was introduced into half of the participants.
 Half of the participants were asked to look at a photograph of themselves from before their injury and to imagine the cells in their faces
 changing to become like the photo. The remainder acted as a control and were asked to look at a picture of a same-sex stranger and to try

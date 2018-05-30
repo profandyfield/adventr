@@ -20,7 +20,7 @@ mask_dat
 A dataset relating to the following fictitious experiment:
 "Twenty-eight participants were tested individually. Each participant sat on a revolving chair in the middle of a circle of 20 people.
 The 20 people all wore a light deflecting aid on their face. For half of the participants (N = 14) the 20 people wore a standard calcite-based mask,
-whereas the other half (N = 14) saw people wearing ‘invisibility paste’, a transparent cream containing calcite micro-crystals.
+whereas the other half (N = 14) saw people wearing 'invisibility paste', a transparent cream containing calcite micro-crystals.
 Participants looked at each person and were given two photographs, one depicting the person they were looking at and one depicting a different
 person matched for age and sex. Participants had to decide which person they were looking at, before turning to the next person and being given
 two different photographs. Participants scored a point for each person they identified correctly: a score of 0 would mean they always chose the

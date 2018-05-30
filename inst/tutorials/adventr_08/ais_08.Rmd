@@ -1,5 +1,5 @@
 ---
-title: "AAiR: Inferential statistics"
+title: "adventr: inferential statistics"
 author: "Andy Field"
 output:
   learnr::tutorial:
@@ -11,7 +11,6 @@ bibliography: adventr_bib.bib
 ```{r setup, include=FALSE}
 library(forcats)
 library(learnr)
-library(RefManageR)
 library(tidyverse)
 library(gmodels)
 library(boot)

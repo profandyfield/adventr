@@ -1,5 +1,5 @@
 ---
-title: "AAiR: Setting up R and RStudio"
+title: "adventr: setting up R and RStudio"
 author: "Andy Field"
 output:
   learnr::tutorial:
@@ -10,7 +10,6 @@ bibliography: adventr_bib.bib
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-library(RefManageR)
 ```
 
 # An Adventure in R: Setting up **R** and **RStudio**

@@ -1,5 +1,5 @@
 ---
-title: "AAiR: Categorical predictors pt. 2"
+title: "adventr: more categorical predictors"
 author: "Andy Field"
 output:
   learnr::tutorial:
@@ -11,7 +11,6 @@ bibliography: adventr_bib.bib
 ```{r setup, include=FALSE}
 library(forcats)
 library(learnr)
-library(RefManageR)
 library(tidyverse)
 
 library(BayesFactor)
@@ -472,11 +471,11 @@ Note that the parameter estimates for the effect of group have changed because t
 
 ### Bootstrap confidence intervals
 
-We can also bootstrap confidence intervals as we did in *adventr_14*. Try this in a separate **RStudio** session outside of the tutorial by loading the data and running:
+We can also bootstrap confidence intervals as we did in *adventr_14* and *adventr_15*. refer back to those tutorials to see whether you can understand the code below, then execute it.
 
 `r colFmt("Hint: remember that you need the package boot, so execute library(boot) before executing the code below.", cbGreen)`
 
-```{r mem_mod_boot, echo = T, eval = F}
+```{r mem_mod_boot, exercise = TRUE}
 library(boot) #This loads the package boot
 
 #write a function to do the bootstrapping. This is identical to what was used in the tutorial adventr_14

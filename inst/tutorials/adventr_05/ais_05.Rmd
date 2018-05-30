@@ -1,5 +1,5 @@
 ---
-title: "AAiR: Presenting data"
+title: "adventr: visualizing data"
 author: "Andy Field"
 output:
   learnr::tutorial:
@@ -11,7 +11,6 @@ bibliography: adventr_bib.bib
 ```{r setup, include=FALSE}
 library(forcats)
 library(learnr)
-library(RefManageR)
 library(tidyverse)
 
 knitr::opts_chunk$set(echo = FALSE)

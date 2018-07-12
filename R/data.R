@@ -128,7 +128,7 @@
 #' A dataset relating to the following fictitious experiment:
 #' "Twenty-eight participants were tested individually. Each participant sat on a revolving chair in the middle of a circle of 20 people.
 #' The 20 people all wore a light deflecting aid on their face. For half of the participants (N = 14) the 20 people wore a standard calcite-based mask,
-#' whereas the other half (N = 14) saw people wearing ‘invisibility paste’, a transparent cream containing calcite micro-crystals.
+#' whereas the other half (N = 14) saw people wearing 'invisibility paste', a transparent cream containing calcite micro-crystals.
 #' Participants looked at each person and were given two photographs, one depicting the person they were looking at and one depicting a different
 #' person matched for age and sex. Participants had to decide which person they were looking at, before turning to the next person and being given
 #' two different photographs. Participants scored a point for each person they identified correctly: a score of 0 would mean they always chose the
@@ -150,10 +150,10 @@
 #' A dataset relating to the following fictitious experiment, which is an extension of the invisibility paste data described elsewhere:
 #' "... we asked whether we could manipulate the face perceived by the participant when viewing someone wearing calcite invisibility paste.
 #' Participants were all so-called Chippers, who had ID chips installed in their brains. Each participant met 40 people who had calcite paste
-#' on their face. For each of these people we took a photo of their face (the ‘actual’ face), and found a photo of a different face matched for
-#' sex and age (the ‘different’ face). We could send these images to the participant’s visual cortex using their ID chip.
-#' For 20 of the encounters an image of the person’s ‘actual’ face was transmitted to the participant’s ID chip during the encounter, for the remaining
-#' 20 encounters the ‘different’ face was sent to the chip. During each encounter the participant was shown the photos of the actual and different face
+#' on their face. For each of these people we took a photo of their face (the 'actual' face), and found a photo of a different face matched for
+#' sex and age (the 'different' face). We could send these images to the participant's visual cortex using their ID chip.
+#' For 20 of the encounters an image of the person's 'actual' face was transmitted to the participant's ID chip during the encounter, for the remaining
+#' 20 encounters the 'different' face was sent to the chip. During each encounter the participant was shown the photos of the actual and different face
 #' and pointed to the one depicting whom they thought they had just met. As in Experiment 1, participants scored a point for each person they correctly
 #' identified: a score of 0 would mean that they never chose the correct photo, a score of 20 would mean that they always chose the correct photo."
 #' The data are taken from Chapter 15 of Field, A. P. (2016). An adventure in statistics: the reality enigma. London: Sage.
@@ -221,7 +221,7 @@
 #' Alice's gene data
 #'
 #' A dataset relating to the following fictitious experiment:
-#' Participants who had facial burns were recruited. One-week pre-test, a gene C–10XFMG (the so-called chameleon gene)
+#' Participants who had facial burns were recruited. One-week pre-test, a gene C-10XFMG (the so-called chameleon gene)
 #' was introduced into all participants.Two days prior to test, a genetic toggle switch was introduced into half of the participants.
 #' Half of the participants were asked to look at a photograph of themselves from before their injury and to imagine the cells in their faces
 #' changing to become like the photo. The remainder acted as a control and were asked to look at a picture of a same-sex stranger and to try

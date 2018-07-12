@@ -11,6 +11,7 @@ bibliography: adventr_bib.bib
 ```{r setup, include=FALSE}
 library(forcats)
 library(learnr)
+library(RefManageR)
 library(tidyverse)
 
 library(nlme)

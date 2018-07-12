@@ -10,8 +10,9 @@ bibliography: adventr_bib.bib
 
 ```{r setup, include=FALSE}
 library(learnr)
+library(RefManageR)
 library(tidyverse)
-#library(ggplot2)
+library(ggplot2)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 

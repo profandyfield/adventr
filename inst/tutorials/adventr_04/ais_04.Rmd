@@ -15,15 +15,9 @@ library(tidyverse)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
+hint_text <- function(text, text_color = "#E69F00"){
+  hint <- paste("<font color='", text_color, "'>", text, "</font>", sep = "")
+  return(hint)
 }
 
 #Read dat files needed for the tutorial
@@ -170,7 +164,7 @@ Remember from the last tutorial that because the ratings are in the variable **r
 
 In the code box execute commands to get the mean and median of Alice's RAS ratings.
 
-`r colFmt("Tip: To find the list of options available for a particular function remember that you can get help by executing ? and the name of the function (e.g., ?mean).", cbOrangeDark)`
+`r hint_text("Tip: To find the list of options available for a particular function remember that you can get help by executing ? and the name of the function (e.g., ?mean).")`
 
 
 ```{r ras_mean, exercise = TRUE}

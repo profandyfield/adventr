@@ -18,19 +18,12 @@ library(robust)
 library(sjstats)
 library(WRS2)
 
-
-
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
+hint_text <- function(text, text_color = "#E69F00"){
+  hint <- paste("<font color='", text_color, "'>", text, "</font>", sep = "")
+  return(hint)
 }
 
 #Read dat files needed for the tutorial
@@ -326,7 +319,7 @@ Note that the parameter for the effect of mask has changed from -3.357 to -1.833
 
 We can also bootstrap confidence intervals just as we did in *adventr_14*. Look at the code below and see whether you can make sense of it by referring back to *adventr_14* tutorial. Then execute the code:
 
-`r colFmt("Hint: remember that you need the package boot, so execute library(boot) before executing the code below.", cbGreen)`
+`r hint_text("Tip: remember that you need the package boot, so execute library(boot) before executing the code below.")`
 
 ```{r mask_mod_boot, exercise = TRUE}
 library(boot) #This loads the package boot
@@ -345,7 +338,7 @@ boot.ci(boot_result, type = "bca", index = 2) #for the effect of mask
                
 ```
 
-###The WRS2 package
+### The WRS2 package
 
 The `WRS2` package [@RN10205] wraps up a few of the many functions described by Wilcox to perform robust variants of tests [@RN5244]. We'll look at three functions that compare two means. They have a very similar format:
 
@@ -378,7 +371,7 @@ Note that the trimmed mean difference is 2.3 (rather than the raw mean differenc
 
 The effect size is a robust variant of Cohen's *d* so can be interpreted as invisibility paste producing recognition scores 0.54 of a standard deviation below that for a calcite mask. The confidence interval is quite wide, ranging from 0 to 0.92.
 
-##Bayesian models
+## Bayesian models
 ### Bayes factors
 
 Like in *adventr_11* and *adventr_14* we can use the [BayesFactor package](http://bayesfactorpcl.r-forge.r-project.org/). In this scenario we'd use the `ttestBF()` function because this gives us a simple Bayes factor that compares the alternative (the two means differ) to the null (the two means do not differ). This function was explained in *adventr_11*; it has basically the same format as most of the other functions in this tutorial:
@@ -389,7 +382,7 @@ To recap, by default the function assumes independent scores (`paired = FALSE`) 
 
 So we would use the same formula that we have used throughout, and specify our tibble as `mask_dat`. It's a good idea to save this model into a new object (lets call it `mask_bf`) because you can do useful things with it (we didn't do this for the `yuen()` functions, but you could).
 
-`r colFmt("Tip: if you are using a tibble (rather than a data frame) then place the tibble's name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn't accept tibbles.", cbGreen)`
+`r hint_text("Tip: if you are using a tibble (rather than a data frame) then place the tibble's name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn't accept tibbles.")`
 
 For our data (using the default prior) we could execute:
 

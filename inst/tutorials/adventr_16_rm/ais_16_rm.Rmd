@@ -21,14 +21,9 @@ library(WRS2)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
+hint_text <- function(text, text_color = "#E69F00"){
+  hint <- paste("<font color='", text_color, "'>", text, "</font>", sep = "")
+  return(hint)
 }
 
 #Read dat files needed for the tutorial
@@ -208,7 +203,7 @@ implant_tidy <- implant_dat %>% gather(key = "interference", value = "recall", -
 implant_tidy
 ```
 
-###Creating factors
+### Creating factors
 
 The variables **id** and **interference** currently have the data type of character. This would be fine for a lot of what we want to do (because **R** is fairly intelligent about how it treats character variables). However, for some things (like assigning contrasts) we need these variables to be defined as factors. We can do this by using the `factor()` function, which we hae met before. For example, we could execute:
 
@@ -237,7 +232,7 @@ Note that levels have been assigned alphabetically. So, for **interference** the
 
 Using what you've learnt in previous tutorials, create a tibble called `implant_summary` containing the mean recall ( and their confidence intervals) within each interference condition.
 
-`r colFmt("Hint: if you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels", cbGreen)`
+`r hint_text("Tip: if you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels")`
 
 ```{r desc, exercise = TRUE, exercise.lines = 6}
              
@@ -351,7 +346,7 @@ quiz(
 
 The confidence intervals for the effect of **interference** tells us about whether the parameters likely to be 0 (assuming that this is one of the 95% of samples that yields confidence intervals containing the population value). Under this assumption, the true difference between recall scores when verbal interference is used compared to no interference lies between -3.352 and 1.352. This means it could be anything between a negative change to a positive change, or even no change. The *p*-value suggests that this difference is not significant, *p* = 0.406. In other words, we can not significantly predict recall scores from whether someone had no interference or verbal interference. Conversely, the true difference between recall scores when visual interference is used compared to no interference lies between -6.841 and -1.559. This means it is likely to be a negative change, and unlikely to be zero. The *p*-value suggests that this difference is  significant, *p* = 0.011. In other words, we can significantly predict recall scores from whether someone had no interference or visual interference.
 
-##Contrasts
+## Contrasts
 ### Assigning contrasts
 
 Just like for independent designs, we can use contrast coding by using the `contrasts()` function. This process was explained in **adventr_16**. I tend to create variables containing the codes that I want to use, and then assign these variables to the predictor that I want to add contrasts to by using these variables. This method is slightly long-winded but has the advantage that the variable names for the contrasts you create are used in the output. So, it enables you to set names for your contrasts, which make the output more interpretable.
@@ -472,7 +467,7 @@ rmmcp(implant_tidy$recall, implant_tidy$interference, implant_tidy$id)
 
 Based on `rmanova` we'd conclude that the group means were significantly different, $F_t(2, 4) = 9.18, p = 0.032$, with recall scores similar in the no interference and verbal conditions, $\hat{\psi} = 0.67 [-2.46, 3.79], p = 0.244$, but significantly lower in the visual condition compared to both the no-interference, $\hat{\psi} = 4.33 [1.21, 7.46], p = 0.009$, and verbal, $\hat{\psi} = 3.67 [0.544, 6.79], p = 0.012$, conditions.
 
-##Bayesian models
+## Bayesian models
 ### Bayes factors
 
 Like in the previous tutorial (**adventr_16**) we can use the `anovaBF()` function from the [BayesFactor package](http://bayesfactorpcl.r-forge.r-project.org/). Top recap, it takes the form:
@@ -483,7 +478,7 @@ The function uses default priors that can be specified as a number or as "medium
 
 The main difference with repeated-measures designs is that we need to add in the effect of the individual (**id**) and also include this as a random effect by specifying `whichRandom = "name_of_id_variable"`. It's a good idea to save this model into a new object (lets call it `implant_bf`) because you can do useful things with it (we didn't do this for the `rmanova()` function, but you could).
 
-`r colFmt("Tip: if you are using a tibble (rather than a data frame) then place the tibble's name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn't accept tibbles.", cbGreen)`
+`r hint_text("Tip: if you are using a tibble (rather than a data frame) then place the tibble's name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn't accept tibbles.")`
 
 For our data (using the default prior) we could execute:
 

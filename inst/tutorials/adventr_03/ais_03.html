@@ -126,7 +126,9 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <li><code>tidyverse</code> <span class="citation">(Wickham 2017)</span></li>
 </ul>
 <p>This package is automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in <strong>RStudio</strong>) then you need to make sure that the package has been installed by executing <code>install.packages(&quot;package_name&quot;)</code>, where <em>package_name</em> is the name of the package. If the package is already installed, then you need to reference it in your current session by executing <code>library(package_name)</code>, where <em>package_name</em> is the name of the package.</p>
-<p>###Data</p>
+</div>
+<div id="section-data" class="section level3">
+<h3>Data</h3>
 <p>This tutorial has the data files pre-loaded so you shouldn’t need to do anything to access the data from within the tutorial. However, if you want to play around with what you have learnt in this tutorial outside of the tutorial environment (i.e. in a stand-alone <strong>RStudio</strong> session) you will need to download the data files and then read them into your <strong>R</strong> session. This tutorial uses the following file:</p>
 <ul>
 <li><a href="http://www.discoveringstatistics.com/repository/ais_data/ais_c03_ha.csv">ais_ch03_ha.csv</a>.</li>
@@ -215,7 +217,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <p>This command creates a new graph object called <em>humour_hist</em> using the tibble called <em>ha_dat</em>, and plotting the variable <strong>humour</strong> on the <em>x</em> axis (for a histogram we don’t need to specify <em>y</em>. This command tells <code>ggplot2</code> <em>what</em> to plot, but not <em>how</em> to plot it. We need to add a geom to display the data. If we want a histogram we could execute:</p>
 <p><code>humour_hist + geom_histogram()</code></p>
 <p>This command tells <strong>R</strong> to take the object <em>humour_hist</em> (which we created above) and add (<code>+</code>) a layer to it using <code>geom_histogram()</code>.</p>
-<p>Tip: for more complex plots you will add lots of different layers, so it is helpful to structure the command with a different layer on each line. I tend to specify a layer then include the + symbol, then hit return to specify the next layer. <strong>RStudio</strong> will indent the lines for you making it easier to read. See the example in the code box below.</p>
+<p><font color='#E69F00'>Tip: for more complex plots you will add lots of different layers, so it is helpful to structure the command with a different layer on each line. I tend to specify a layer then include the + symbol, then hit return to specify the next layer. <strong>RStudio</strong> will indent the lines for you making it easier to read. See the example in the code box below.</font></p>
 <p>The full code is in the box below, execute it to see what happens.</p>
 <div class="tutorial-exercise" data-label="humour_hist" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>humour_hist &lt;- ggplot(ha_dat, aes(humour))
@@ -230,7 +232,7 @@ humour_hist +
 <p>We can change the colour of the bars by including <code>fill =</code> within the <code>geom_histogram()</code> function. For example, we could specify the colour red as:</p>
 <p><code>geom_histogram(binwidth = 1, fill = &quot;red&quot;)</code></p>
 <p>Try this in the code box below and run the code.</p>
-<p>Tip: Note that options within a function are separated by a comma. In this example, ‘binwidth = 1, fill = “red”’ will work but ‘binwidth = 1 fill = “red”’ (note the comma is missing) would throw an error.</p>
+<p><font color='#E69F00'>Tip: Note that options within a function are separated by a comma. In this example, ‘binwidth = 1, fill = “red”’ will work but ‘binwidth = 1 fill = “red”’ (note the comma is missing) would throw an error.</font></p>
 <p>You can also specify any <a href="http://www.color-hex.com/">Hex colour code</a>. For example, the shade of blue defined by hex code “#56B4E9” is good for colour blind people, so we could specify this:</p>
 <p><code>geom_histogram(binwidth = 1, fill = &quot;#56B4E9&quot;)</code></p>
 <p>Try this below by replacing <code>&quot;red&quot;</code> with <code>&quot;#56B4E9&quot;</code> and running the code. Play around with other hex codes.</p>
@@ -269,7 +271,7 @@ humour_hist +
 <p>You set the limits of the <em>x</em>-axis using <code>xlim</code> and the limits of the <em>y</em>-axis with <code>ylim</code>. After each you specify numbers representing the start and end values for the axis. You need to collect these values into a single object by enclosing them in <code>c()</code>. So, to set the <em>x</em>-axis to begin at 1 and end at 10 (the lowest and highest points of the scale) add a <code>+</code> after the <code>geom_histogram()</code> function and on the next line type:</p>
 <p><code>coord_cartesian(xlim = c(1, 10))</code></p>
 <p>Add this line to the code box below and run the code to see how the limits of the <em>x</em>-axis change.</p>
-<p>Tip: You may notice that you can also set limits using scale_x_continuous(). However, if you do this then data outside of the limits you set are discarded. Therefore, most of the time we would use coord_cartesian() because it leaves the underlying data alone.</p>
+<p><font color='#E69F00'>Tip: You may notice that you can also set limits using scale_x_continuous(). However, if you do this then data outside of the limits you set are discarded. Therefore, most of the time we would use coord_cartesian() because it leaves the underlying data alone.</font></p>
 <p>Now let’s add a layer that changes what breaks are displayed on the <em>x</em>-axis. At the moment the <em>x</em>-axis displays 2.5, 5, 7.5, and 10 Let’s change this to display the numbers 1 to 10 In <strong>R</strong> we can generate this sequence of numbers by using <code>:</code>. For example, <code>1:5</code> will return 1, 2, 3, 4, 5. The <em>x</em>-axis displays a continuous variable (<strong>humour</strong>) so we can use the function <code>scale_x_continuous()</code> to change aspects of this axis. In particular, the <code>breaks =</code> option will over-ride the default breaks along the axis.</p>
 <p>In the code box below, type <code>+</code> after the <code>coord_cartesian()</code> function and on the next line type:</p>
 <p><code>scale_x_continuous(breaks = 1:10)</code></p>
@@ -425,16 +427,9 @@ library(tidyverse)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-
-
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"<\u002ffont>",sep="")
-  else
-    x
+hint_text <- function(text, text_color = "#E69F00"){
+  hint <- paste("<font color='", text_color, "'>", text, "<\u002ffont>", sep = "")
+  return(hint)
 }
 
 #Read dat files needed for the tutorial

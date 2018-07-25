@@ -19,17 +19,6 @@ library(gmodels)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
-}
-
 #Read dat files needed for the tutorial
 
 teddy_dat <- adventr::teddy_dat;

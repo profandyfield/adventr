@@ -20,15 +20,9 @@ library(WRS2)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
+hint_text <- function(text, text_color = "#E69F00"){
+  hint <- paste("<font color='", text_color, "'>", text, "</font>", sep = "")
+  return(hint)
 }
 
 #Read dat files needed for the tutorial
@@ -227,7 +221,7 @@ calcite_tidy
 
 Use what you've learnt in previous tutorials to create a tibble called `calcite_summary` containing the mean recognition scores (and their confidence intervals) in the two experimental conditions.
 
-`r colFmt("Tip: Remember to use the tidy tibble that we've just created. If you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels", cbGreen)`
+`r hint_text("Tip: Remember to use the tidy tibble that we've just created. If you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels")`
 
 ```{r desc, exercise = TRUE, exercise.lines = 6}
              
@@ -400,7 +394,7 @@ Note that the trimmed mean difference is -2.75 (rather than the raw mean differe
 
 The effect size is a robust variant of Cohen's *d* so can be interpreted as implanting a different face producing recognition scores 0.52 of a standard deviation below that for the actual face.
 
-##Bayesian models
+## Bayesian models
 ### Bayes factors
 
 Like in **adventr_15** we can use the `ttestBF()` function from the [BayesFactor package](http://bayesfactorpcl.r-forge.r-project.org/). This function was explained in **adventr_15**, but with repeated measures data we can't use formula input:

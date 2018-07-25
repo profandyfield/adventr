@@ -19,14 +19,9 @@ library(nlme)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
+hint_text <- function(text, text_color = "#E69F00"){
+  hint <- paste("<font color='", text_color, "'>", text, "</font>", sep = "")
+  return(hint)
 }
 
 #Read dat files needed for the tutorial
@@ -242,7 +237,7 @@ You should see that *Wait list* is now the first level of **intervention** and t
 
 Using what you've learnt in previous tutorials, create a tibble called `growth_summary` containing the mean resemblance scores (and their confidence intervals) at each time point and within each treatment condition.
 
-`r colFmt("Hint: Use the variable called time, for time, and if you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels", cbGreen)`
+`r hint_text("Tip: Use the variable called time, for time, and if you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels")`
 
 ```{r desc, exercise = TRUE, exercise.lines = 6, exercise.setup = "prepare-data"}
              
@@ -306,7 +301,7 @@ growth_mean_plot +
 ```
 
 ## Fitting a growth model
-###Modelling time
+### Modelling time
 
 Traditionally many people would treat the design of this study as, what's known as, a *mixed design*. It is so-called because the predictors (independent variables) are a 'mix' of repeated measures and independent measures. Specifically:
 

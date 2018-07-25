@@ -17,16 +17,6 @@ knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
 
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
-}
-
 #Read dat files needed for the tutorial
 
 jig_dat <- adventr::jig_dat
@@ -285,8 +275,8 @@ strength_sum
 ```
 
 
-##Plotting grouped data
-###Boxplots
+## Plotting grouped data
+### Boxplots
 
 Figure 5.6 in *An adventure in statistics* shows a boxplot of **footspeed** split by **employee**. This is easy to create in `ggplot` using the `geom_boxplot()` function. We could set up the plot with this command:
 
@@ -539,7 +529,7 @@ strength_plot +
 ```
 
 
-##Scatterplots
+## Scatterplots
 
 Zach also showed Dr Tuff a scatterplot of **footspeed** against **strength**. At the simplest level we could set this up as:
 

@@ -16,14 +16,9 @@ library(tidyverse)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-colFmt <- function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
+hint_text <- function(text, text_color = "#E69F00"){
+  hint <- paste("<font color='", text_color, "'>", text, "</font>", sep = "")
+  return(hint)
 }
 
 ha_dat <- adventr::ha_dat
@@ -121,7 +116,7 @@ In the previous tutorial we downloaded and set up **R** and **RStudio**. Open a 
 
 There are many things you can do more quickly using keyboard short-cuts and you can find a full list of available short-cuts [here](https://support.rstudio.com/hc/en-us/articles/200711853-Keyboard-Shortcuts).
 
-`r colFmt("Tip: To see a list of the available shortcuts from within **RStudio** use the *Tools > Keyboard Shortcuts Help* menu, or simulatenously press **alt** + **shift** + **K**", cbOrangeDark) `
+`r hint_text("Tip: To see a list of the available shortcuts from within **RStudio** use the *Tools > Keyboard Shortcuts Help* menu, or simulatenously press **alt** + **shift** + **K**") `
 
 Within these tutorials I flag keyboard short-cuts using notation such as **ctrl** + **shift** + **N**, which means 'simultaneously press the *control*, *shift* and *N* keys' (i.e., you should not press *+*!)
 
@@ -141,7 +136,7 @@ in which *package_name* is replaced by the name of the package that you’d like
 `install.packages("tidyverse")`
 
 
-`r colFmt("Tip: You will find that you use certain packages a lot, so create a script that installs these packages. Wheneever you update or re-install **R** run this script and you will have all of your favourite packages installed", cbOrangeDark) `
+`r hint_text("Tip: You will find that you use certain packages a lot, so create a script that installs these packages. Wheneever you update or re-install **R** run this script and you will have all of your favourite packages installed") `
 
 Having installed a package, you then need to load it in any session where you want to use it. So, if you close **R** or **RStudio** and re-open it, or re-set your workspace, you will need to reload your packages (but not re-install them). To load a package use the `library()` function, which takes the general form:
 
@@ -151,7 +146,7 @@ in which *package_name* is replaced by the name of the package that you’d like
 
 `library(tidyverse)`
 
-`r colFmt("Tip: Near the top of my scripts I have a section marked *# load packages* fiollowed by a list of commands that load all of the packages I use in the script. (I also list them alphabetically because I'm anally retentive.) This makes it easy for me to see which packages the script relies on", cbOrangeDark) `
+`r hint_text("Tip: Near the top of my scripts I have a section marked *# load packages* fiollowed by a list of commands that load all of the packages I use in the script. (I also list them alphabetically because I'm anally retentive.) This makes it easy for me to see which packages the script relies on") `
 
 In these tutorials the packages you need are pre-installed and pre-loaded so you don't need to worry about it. However, when working in **RStudio** on your own assignments/data you will need to install and load the packages that you use.
 
@@ -207,7 +202,7 @@ Commands in R are generally made up of two parts: **objects** and **functions**,
 
 Which means ‘object is created from function’. An object is anything created in **R**. It could be a variable, a collection of variables, a statistical model etc. Objects can be single values (such as the mean of a set of scores) or collections of information; for example, when you run an analysis, you create an object that contains the output of that analysis, which means that this object contains many different values and variables. Functions are the things that you do in *R* to create your objects.
 
-`r colFmt("Tip: Simultaneously press the **alt** + **−** keys to insert the assignment operator (<-)", cbOrangeDark) `
+`r hint_text("Tip: Simultaneously press the **alt** + **−** keys to insert the assignment operator (<-)") `
 
 Having written a command you execute it by (assuming you're working with a script file) selecting it and simultaneously pressing **ctrl** + **↩︎** (**⌘** + **↩︎** on a mac). (If you want to slow yourself down you can click ![](./images/run.png) instead of the keyboard short-cut.) The results of the executed code will appear in the console.
 

@@ -136,7 +136,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <h3>Keyboard shortcuts</h3>
 <p>In the previous tutorial we downloaded and set up <strong>R</strong> and <strong>RStudio</strong>. Open a new script file using the <em>File &gt; New File &gt; R Script</em> menu or by simultaneously pressing the <strong>ctrl</strong> + <strong>shift</strong> + <strong>N</strong> keys (<strong>⌘</strong> + <strong>shift</strong> + <strong>N</strong> on a mac).</p>
 <p>There are many things you can do more quickly using keyboard short-cuts and you can find a full list of available short-cuts <a href="https://support.rstudio.com/hc/en-us/articles/200711853-Keyboard-Shortcuts">here</a>.</p>
-<p>Tip: To see a list of the available shortcuts from within <strong>RStudio</strong> use the <em>Tools &gt; Keyboard Shortcuts Help</em> menu, or simulatenously press <strong>alt</strong> + <strong>shift</strong> + <strong>K</strong></p>
+<p><font color='#E69F00'>Tip: To see a list of the available shortcuts from within <strong>RStudio</strong> use the <em>Tools &gt; Keyboard Shortcuts Help</em> menu, or simulatenously press <strong>alt</strong> + <strong>shift</strong> + <strong>K</strong></font></p>
 <p>Within these tutorials I flag keyboard short-cuts using notation such as <strong>ctrl</strong> + <strong>shift</strong> + <strong>N</strong>, which means ‘simultaneously press the <em>control</em>, <em>shift</em> and <em>N</em> keys’ (i.e., you should not press <em>+</em>!)</p>
 </div>
 <div id="section-installing-and-loading-packages" class="section level3">
@@ -150,12 +150,12 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <p><code>install.packages(&quot;package_name&quot;)</code></p>
 <p>in which <em>package_name</em> is replaced by the name of the package that you’d like installed. Note that the name of the package must be enclosed in <em>straight</em> quotes. For example, later in this tutorial we will use the package <code>tidyverse</code>. To install it, we execute:</p>
 <p><code>install.packages(&quot;tidyverse&quot;)</code></p>
-<p>Tip: You will find that you use certain packages a lot, so create a script that installs these packages. Wheneever you update or re-install <strong>R</strong> run this script and you will have all of your favourite packages installed</p>
+<p><font color='#E69F00'>Tip: You will find that you use certain packages a lot, so create a script that installs these packages. Wheneever you update or re-install <strong>R</strong> run this script and you will have all of your favourite packages installed</font></p>
 <p>Having installed a package, you then need to load it in any session where you want to use it. So, if you close <strong>R</strong> or <strong>RStudio</strong> and re-open it, or re-set your workspace, you will need to reload your packages (but not re-install them). To load a package use the <code>library()</code> function, which takes the general form:</p>
 <p><code>library(package_name)</code></p>
 <p>in which <em>package_name</em> is replaced by the name of the package that you’d like to use. Note that the name of the package is <strong>not</strong> enclosed in quotes. For example, later in this tutorial we will use the package <code>tidyverse</code>. To load it, we execute:</p>
 <p><code>library(tidyverse)</code></p>
-<p>Tip: Near the top of my scripts I have a section marked <em># load packages</em> fiollowed by a list of commands that load all of the packages I use in the script. (I also list them alphabetically because I’m anally retentive.) This makes it easy for me to see which packages the script relies on</p>
+<p><font color='#E69F00'>Tip: Near the top of my scripts I have a section marked <em># load packages</em> fiollowed by a list of commands that load all of the packages I use in the script. (I also list them alphabetically because I’m anally retentive.) This makes it easy for me to see which packages the script relies on</font></p>
 <p>In these tutorials the packages you need are pre-installed and pre-loaded so you don’t need to worry about it. However, when working in <strong>RStudio</strong> on your own assignments/data you will need to install and load the packages that you use.</p>
 </div>
 <div id="section-setting-the-working-directory" class="section level3">
@@ -197,7 +197,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <p>Commands in R are generally made up of two parts: <strong>objects</strong> and <strong>functions</strong>, which are separated by the assignment operator <code>&lt;-</code>. Think of the assignment operator as meaning ‘is created from’. As such, the general form of a command is:</p>
 <p><code>Object &lt;- function</code></p>
 <p>Which means ‘object is created from function’. An object is anything created in <strong>R</strong>. It could be a variable, a collection of variables, a statistical model etc. Objects can be single values (such as the mean of a set of scores) or collections of information; for example, when you run an analysis, you create an object that contains the output of that analysis, which means that this object contains many different values and variables. Functions are the things that you do in <em>R</em> to create your objects.</p>
-<p>Tip: Simultaneously press the <strong>alt</strong> + <strong>−</strong> keys to insert the assignment operator (&lt;-)</p>
+<p><font color='#E69F00'>Tip: Simultaneously press the <strong>alt</strong> + <strong>−</strong> keys to insert the assignment operator (&lt;-)</font></p>
 <p>Having written a command you execute it by (assuming you’re working with a script file) selecting it and simultaneously pressing <strong>ctrl</strong> + <strong>↩︎</strong> (<strong>⌘</strong> + <strong>↩︎</strong> on a mac). (If you want to slow yourself down you can click <img src="images/run.png" /> instead of the keyboard short-cut.) The results of the executed code will appear in the console.</p>
 <p>Let’s write a command to create an object containing the first names of the members of Zach’s band <em>The Reality Enigma</em> (Zach, Nick, Joel, Jessika). We’re going to use the in-built function <code>c()</code> to ‘collect’ these names together, and call the object <code>name</code>. Note that text values need to be entered in straight (not curly) quotes. To do this we need to execute the following code (which I have already written into the code box below):</p>
 <div class="tutorial-exercise" data-label="met_data" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
@@ -244,14 +244,14 @@ name &lt;- c(&quot;Zach&quot;, &quot;Nick&quot;, &quot;Joel&quot;, &quot;Jessika
 <pre class="r"><code>First_names_of_The_Reality_Enigma.members&lt;-c(&quot;Zach&quot;, &quot;Nick&quot;, &quot;Joel&quot;, &quot;Jessika&quot;)</code></pre>
 <p>This example shows bad practice. Note that I have not annotated what I am doing, there are no spaces around the assignment operator (&lt;-) or after commas, I have some capital letters in my object name, have not been consistent with how I separate words in the object name, and have a name that is unnecessarily long.</p>
 
-<div id="htmlwidget-4f898e0016666120dd6d" style="width:100%;height:auto;", class = "quiz html-widget">
+<div id="htmlwidget-1a639b622b7cd37fba63" style="width:100%;height:auto;", class = "quiz html-widget">
 <div class="panel panel-default">
 <div class="panel-body quizArea">
 </div>
 </div>
 </div>
 
-<script type="application/json" data-for="htmlwidget-4f898e0016666120dd6d">{"x":{"question":"Which of these is <strong>not<\/strong> an example of good style?","answers":[{"option":"Use upper case letters for important words when naming objects.","correct":true,"message":"This is poor style because capital letters increase the chance of making errors when later referring to objects that you have created. Use lower case throughout when naming objects."},{"option":"Avoid long names when naming objects.","correct":false,"message":null},{"option":"Place spaces around operators such as &#39;+&#39;, &#39;&lt;-&#39;, &#39;-&#39; etc..","correct":false,"message":null},{"option":"Use comments to remind yourself of what your code is doing.","correct":false,"message":null}],"label":"style_quiz","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"Which of these is <strong>not<\/strong> an example of good style?","a":[{"option":"Use upper case letters for important words when naming objects.","correct":true,"message":"This is poor style because capital letters increase the chance of making errors when later referring to objects that you have created. Use lower case throughout when naming objects."},{"option":"Avoid long names when naming objects.","correct":false,"message":null},{"option":"Place spaces around operators such as &#39;+&#39;, &#39;&lt;-&#39;, &#39;-&#39; etc..","correct":false,"message":null},{"option":"Use comments to remind yourself of what your code is doing.","correct":false,"message":null}],"correct":"Correct - well done!","incorrect":"Sorry, that&#39;s incorrect. Try again."}]}},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-1a639b622b7cd37fba63">{"x":{"question":"Which of these is <strong>not<\/strong> an example of good style?","answers":[{"option":"Use upper case letters for important words when naming objects.","correct":true,"message":"This is poor style because capital letters increase the chance of making errors when later referring to objects that you have created. Use lower case throughout when naming objects."},{"option":"Avoid long names when naming objects.","correct":false,"message":null},{"option":"Place spaces around operators such as &#39;+&#39;, &#39;&lt;-&#39;, &#39;-&#39; etc..","correct":false,"message":null},{"option":"Use comments to remind yourself of what your code is doing.","correct":false,"message":null}],"label":"style_quiz","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"Which of these is <strong>not<\/strong> an example of good style?","a":[{"option":"Use upper case letters for important words when naming objects.","correct":true,"message":"This is poor style because capital letters increase the chance of making errors when later referring to objects that you have created. Use lower case throughout when naming objects."},{"option":"Avoid long names when naming objects.","correct":false,"message":null},{"option":"Place spaces around operators such as &#39;+&#39;, &#39;&lt;-&#39;, &#39;-&#39; etc..","correct":false,"message":null},{"option":"Use comments to remind yourself of what your code is doing.","correct":false,"message":null}],"correct":"Correct - well done!","incorrect":"Sorry, that&#39;s incorrect. Try again."}]}},"evals":[],"jsHooks":[]}</script>
 </div>
 </div>
 <div id="section-creating-variables" class="section level2">
@@ -647,14 +647,9 @@ library(tidyverse)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-colFmt <- function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"<\u002ffont>",sep="")
-  else
-    x
+hint_text <- function(text, text_color = "#E69F00"){
+  hint <- paste("<font color='", text_color, "'>", text, "<\u002ffont>", sep = "")
+  return(hint)
 }
 
 ha_dat <- adventr::ha_dat

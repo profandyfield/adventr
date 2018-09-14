@@ -416,7 +416,7 @@ You can use the `ggsave()` function to save plots (this is what I generally use)
 
 ![](./images/export_plot.png)
 
-Saving to an image or PDF will open a fairly self-explanatory dialog box in which you specify the name of the file, the directory in which to save it, the image format and the size of the image.
+Saving to an image or PDF will open a fairly self-explanatory dialog box in which you specify the name of the file, the directory in which to save it, the image format and the size of the image. If you use a [Notebook](https://bookdown.org/yihui/rmarkdown/notebook.html) or [R Markdown](https://bookdown.org/yihui/rmarkdown/) file you don't need to worry about saving images.
 
 ## Other resources
 

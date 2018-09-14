@@ -136,7 +136,7 @@ in which *package_name* is replaced by the name of the package that you’d like
 `install.packages("tidyverse")`
 
 
-`r hint_text("Tip: You will find that you use certain packages a lot, so create a script that installs these packages. Wheneever you update or re-install **R** run this script and you will have all of your favourite packages installed") `
+`r hint_text("Tip: You will find that you use certain packages a lot, so create a script that installs these packages. Whenever you update or re-install **R** run this script and you will have all of your favourite packages installed") `
 
 Having installed a package, you then need to load it in any session where you want to use it. So, if you close **R** or **RStudio** and re-open it, or re-set your workspace, you will need to reload your packages (but not re-install them). To load a package use the `library()` function, which takes the general form:
 
@@ -239,8 +239,9 @@ You will make your life easier if you organise and write your scripts following 
 * *Use lower case when naming things*: **R** is case sensitive so it will treat *myData* as a completely different object to *mydata*. One of the most common reasons why your code won't run will be because you forgot to capitalize an object that you capitalized when you created it. The simplest solution is to use lower case all of the time when naming objects.
 * *Use underscores to separate words*: when creating objects it improves readability if you use underscores to distinguish words. For example, you might import the data relating to mathematical achievement as *maths_data*, which is easier to read than *mathsdata*. (I used to use camelBack, which results in *mathsData* which is easy to read but introduces a capital letter. I am trying to unlearn this habit!)
 * *Avoid long names*: naming something *great_experiment_to_test_whether_listening_to_heavy_metal_improves_your_statistical_ability_data* is certainly descriptive but you're going to really regret it when you want to refer to that object again - think of the potential for typos which would mean **R** doesn't recognise the object, not to mention the time wasted in typing it out. Keep it short but meaningful.
-* *consider consistent suffixes*: Although not in the style guide, and not essential, I find it useful to have a set of suffixes to indicate the types of objects that I have created. For example, you might use *dat* or *data* for data files, and *m* or *mod* for model, and *out* for output. For example, I might create these objects:
-    - *maths_data*: object containing my data on mathematical achievement
+* *consider consistent suffixes*: Although not in the style guide, and not essential, I find it useful to have a set of suffixes to indicate the types of objects that I have created. For example, you might use *dat* for data frames, *tib* for *tibbles* and *m* or *mod* for model, and *out* for output. For example, I might create these objects:
+    - *maths_dat*: data frame containing my data on mathematical achievement
+    - *maths_tib*: tibble containing my data on mathematical achievement
     - *maths_3x_m*: object specifying a model in which maths achievement was predicted from 3 variables (i.e., 3 *X*s).
     - *maths_3x_out*: object containing the summary output from the above model.
 * *Comment*: You can annotate your code by prefixing text with **#**. This enables you to describe what you are doing. You have no idea how helpful this can be when you revisit code 6 months later and can't remember what you were trying to do. It's a really good habit to get into.

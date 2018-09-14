@@ -168,7 +168,7 @@ mem_plot <- ggplot(mask_dat, aes(mask, recognition))
 mem_plot +
   geom_point(colour = "#E69F00", position = position_jitter(width = 0.1, height = 0)) +
   stat_summary(fun.data = "mean_cl_normal", geom = "pointrange") +
-  labs(x = "Experimental group", y = "Recoognition (out of 20") +
+  labs(x = "Experimental group", y = "Recognition (out of 20") +
   coord_cartesian(ylim = c(0, 20)) +
   scale_y_continuous(breaks = 0:20) +
   theme_bw()

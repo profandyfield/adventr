@@ -27,14 +27,9 @@ library(WRS2)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
+hint_text <- function(text, text_color = "#E69F00"){
+  hint <- paste("<font color='", text_color, "'>", text, "</font>", sep = "")
+  return(hint)
 }
 
 #Read dat files needed for the tutorial
@@ -189,7 +184,7 @@ The variables **gene** and **picture** are made up of 0s and 1s that code the th
 
 Using what you've learnt in previous tutorials, create a tibble called `alice_summary` containing the group means and their confidence intervals split by **gene** and **picture**.
 
-`r colFmt("Hint: to group means by more than one variable you can use group_by(x, y). If you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels", cbGreen)`
+`r hint_text("Tip: to group means by more than one variable you can use group_by(x, y). If you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels")`
 
 ```{r desc, exercise = TRUE, exercise.lines = 6}
              
@@ -301,7 +296,7 @@ b_3 &= \big(\bar{X}_\text{Toggle, other} - \bar{X}_\text{C-gene, other}\big) - \
 \end{aligned}
 $$
 
-###Using *F*-statistics to evaluate effects
+### Using *F*-statistics to evaluate effects
 
 It is common to evaluate the effects in factorial models using an *F*-statistic (the so called Analysis of variance, ANOVA). We can get these *F*-statistics in two ways. The first is to place the model we have just created into the `aov` function and then summarize it. For example, we could execute:
 
@@ -312,7 +307,7 @@ summary(gen_aov)
 
 The first takes the model `gen_mod` that we just created and extracts the information needed to present a summary in terms of *F*-statistics. We store this information in a new object called `gen_aov`. The second line uses `summary()` to print the summary table of *F*-values. This method will give us Type I sums of squares (refer to the lecture). These sums of squares are sequential and are affected by the order in which we place variables into the model. That's why software like SAS and SPSS uses type III sums of squares. The fact that our data are balanced (equal numbers of participants in all conditions) and orthogonal (all of our predictors are binary) means that for these data the Type I sums of squares are the same as the Type III. However, if you have unbalanced designs or predictors with more than two categories you need to look at Type III sums of squares.
 
-`r colFmt("Warning: the following section is quite tricky", cbRed)`
+`r hint_text("Warning: the following section is quite tricky", "#DF4738")`
 
 To get these we use the `Anova()` function from the `car` package. It's a complicated process because for Type III sums of squares to make sense, the contrasts for predictor variables need to be independent (or to use the posh term *orthogonal*). Orthogonal means that the numbers used to code groups must sum to zero and cross multiple to sum to zero. By default, R will use dummy coding (0s and 1s) which results in non-orthogonal contrasts. You can tell that the contrasts are not orthogonal by the fact that the codes do not sum to zero, and when you cross multiply them that sum is also not zero. Table 1 shows what I mean. The codes for the variable **gene** are 0 for c-gene and 1 for toggle switch. So, the two c-gene groups get a code of 0 and the two toggle groups get a code of 1. Sum these codes and you get 0 + 0 + 1 + 1 = 2. This sum needs to be zero. Similarly, for picture, other is coded as 1 and self as 0. So the two 'other' groups get a 1 and the two 'self' groups get a 0. The resulting codes again do not sum to zero: 1 + 0 + 1 + 0 = 2. The final column shows the codes for **gene** multiplied by the corresponding code for **picture**. For example, for the c-gene and other condition we get $0 \times 1 = 0$, for the c-gene and self condition we get $0 \times 0 = 0$ and so on. If we add these products we get a sum of 1. Again, we need this sum to be zero.
 
@@ -378,7 +373,7 @@ Anova(gen_mod2, type = 3, white.adjust = "hc3")
 
 As in previous tutorials, we can use one of the methods (HC0 to HC5) for producing standard errors (and hence confidence intervals) that are robust to heteroscedasticity.
 
-`r colFmt("Hint: if you're doing this outside of the tutorial you need the sjstats package installed and you need to execute library(sjstats).", cbGreen)`
+`r hint_text("Tip: if you're doing this outside of the tutorial you need the sjstats package installed and you need to execute library(sjstats).")`
 
 Remember that we place the model we created with `lm()` (in this case `gen_mod`) into the function `robust()`. For example, we could execute:
 
@@ -401,7 +396,7 @@ robust(gen_mod, conf.int = T)
 robust(gen_mod, vcov = "HC4", conf.int = T)
 ```
 
-###Robust *F*s
+### Robust *F*s
 We saw in the previous section that if we evaluate effects with an *F*-statistic we can correct for heteroscedasticity by including `white.adjust = "hc3"` in the `Anova()` function.
 
 ### Robust estimates
@@ -420,7 +415,7 @@ summary(gen_rob)
 
 Note that the parameter estimates for the effect of group have changed because they no longer represents the difference between arithmetic means but instead represents a robust estimate of those differences.
 
-###The WRS2 package
+### The WRS2 package
 
 The `WRS2` package [@RN10205] wraps up a few of the many functions described by Wilcox to perform robust variants of tests [@RN5244]. We'll look at these functions that compare several means:
 
@@ -452,7 +447,7 @@ mcp2a(resemblance ~ gene*picture, data = alice_dat, nboot = 1000)
 
 Because our predictors are both made up of only two categories, there isn't really any need for *post hoc* tests (because the main effects can only reflect the difference between the two groups). Based on `t2way()` we'd conclude that there was a significant main effect of **gene**, *Q* = 451.36, *p* = 0.001, a significant main effect of **picture**, *Q* = 65.50, *p* = 0.001, and a significant interaction between the two, *Q* = 61.47, *p* = 0.001. `pbad2way()` returns only *p*-values for each effect, and these are all 0, which would again suggest all effects in the model are significant.
 
-##Bayesian models
+## Bayesian models
 ### Bayes factors
 
 Like in previous tutorials (*adventr_11*, and *adventr_14* to *adventr_16*) we can obtain Bayes factors using the [BayesFactor package](http://bayesfactorpcl.r-forge.r-project.org/). We are going to use the `lmBF()` function, which is basically the same as the `regressionBF()` and `anovaBF()` functions that we have encountered before. The difference is that with `lmBF` we can build individual models and compare them. This function has this format:
@@ -463,7 +458,7 @@ The function uses default priors and by default (i.e. if you exclude the option 
 
 We're going to build three models: (1) **gene** as the only predictor; (2) a model that adds **picture** as a predictor; (3) a model that adds the interaction term (**gene:picture**). Having created these models we will compared them. So, we'll start by looking at the Bayes factor for **gene** as the sole predictor, then get the Bayes factor for what **picture** adds to the model, then finally get the Bayes factor for what the interaction term adds to the model.
 
-`r colFmt("Tip: if you are using a tibble (rather than a data frame) then place the tibble's name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn't accept tibbles.", cbGreen)`
+`r hint_text("Tip: if you are using a tibble (rather than a data frame) then place the tibble's name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn't accept tibbles.")`
 
 For our data (using the default prior) we could execute the following to create our three models:
 
@@ -502,7 +497,7 @@ Because the results are based on sampling (and so will vary each time you genera
 
 ![Figure 1: Bayes factors output](./images/ais_17_bf.png)
 
-##Adjusting means (ANCOVA)
+## Adjusting means (ANCOVA)
 ### A familiar example (unless your ID chip has been zapped)
 
 In the lecture (but not the book) we also looked at models including categorical and continuous predictors. In these models, the categorical predictors no longer compare the means of the categories, but compare the means *adjusted for other variables in the model*. This is the basic 'analysis of covariance (ANCOVA)' model. In the lecture we imagined an experiment similar to the one we encountered in the previous tutorial, but with an added covariate. Just to recap:
@@ -534,7 +529,7 @@ Y_i & = b_0 + b_1X_i+ ε_i\\
 \end{aligned}
 $$
 
-###Fitting the model
+### Fitting the model
 
 We can fit this model in the same way as described for a factorial design. Remember that **R** will dummy code the variable **group** for us, but we'd want to set some orthogonal contrasts. We did this in the previous tutorial using these commands:
 

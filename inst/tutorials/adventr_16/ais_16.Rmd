@@ -25,14 +25,9 @@ library(WRS2)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
+hint_text <- function(text, text_color = "#E69F00"){
+  hint <- paste("<font color='", text_color, "'>", text, "</font>", sep = "")
+  return(hint)
 }
 
 #Read dat files needed for the tutorial
@@ -184,7 +179,7 @@ The dummy variables are made up of 0s and 1s that code the three groups across t
 
 Using what you've learnt in previous tutorials, create a tibble called `mem_summary` containing the group means and their confidence intervals.
 
-`r colFmt("Hint: if you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels", cbGreen)`
+`r hint_text("Tip: if you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels")`
 
 ```{r desc, exercise = TRUE, exercise.lines = 6}
              
@@ -342,7 +337,7 @@ Let's break this down:
 * `contrasts(memory_dat$group)` instructs **R** to set contrasts for the variable **group** in the tibble called `memory_dat`.
 *  `cbind(rep_vs_control, rep_vs_erase)` sets the contrast to be the two dummy variables we created bound together in columns (that's what `cbind()` does). To get a flavour of what `cbind` is doing try executing only the right hand side of the command in the code box. You should see two columns that look like columns 2 and 3 of Table 2.
 
-`r colFmt("Hint: the contrast function only works on variables that are factors. The variable group in this tutorial has already been converted into a factor, but when you import data files remember to set variables that define groups as factors. There are various different ways to do this including the as_factor() function form the forcats package.", cbGreen)`
+`r hint_text("Tip: the contrast function only works on variables that are factors. The variable group in this tutorial has already been converted into a factor, but when you import data files remember to set variables that define groups as factors. There are various different ways to do this including the as_factor() function form the forcats package.")`
 
 I don't personally do this for the reason already explained, but if you don't care about setting variable names for the dummy variables, you can set the contrasts in a single command that puts the codes directly into the `cbind()` function:
 
@@ -408,7 +403,7 @@ As well as defining our own contrasts, we can use pre-defined ones. For example,
 
 `contrasts(memory_dat$group) <- contr.poly(3)`
 
-`r colFmt("Tip: R will order the groups alphabetically (in this case control, erase, replace). For the current data this is a sensible order because we expect recall to get progressively worse across those groups. However, if the alphabetical order of groups does not represent the order that you want, you can use the fct_relevel() function in the forcats package to re-order the levels of your grouping variable into the order you want.", cbGreen)`
+`r hint_text("Tip: R will order the groups alphabetically (in this case control, erase, replace). For the current data this is a sensible order because we expect recall to get progressively worse across those groups. However, if the alphabetical order of groups does not represent the order that you want, you can use the fct_relevel() function in the forcats package to re-order the levels of your grouping variable into the order you want.")`
 
 Set the variable **group** to have polynomial contrast (as above) then create and summarize a model called `mem_mod_poly` that fits a linear model predicting **recall** from **group**.
 
@@ -430,7 +425,7 @@ The output contains two contrasts (because there were 3 groups). The *b* labelle
 
 As in previous tutorials, we can use one of the methods (HC0 to HC5) for producing standard errors (and hence confidence intervals) that are robust to heteroscedasticity.
 
-`r colFmt("Hint: if you're doing this outside of the tutorial you need the sjstats package installed and you need to execute library(sjstats).", cbGreen)`
+`r hint_text("Tip: if you're doing this outside of the tutorial you need the sjstats package installed and you need to execute library(sjstats).")`
 
 Remember that we place the model we created with `lm()` (in this case `mem_mod`) into the function `robust()`. For example, we could execute:
 
@@ -473,7 +468,7 @@ Note that the parameter estimates for the effect of group have changed because t
 
 We can also bootstrap confidence intervals as we did in *adventr_14* and *adventr_15*. refer back to those tutorials to see whether you can understand the code below, then execute it.
 
-`r colFmt("Hint: remember that you need the package boot, so execute library(boot) before executing the code below.", cbGreen)`
+`r hint_text("Tip: remember that you need the package boot, so execute library(boot) before executing the code below.")`
 
 ```{r mem_mod_boot, exercise = TRUE}
 library(boot) #This loads the package boot
@@ -493,7 +488,7 @@ boot.ci(boot_result, type = "bca", index = 3) #for the second dummy variable for
 ```
 
 
-###The WRS2 package
+### The WRS2 package
 
 The `WRS2` package [@RN10205] wraps up a few of the many functions described by Wilcox to perform robust variants of tests [@RN5244]. We'll look at these functions that compare several means:
 
@@ -526,7 +521,7 @@ Based on `t1way` we'd conclude that the group means were significantly different
 
 Based on `t1waybt` we'd conclude that the group means were significantly different, $F_t(2, 13.9) = 4.13, p = 0.029$, with recall scores similar in the control and erase conditions, $\hat{\psi} = 1 [-2.00, 3.25], p = 0.429$, and in the erase and replace groups, $\hat{\psi} = 2.5 [-1.25, 5.125], p = 0.079$, but were significantly lower in the replace group than both the control group, $\hat{\psi} = 3.5 [-0.63, 5.75], p = 0.045$ although the 95% confidence interval crossed zero.
 
-##Bayesian models
+## Bayesian models
 ### Bayes factors
 
 Like in previous tutorials (*adventr_11*, *adventr_14*, *adventr_15*) we can use the [BayesFactor package](http://bayesfactorpcl.r-forge.r-project.org/). In this scenario we use the `anovaBF()` function. This function has basically the same format as most of the other functions in this tutorial:
@@ -537,7 +532,7 @@ The function uses default priors that can be specified as a number or as "medium
 
 So we would use the same formula that we have used throughout, and specify our tibble as `memory_dat`. It's a good idea to save this model into a new object (lets call it `mem_bf`) because you can do useful things with it (we didn't do this for the `t1way()` functions, but you could).
 
-`r colFmt("Tip: if you are using a tibble (rather than a data frame) then place the tibble's name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn't accept tibbles.", cbGreen)`
+`r hint_text("Tip: if you are using a tibble (rather than a data frame) then place the tibble's name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn't accept tibbles.")`
 
 For our data (using the default prior) we could execute:
 

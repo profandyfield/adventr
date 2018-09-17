@@ -19,14 +19,9 @@ library(gmodels)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
+hint_text <- function(text, text_color = "#E69F00"){
+  hint <- paste("<font color='", text_color, "'>", text, "</font>", sep = "")
+  return(hint)
 }
 
 #Read dat files needed for the tutorial
@@ -251,7 +246,7 @@ rehab_alt_dat$id_clin <- fct_relevel(rehab_alt_dat$id_clin, "clinic_10", after =
 
 In the first line we achieve what we want by simply listing the factor levels in the order we want them. This method is inefficient for the current example because we only want to move one level, so it's annoying to have to list all 10 levels. The second line achieves the same goal but by asking for "clinic_10" to be moved to after level 9. This code, therefore, will move "clinic_10" to level 10. The third line uses `Inf` (short for infinite) to move "clinic_10" to the final level (whatever that may be). This final method is particularly useful when you want to move a level to the end but you don't know how many levels there are off the top of your head.
 
-`r colFmt("Tip: When you specify levels of a factor the text must exactly match that of the variable level. In the example above if you type \"Clinic_10\" or \"clinic 10\" the command will fail because neither exactly match the factopr level of \"clinic_10\". Check that upper and lower case letters match with the factor level and so on.", cbGreen)`
+`r hint_text("Tip: When you specify levels of a factor the text must exactly match that of the variable level. In the example above if you type \"Clinic_10\" or \"clinic 10\" the command will fail because neither exactly match the factopr level of \"clinic_10\". Check that upper and lower case letters match with the factor level and so on.")`
 
 We could re-order the levels of **intervention** (to make the wait list first) in a similar way using any of these 4 ways:
 
@@ -285,12 +280,12 @@ levels(rehab_alt_dat$gep_level)
 
 That was just a little detour to show you how to check the levels of any categorical predictors and make sure that categories are in the order you want them. From now on we'll return to using the tibble called `rehab_dat` that has the categorical variables set up as we want them.
 
-##Exploring data
-###Descriptive statistics
+## Exploring data
+### Descriptive statistics
 
 Using what you've learnt in previous tutorials, create a tibble called `rehab_summary` containing the group means of the variables **resemblance** and **tse_months** and their confidence intervals split by **id_clin** and **intervention** (in that order).
 
-`r colFmt("Hint: to group means by three variables you can use group_by(x, y, z). If you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels", cbGreen)`
+`r hint_text("Tip: to group means by three variables you can use group_by(x, y, z). If you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels")`
 
 ```{r desc, exercise = TRUE, exercise.lines = 6}
              
@@ -439,7 +434,7 @@ anova(rehab_base, rehab_ri, rehab_int)
 
 The AIC and BIC are reduced by including **intervention** as a predictor, which indicates a better-fitting model. The *L. Ratio* (the change in the −2LL between the models), suggests that including **intervention** significantly improves the fit of our model, $\chi^2(1) = 7.12, p = 0.0076$.
 
-###Adding random slopes for the effect of the intervention
+### Adding random slopes for the effect of the intervention
 
 We might now want to allow the effect of the intervention to vary across clinics to acknowledge that treatment effects might vary across clinics. In doing so we'll add a random slope to the effect of **intervention**. Again we can do this either by re-specifying the entire model, or by using the `update()` function to update the previous model (`rehab_int`). In either case, the crucial change will be to change the specification of the random intercept (`random = ~ 1|id_clin`) to be a random slope (`random = ~ intervention|id_clin`). The `intervention|id_clin` means 'the effect of **intervention** varies within the variable **id_clinic**. In other words the 'slope' for **intervention** is random (across clinics). Again, the intercept is implied, so this model includes both a random slope and a random intercept. Let's call the resulting model `rehab_rs` (the *rs* meaning *random slope*). If we specify the model in full we would execute:
 
@@ -471,7 +466,7 @@ anova(rehab_base, rehab_ri, rehab_int, rehab_rs)
 
 The AIC and BIC are reduced by including a random slope for **intervention** indicating a better-fitting model. The *L. Ratio* (the change in the −2LL between the models), suggests that including this random slope significantly improves the fit of our model, $\chi^2(2) = 12.27, p = 0.0022$. Another way to think of this is that there is significant variability in treatment effects across clinics.
 
-###Adding the final fixed effects
+### Adding the final fixed effects
 
 Finally, we want to add fixed effects for **gep_level** and **tse_months**. We can again add these predictors most efficiently by using the update function. (Although by all means have a go specifying the full model). For example, we might create a model called `rehab_gep` that updates the model `rehab_rs` by including **gep_level** by executing:
 
@@ -504,7 +499,7 @@ rehab_tse <- update(rehab_gep, .~. + tse_months)
 anova(rehab_base, rehab_ri, rehab_int, rehab_rs, rehab_gep, rehab_tse)
 ```
 
-###Viewing the model parameters
+### Viewing the model parameters
 
 We can look at *F*-statistics for the model by using the `anova()` function. To view the parameters of any one of our models use `summary()` and to get confidence intervals for the parameters use the `intervals()` function. For example, to inspect the final model we could execute:
 

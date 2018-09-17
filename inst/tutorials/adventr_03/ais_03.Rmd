@@ -16,16 +16,9 @@ library(tidyverse)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-
-
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
+hint_text <- function(text, text_color = "#E69F00"){
+  hint <- paste("<font color='", text_color, "'>", text, "</font>", sep = "")
+  return(hint)
 }
 
 #Read dat files needed for the tutorial
@@ -112,7 +105,7 @@ This tutorial uses the following packages:
 
 This package is automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in **RStudio**) then you need to make sure that the package has been installed by executing `install.packages("package_name")`, where *package_name* is the name of the package. If the package is already installed, then you need to reference it in your current session by executing `library(package_name)`, where *package_name* is the name of the package.
 
-###Data
+### Data
 
 This tutorial has the data files pre-loaded so you shouldn't need to do anything to access the data from within the tutorial. However, if you want to play around with what you have learnt in this tutorial outside of the tutorial environment (i.e. in a stand-alone **RStudio** session) you will need to download the data files and then read them into your **R** session. This tutorial uses the following file:
 
@@ -204,7 +197,7 @@ This command creates a new graph object called *humour_hist* using the tibble ca
 
 This command tells **R** to take the object *humour_hist* (which we created above) and add (`+`) a layer to it using `geom_histogram()`.
 
-`r colFmt("Tip: for more complex plots you will add lots of different layers, so it is helpful to structure the command with a different layer on each line. I tend to specify a layer then include the + symbol, then hit return to specify the next layer. **RStudio** will indent the lines for you making it easier to read. See the example in the code box below.", cbOrangeDark) `
+`r hint_text("Tip: for more complex plots you will add lots of different layers, so it is helpful to structure the command with a different layer on each line. I tend to specify a layer then include the + symbol, then hit return to specify the next layer. **RStudio** will indent the lines for you making it easier to read. See the example in the code box below.")`
 
 The full code is in the box below, execute it to see what happens.
 
@@ -224,7 +217,7 @@ We can change the colour of the bars by including `fill = ` within the `geom_his
 
 Try this in the code box below and run the code.
 
-`r colFmt("Tip: Note that options within a function are separated by a comma. In this example, \'binwidth = 1, fill = \"red\"\' will work but \'binwidth = 1 fill = \"red\"\' (note the comma is missing) would throw an error.", cbOrangeDark)`
+`r hint_text("Tip: Note that options within a function are separated by a comma. In this example, \'binwidth = 1, fill = \"red\"\' will work but \'binwidth = 1 fill = \"red\"\' (note the comma is missing) would throw an error.")`
 
 You can also specify any [Hex colour code](http://www.color-hex.com/). For example, the shade of blue defined by hex code "#56B4E9" is good for colour blind people, so we could specify this:
 
@@ -278,7 +271,7 @@ You set the limits of the *x*-axis using `xlim` and the limits of the *y*-axis w
 
 Add this line to the code box below and run the code to see how the limits of the *x*-axis change.
 
-`r colFmt("Tip: You may notice that you can also set limits using scale_x_continuous(). However, if you do this then data outside of the limits you set are discarded. Therefore, most of the time we would use coord_cartesian() because it leaves the underlying data alone.", cbOrangeDark)`
+`r hint_text("Tip: You may notice that you can also set limits using scale_x_continuous(). However, if you do this then data outside of the limits you set are discarded. Therefore, most of the time we would use coord_cartesian() because it leaves the underlying data alone.")`
 
 Now let's add a layer that changes what breaks are displayed on the *x*-axis. At the moment the *x*-axis displays 2.5, 5, 7.5, and 10 Let's change this to display the numbers 1 to 10 In **R** we can generate this sequence of numbers by using `:`. For example, `1:5` will return 1, 2, 3, 4, 5. The *x*-axis displays a continuous variable (**humour**) so we can use the function `scale_x_continuous()` to change aspects of this axis. In particular, the `breaks = ` option will over-ride the default breaks along the axis.
 
@@ -423,7 +416,7 @@ You can use the `ggsave()` function to save plots (this is what I generally use)
 
 ![](./images/export_plot.png)
 
-Saving to an image or PDF will open a fairly self-explanatory dialog box in which you specify the name of the file, the directory in which to save it, the image format and the size of the image.
+Saving to an image or PDF will open a fairly self-explanatory dialog box in which you specify the name of the file, the directory in which to save it, the image format and the size of the image. If you use a [Notebook](https://bookdown.org/yihui/rmarkdown/notebook.html) or [R Markdown](https://bookdown.org/yihui/rmarkdown/) file you don't need to worry about saving images.
 
 ## Other resources
 

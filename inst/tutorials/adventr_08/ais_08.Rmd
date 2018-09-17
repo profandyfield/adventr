@@ -18,15 +18,6 @@ library(boot)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
-}
 
 #Read dat files needed for the tutorial
 
@@ -249,7 +240,7 @@ speed_sum <-
 speed_sum
 ```
 
-##Plotting confidence intervals
+## Plotting confidence intervals
 
 We've seen in previous tutorials how to plot means. For example we created a plot of the strength data split by JIG:SAW employees and non-employees. We used this code:
 
@@ -349,7 +340,7 @@ vis_plot +
   theme_bw()
 ```
 
-##Robust means
+## Robust means
 
 In Chapter 9, Zach steals the data we have been analysing that relates to JIG:SAW employees. Milton teaches him how the mean and confidence intervals can be biased by skew, kurtosis and outliers. Milton introduces the idea of the trimmed mean.
 
@@ -399,7 +390,7 @@ strength_sum
 ```
 
 
-##Robust confidence intervals
+## Robust confidence intervals
 
 Milton also introduces Zach to the idea of bootstrapping as a way to create robust confidence intervals.
 

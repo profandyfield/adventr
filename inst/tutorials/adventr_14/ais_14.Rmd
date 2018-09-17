@@ -23,16 +23,6 @@ library(sjstats)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
-}
-
 #Read dat files needed for the tutorial
 
 garlic_dat <- adventr::garlic_dat;
@@ -545,7 +535,7 @@ boot.ci(boot_result, type = "bca", index = 2)
 boot.ci(boot_result, type = "bca", index = 3)
 ```
 
-##Bayesian zombies
+## Bayesian zombies
 ### Bayes factors
 
 The first thing we could do is compare models using Bayes factors. We can do this using the `regressionBF()` function in the [BayesFactor package](http://bayesfactorpcl.r-forge.r-project.org/). We could do a whole tutorial on this alone, so I'm just going to show you how to do some stuff (linked to the book) and then you can read more if you get the urge.

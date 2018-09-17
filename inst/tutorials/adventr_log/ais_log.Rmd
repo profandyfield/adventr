@@ -19,15 +19,9 @@ library(effects)
 knitr::opts_chunk$set(echo = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
-
-colFmt = function(x,color){
-  outputFormat = knitr::opts_knit$get("rmarkdown.pandoc.to")
-  if(outputFormat == 'latex')
-    paste("\\textcolor{",color,"}{",x,"}",sep="")
-  else if(outputFormat == 'html')
-    paste("<font color='",color,"'>",x,"</font>",sep="")
-  else
-    x
+hint_text <- function(text, text_color = "#E69F00"){
+  hint <- paste("<font color='", text_color, "'>", text, "</font>", sep = "")
+  return(hint)
 }
 
 #Read dat files needed for the tutorial
@@ -270,7 +264,7 @@ Let's look at each line:
 
 As I said, it can be useful to execute parts of the pipe to see how it builds up, or even to break it into separate smaller pipes to help you understand what it is doing. Use the code box to execute the pipe and inspect the resulting tibble.
 
-`r colFmt("Hint: If you're doing this outside of the tutorial remember to load the package tidyverse (or dplyr)", cbGreen)`
+`r hint_text("Tip: If you're doing this outside of the tutorial remember to load the package tidyverse (or dplyr)")`
 
 
 ```{r freqs, exercise = TRUE, exercise.lines = 9, exercise.setup = "prepare-data"}
@@ -317,7 +311,7 @@ Let's explore this command line by line:
 
 Use the code box to draw this plot. Try deleting lines and observing the effect it has on the plot.
 
-`r colFmt("Hint: If you're doing this outside of the tutorial remember to load the tidyverse (or ggplot2) package", cbGreen)`
+`r hint_text("Tip: If you're doing this outside of the tutorial remember to load the tidyverse (or ggplot2) package")`
 
 ```{r plot_1, exercise = TRUE, exercise.lines = 7, exercise.setup = "prepare-data"}
              
@@ -365,7 +359,7 @@ Let's explore this command line by line:
 
 Use the code box to draw this plot. Try deleting lines and observing the effect it has on the plot.
 
-`r colFmt("Hint: Remember that you need to create the recover_percent tibble first", cbGreen)`
+`r hint_text("Tip: Remember that you need to create the recover_percent tibble first")`
 
 
 ```{r plot_2, exercise = TRUE, exercise.lines = 10, exercise.setup = "prepare-data"}

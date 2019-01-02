@@ -28,7 +28,7 @@ hint_text <- function(text, text_color = "#E69F00"){
 
 #Read dat files needed for the tutorial
 
-mask_dat <- adventr::mask_dat
+mask_tib <- adventr::mask_dat
 
 #setup objects for code blocks
 
@@ -39,10 +39,10 @@ mask_dat <- adventr::mask_dat
 
 ## Overview
 
-This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] by me, [Andy Field](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
 
 * Who is the tutorial aimed at?
-    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+    - Anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/)  may find them useful.
 * What is covered?
     - This tutorial looks at how to fit a linear model with a predictor variable that represents two independent categories. We look at robust variants of the model, and computing a Bayes factor. It would be a useful tutorial to run alongside teaching based on Chapter 15 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
     - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
@@ -127,19 +127,34 @@ This tutorial has the data files pre-loaded so you shouldn't need to do anything
 You can load the file in several ways:
 
 * Assuming that you save this file into the working directory, you can load it by executing:
-    - `mask_dat <- read_csv("ais_15_masks.csv")`
+    - `mask_tib <- read_csv("ais_15_masks.csv")`
     - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
 * To load the file using a standard dialogue box to navigate your file system, execute:
-    - `mask_dat <- read_csv(file.choose())`
+    - `mask_tib <- read_csv(file.choose())`
 * You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
-    - `mask_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_15_masks.csv")`
+    - `mask_tib <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_15_masks.csv")`
     - This method relies on an internet connection (and my server having not exploded!)
+
+
+### Categorical variables
+
+When working within the tutorial the data are already prepared for you. However, if you are trying to replicate the tutorial within R or R Studio then you need to explicitly convert categorical predictors to factors. The data for this tutorial contains a variable **mask**, which will be read in from the csv file as a character variable. To convert this variable to a factor we can use the `as_factor()` function from the `forcats` package. There are several ways to do this, but the most tidyverse way is to use `mutate()` from `tidyverse`, which is a way of adding variables to a tibble or overwriting existing variables. We could execute:
+
+```{r, echo = TRUE, eval = FALSE}
+library(tidyverse)
+mask_tib <- mask_tib %>% 
+  mutate(
+    mask = forcats::as_factor(mask)
+  )
+```
+
+This code recreates the `mask_tib` tibble from itself then uses mutate to recreate the variable **group** from itself by placing it within the `as_factor()` function. I have explicitly declared that I want to use the `as_factor()` function from the package `forcats` because the package `haven` also has an `as_factor()` function.
 
 
 ## Categorical predictors in the GLM
 ### The model
 
-During Zach's visit to the JIG:SAW complex he visits several research buildings. In the first, he discovers experiments being conducted related to invisibility. Each participant sat on a revolving chair in the middle of a circle of 20 people. The 20 people all wore a light deflecting aid on their face. For half of the participants (*N* = 14) the 20 people wore a calcite-based mask, whereas the other half (*N* = 14) saw people wearing ‘invisibility paste’, a transparent cream containing calcite micro-crystals. Participants looked at each person and were given two photographs, one depicting the person they were looking at and one depicting a different person matched for age and sex. Participants had to decide which person they were looking at, before turning to the next person and being given two different photographs. Participants scored a point for each person they identified correctly: a score of 0 would mean they always chose the incorrect photo, a score of 20 would mean that they always chose the correct photo. The question is whether the light deflecting aids interfere with facial recognition. The prediction was that the paste would lead to lower recognition than the masks. The data are in the tibble `mask_dat`, which has three variables:
+During Zach's visit to the JIG:SAW complex he visits several research buildings. In the first, he discovers experiments being conducted related to invisibility. Each participant sat on a revolving chair in the middle of a circle of 20 people. The 20 people all wore a light deflecting aid on their face. For half of the participants (*N* = 14) the 20 people wore a calcite-based mask, whereas the other half (*N* = 14) saw people wearing ‘invisibility paste’, a transparent cream containing calcite micro-crystals. Participants looked at each person and were given two photographs, one depicting the person they were looking at and one depicting a different person matched for age and sex. Participants had to decide which person they were looking at, before turning to the next person and being given two different photographs. Participants scored a point for each person they identified correctly: a score of 0 would mean they always chose the incorrect photo, a score of 20 would mean that they always chose the correct photo. The question is whether the light deflecting aids interfere with facial recognition. The prediction was that the paste would lead to lower recognition than the masks. The data are in the tibble `mask_tib`, which has three variables:
 
 * **id**: Participant ID
 * **mask**: Whether the person was assigned to the calcite mask condition or the invisibility paste condition
@@ -164,7 +179,7 @@ Let's plot the data. Use the code box below to create an error bar chart with **
 ```
 
 ```{r scat-solution}
-mem_plot <- ggplot(mask_dat, aes(mask, recognition))
+mem_plot <- ggplot(mask_tib, aes(mask, recognition))
 mem_plot +
   geom_point(colour = "#E69F00", position = position_jitter(width = 0.1, height = 0)) +
   stat_summary(fun.data = "mean_cl_normal", geom = "pointrange") +
@@ -197,7 +212,7 @@ Using these hints, see whether you can fit the model in the code box below
 ```
 
 ```{r lm1-solution}
-mask_mod <- lm(recognition ~ mask, data = mask_dat)
+mask_mod <- lm(recognition ~ mask, data = mask_tib)
 mask_mod <- lm.beta(mask_mod)
 summary(mask_mod)
 confint(mask_mod)
@@ -242,7 +257,7 @@ In which:
 * `new_model`: an object created that contains information about the model. We can get summary statistics for this model by executing the name of the model.
 * `outcome`: the variable that contains the scores for the outcome measure (in this case **recognition**).
 * `predictor`: the variable that contains information about to which group a score belongs (in this case **mask**).
-* `tibble`: the name of the tibble containing the data (in this case `mask_dat`) 
+* `tibble`: the name of the tibble containing the data (in this case `mask_tib`) 
 * `paired`: by default scores are treated as independent (`paired = FALSE`), but if you have a repeated measures design and want to treat scores as dependent change this to `paired = TRUE`
 * `var.equal`: by default the function assumes that variances are unequal (`var.equal = FALSE`) and applies Welch's correction (a sensible thing to do). If for some reason you want to assume equal variances include the option `var.equal = TRUE`.
 * `conf.level`: determines the alpha level for the *p*-value and confidence intervals. By default it is 0.95 (for 95% confidence intervals) and usually you’d exclude this option, but if you want to use a different value, say 99%, you could include `conf.level = 0.99`.
@@ -251,13 +266,13 @@ In which:
 To get a *t*-test for the current data we would execute:
 
 ```{r echo = T, eval = F}
-t.test(recognition ~ mask, data = mask_dat)
+t.test(recognition ~ mask, data = mask_tib)
 ```
 
 or to create an object that we can use later:
 
 ```{r, echo = T, eval = F}
-mask_t <- t.test(recognition ~ mask, data = mask_dat)
+mask_t <- t.test(recognition ~ mask, data = mask_tib)
 mask_t
 ```
 
@@ -268,7 +283,7 @@ Try this in the code box:
 ```
 
 ```{r t1-solution}
-mask_t <- t.test(recognition ~ mask, data = mask_dat, var.equal = T)
+mask_t <- t.test(recognition ~ mask, data = mask_tib, var.equal = T)
 mask_t
 ```
 
@@ -280,12 +295,12 @@ The value of *t* (2.0689) and the corresponding *p* (0.04956) are slightly diffe
 To apply a Welch-style correction to the linear model we can use one of the methods we learnt before for producing standard errors (and hence confidence intervals) that are robust to heteroscedasticity. Remember that we compute these using the `robust()` function from the `sjstats` package (so execute `library(sjstats)` if you're doing this outside of the tutorial). Remember that we simply place the model we created with `lm()` (in this case `mask_mod`) into the function. For example, we could execute:
 
 * `robust(mask_mod, conf.int = T)` to use the default "HC3" method and request 95% confidence intervals
-* `robust(mask_mod, vcov = "HC4", conf.int = T)` to use "HC4" and request 95% confidence intervals
+* `robust(mask_mod, vcov.type = "HC4", conf.int = T)` to use "HC4" and request 95% confidence intervals
 
 The HC3 and HC4 refer to different methods to correct the standard errors (refer back to the tutorial *adventr_14*). Try these commands in the code box and compare the results.
 
 ```{r mask_mod_hc4-setup}
-mask_mod <- lm(recognition ~ mask, data = mask_dat)
+mask_mod <- lm(recognition ~ mask, data = mask_tib)
 ```
 
 ```{r mask_mod_hc4, exercise = TRUE}
@@ -295,7 +310,7 @@ mask_mod <- lm(recognition ~ mask, data = mask_dat)
 
 ```{r mask_mod_hc4-solution}
 robust(mask_mod, conf.int = T)
-robust(mask_mod, vcov = "HC4", conf.int = T)
+robust(mask_mod, vcov.type = "HC4", conf.int = T)
 ```
 
 ### Robust estimates
@@ -308,7 +323,7 @@ We also saw in *advetr_14* that we can get robust parameter estimates using the 
 ```
 
 ```{r mask_mod_robust-solution}
-mask_rob <- lmRob(recognition ~ mask, data = mask_dat)
+mask_rob <- lmRob(recognition ~ mask, data = mask_tib)
 summary(mask_rob)   
 ```
 
@@ -332,7 +347,7 @@ boot_lm <- function(formula, data, index){
 }
 
 #The following runs the bootstrap and extracts the CIs
-boot_result <- boot(boot_lm, formula = recognition ~ mask, data = mask_dat, R = 2000)
+boot_result <- boot(boot_lm, formula = recognition ~ mask, data = mask_tib, R = 2000)
 boot.ci(boot_result, type = "bca", index = 1) #for the intercept
 boot.ci(boot_result, type = "bca", index = 2) #for the effect of mask 
                
@@ -349,7 +364,7 @@ The `WRS2` package [@RN10205] wraps up a few of the many functions described by 
 These functions have similar arguments:
 
 * `formula`: the functions use a formula like that for `lm()`, son in this case we could again use `recognition ~ mask`.
-* `data = tibble`: replace tibble with the name of the tibble or data frame in which the data are stored (in this case `data = mask_dat`)
+* `data = tibble`: replace tibble with the name of the tibble or data frame in which the data are stored (in this case `data = mask_tib`)
 * `tr = 0.2`: determines the level of trim. The default is a 20% trim, which has been shown to perform well, but you could change this to 0.1 (10% trim) or any value up to 0.5 (although if you want to compare medians you should a function called `pb2gen()`). You can omit this argument if you're happy with a 20% trim.
 * `nboot = 599`: specifies the number of bootstrap samples. There is a case for increasing the defaults to 1000.
 * `side = TRUE`: performs a two-tailed test. You can usually omit this argument because this default is sensible: one-tailed tests are usually a bad idea [@RN10163]!
@@ -362,9 +377,9 @@ See if you can run the three commands in the code box below based on my descript
 ```
 
 ```{r mask_wrs-solution}
-yuen(recognition ~ mask, data = mask_dat)
-yuenbt(recognition ~ mask, data = mask_dat, nboot = 1000)
-yuen.effect.ci(recognition ~ mask, data = mask_dat, nboot = 1000)
+yuen(recognition ~ mask, data = mask_tib)
+yuenbt(recognition ~ mask, data = mask_tib, nboot = 1000)
+yuen.effect.ci(recognition ~ mask, data = mask_tib, nboot = 1000)
 ```
 
 Note that the trimmed mean difference is 2.3 (rather than the raw mean difference of 3.357). This difference is not significant both when using a bootstrap and when not. Also, in both tests the confidence intervals cross zero, indicating that if this is one of the 95% of samples where the confidence interval contains the population value, then the population difference between means could be positive, negative or zero.
@@ -380,14 +395,14 @@ Like in *adventr_11* and *adventr_14* we can use the [BayesFactor package](http:
 
 To recap, by default the function assumes independent scores (`paired = FALSE`) so for dependent scores (see *adventr_15_rm*) we'd change this to `paired = TRUE`. The function uses default priors that can be specified as a number or as "medium" (the default), "wide", and "ultrawide". These labels correspond to *r* scale values of $^\sqrt{2}/_2$, 1, and $\sqrt{2}$. These priors were explained in *adventr_11*.
 
-So we would use the same formula that we have used throughout, and specify our tibble as `mask_dat`. It's a good idea to save this model into a new object (lets call it `mask_bf`) because you can do useful things with it (we didn't do this for the `yuen()` functions, but you could).
+So we would use the same formula that we have used throughout, and specify our tibble as `mask_tib`. It's a good idea to save this model into a new object (lets call it `mask_bf`) because you can do useful things with it (we didn't do this for the `yuen()` functions, but you could).
 
 `r hint_text("Tip: if you are using a tibble (rather than a data frame) then place the tibble's name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn't accept tibbles.")`
 
 For our data (using the default prior) we could execute:
 
 ```{r echo = T, eval = F}
-mask_bf <- ttestBF(formula = recognition ~ mask, data = data.frame(mask_dat))
+mask_bf <- ttestBF(formula = recognition ~ mask, data = data.frame(mask_tib))
 mask_bf
 ```
 
@@ -398,7 +413,7 @@ The first line creates the object `mask_bf` as described above and the second li
 ```
 
 ```{r mask_bf-solution}
-mask_bf <- ttestBF(formula = recognition ~ mask, data = data.frame(mask_dat))
+mask_bf <- ttestBF(formula = recognition ~ mask, data = data.frame(mask_tib))
 mask_bf
 ```
 
@@ -416,7 +431,7 @@ summary(mask_bf_est)
 Try executing these two commands to view the estimates:
 
 ```{r mask_bf_est-setup}
-mask_bf <- ttestBF(formula = recognition ~ mask, data = data.frame(mask_dat)) 
+mask_bf <- ttestBF(formula = recognition ~ mask, data = data.frame(mask_tib)) 
 ```
 
 ```{r mask_bf_est, exercise = TRUE}

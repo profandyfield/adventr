@@ -49,11 +49,11 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <h1>An Adventure in R: Presenting data (summarizing groups and more ggplot2)</h1>
 <div id="section-overview" class="section level2">
 <h2>Overview</h2>
-<p>This tutorial is one of a series that accompanies <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> <span class="citation">(Field 2016)</span> and <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(Field, Miles, and Field 2012)</span> by <a href="https://en.wikipedia.org/wiki/Andy_Field_(academic)">me</a>. These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>,<a href="#section-fn1" class="footnote-ref" id="section-fnref1"><sup>1</sup></a></p>
+<p>This tutorial is one of a series that accompanies <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> <span class="citation">(Field 2016)</span> by me, <a href="https://en.wikipedia.org/wiki/Andy_Field_(academic)">Andy Field</a>. These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>,<a href="#section-fn1" class="footnote-ref" id="section-fnref1"><sup>1</sup></a></p>
 <ul>
 <li>Who is the tutorial aimed at?
 <ul>
-<li>Primarily students enrolled on my <em>Linear models in statistics</em> module at the University of Sussex, but anyone teaching from or reading <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> or <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(Field, Miles, and Field 2012)</span> may find them useful.</li>
+<li>Anyone teaching from or reading <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> may find them useful.</li>
 </ul></li>
 <li>What is covered?
 <ul>
@@ -137,16 +137,16 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <ul>
 <li>Assuming that you save this file into the working directory, you can load it by executing:
 <ul>
-<li><code>jig_dat &lt;- read_csv(&quot;ais_c05_jigsaw.csv&quot;)</code></li>
+<li><code>jig_tib &lt;- read_csv(&quot;ais_c05_jigsaw.csv&quot;)</code></li>
 <li>If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called <em>adventr_02</em>)</li>
 </ul></li>
 <li>To load the file using a standard dialogue box to navigate your file system, execute:
 <ul>
-<li><code>jig_dat &lt;- read_csv(file.choose())</code></li>
+<li><code>jig_tib &lt;- read_csv(file.choose())</code></li>
 </ul></li>
 <li>You can load the file direct from the URL (i.e., you don’t need to download it first) by executing:
 <ul>
-<li><code>jig_dat &lt;- read_csv(&quot;http://www.discoveringstatistics.com/repository/ais_data/ais_c05_jigsaw.csv&quot;)</code></li>
+<li><code>jig_tib &lt;- read_csv(&quot;http://www.discoveringstatistics.com/repository/ais_data/ais_c05_jigsaw.csv&quot;)</code></li>
 <li>This method relies on an internet connection (and my server having not exploded!)</li>
 </ul></li>
 </ul>
@@ -157,12 +157,12 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div id="section-the-data" class="section level3">
 <h3>The data</h3>
 <p>In chapter 5 of <em>An Adventure in Statistics</em> Milton and Zach attend a recruitment event by a corporation called JIG:SAW. During it, Rob Nutcot presents data about JIG:SAW’s genetic enhancement programme. Afterwards he hands Zach a brochure full of graphs of data comparing JIG:SAW employees to non-employees on various physical attributes such as speed (<strong>footspeed</strong>), visual acuity (<strong>vision</strong>) and <strong>strength</strong>. Zach can’t interpret these graphs. Milton takes Zach to visit Dr Sisyphus Tuff in a bar called ‘6’ located in the Evil Pockets, an uninhabited part of the city of Elpis that attracted ‘undesirables’. Dr Tuff is an expert in visualizing data but has been driven slightly crazy by his quest for visual perfection.</p>
-<p>The data from which Rob Nutcot’s graphs were generated are in the tibble called <code>jig_dat</code>; use the code box to view this tibble.</p>
-<div class="tutorial-exercise" data-label="jig_dat_view" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<p>The data from which Rob Nutcot’s graphs were generated are in the tibble called <code>jig_tib</code>; use the code box to view this tibble.</p>
+<div class="tutorial-exercise" data-label="jig_tib_view" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
-<div class="tutorial-exercise-support" data-label="jig_dat_view-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>jig_dat</code></pre>
+<div class="tutorial-exercise-support" data-label="jig_tib_view-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>jig_tib</code></pre>
 </div>
 <p>You should see a tibble with 7 variables:</p>
 <ul>
@@ -178,18 +178,18 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div id="section-creating-summaries-by-group" class="section level3">
 <h3>Creating summaries by group</h3>
 <p>In several graphs in Nutcot’s report the data are summarized by group (for example JIG:SAW employees vs. non-employees). We can summarize data by applying the <code>group_by()</code> and <code>summarize()</code> functions from the tidyverse package to our tibble. For example, lets saw we wanted to get the mean visual acuity separately for the JIG:SAW employees and non-employees and store these values in a tibble called <code>vis_mean</code>. We could achieve this using the following pipe command:</p>
-<pre class="r"><code>vis_mean &lt;- jig_dat %&gt;% group_by(employee) %&gt;% summarize(mean = mean(vision))</code></pre>
+<pre class="r"><code>vis_mean &lt;- jig_tib %&gt;% group_by(employee) %&gt;% summarize(mean = mean(vision))</code></pre>
 <p>Let’s break this command down:</p>
 <ul>
-<li><code>vis_mean &lt;- jig_dat %&gt;%</code> translates as create an object called <code>vis_mean</code> and the starting point is to copy the tibble called <code>jig_dat</code>. The pipe operator (<code>%&gt;%</code>) indicates that more processing will be done on the <code>jig_dat</code> tibble before <code>vis_mean</code> is created.</li>
-<li><code>group_by(employee) %&gt;%</code> tells <strong>R</strong> to group by the variable <strong>employeee</strong> and because this command comes after the pipe operator we know that the thing that we’re going to ‘group by’ employee is the object before the pipe operator (i.e. <code>jig_dat</code>). If <code>group_by</code> is used outside of a pipe command then you need to specify a data frame or tibble within it otherwise it won’t know what object to group. the pipe operator again tells <strong>R</strong> that there is more processing to come.</li>
+<li><code>vis_mean &lt;- jig_tib %&gt;%</code> translates as create an object called <code>vis_mean</code> and the starting point is to copy the tibble called <code>jig_tib</code>. The pipe operator (<code>%&gt;%</code>) indicates that more processing will be done on the <code>jig_tib</code> tibble before <code>vis_mean</code> is created.</li>
+<li><code>group_by(employee) %&gt;%</code> tells <strong>R</strong> to group by the variable <strong>employeee</strong> and because this command comes after the pipe operator we know that the thing that we’re going to ‘group by’ employee is the object before the pipe operator (i.e. <code>jig_tib</code>). If <code>group_by</code> is used outside of a pipe command then you need to specify a data frame or tibble within it otherwise it won’t know what object to group. the pipe operator again tells <strong>R</strong> that there is more processing to come.</li>
 <li><code>summarize(mean = mean(vision))</code> creates a new variable called <code>mean_vis</code> within the tibble and then uses the function <code>mean()</code>, which we learnt about in a previous tutorial, to place values into that variable.</li>
 </ul>
 <p>The easiest way to get a feel for what’s happening is to execute the code and see what happens. The code is already types into the code box to show you a good way to format this kind of piped command. Note that the top line sets up the object to be created, then the commands to control <em>how</em> the object is created are indented on the lines below. You start a new line after each pipe operator (so that it’s easy to see the components of the pipe), and within the <code>summarize()</code> command we indent any commands. It may not be obvious why we do this, but it will when we move onto more complex examples.</p>
 <p>The final line <code>vis_mean</code> is there simply to display the newly created object. Run this code to see what is created by this command.</p>
 <div class="tutorial-exercise" data-label="gb_vis" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>vis_mean &lt;-
-  jig_dat %&gt;%
+  jig_tib %&gt;%
   group_by(employee) %&gt;%
   summarize(
     mean_vis = mean(vision)
@@ -204,7 +204,7 @@ vis_mean</code></pre>
 </div>
 <div class="tutorial-exercise-support" data-label="gb_stnth-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>strength_mean &lt;-
-  jig_dat %&gt;%
+  jig_tib %&gt;%
   group_by(employee, sex) %&gt;%
   summarize(
     mean_strength = mean(strength)
@@ -214,7 +214,7 @@ strength_mean</code></pre>
 <p>The resulting values are those plotted in Figure 5.4 in the book.</p>
 <p>We’re not restricted to the mean, we can use all of the functions that we learnt about in the previous tutorial (<code>var()</code>, <code>median()</code>, <code>sd()</code> etc.) within the summarize function. For example, imagine we wanted a table (tibble) containing a detailed summary of the <strong>footspeed</strong> scores. We could create this using a pipe command like this:</p>
 <pre class="r"><code>speed_sum &lt;-
-  jig_dat %&gt;%
+  jig_tib %&gt;%
   group_by(employee, sex) %&gt;%
   summarize(
     mean_speed = mean(footspeed),
@@ -230,7 +230,7 @@ strength_mean</code></pre>
 </div>
 <div class="tutorial-exercise-support" data-label="spd_sum-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>speed_sum &lt;-
-  jig_dat %&gt;%
+  jig_tib %&gt;%
   group_by(employee, sex) %&gt;%
   summarize(
     mean_speed = mean(footspeed),
@@ -247,7 +247,7 @@ speed_sum</code></pre>
 </div>
 <div class="tutorial-exercise-support" data-label="stnth_sum-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>strength_sum &lt;-
-  jig_dat %&gt;%
+  jig_tib %&gt;%
   group_by(employee, sex) %&gt;%
   summarize(
     mean_strength = mean(strength),
@@ -265,14 +265,14 @@ strength_sum</code></pre>
 <div id="section-boxplots" class="section level3">
 <h3>Boxplots</h3>
 <p>Figure 5.6 in <em>An adventure in statistics</em> shows a boxplot of <strong>footspeed</strong> split by <strong>employee</strong>. This is easy to create in <code>ggplot</code> using the <code>geom_boxplot()</code> function. We could set up the plot with this command:</p>
-<pre class="r"><code>speed_box &lt;- ggplot(jig_dat, aes(employee, footspeed))
+<pre class="r"><code>speed_box &lt;- ggplot(jig_tib, aes(employee, footspeed))
 speed_box +
   geom_boxplot() +
   labs(x = &quot;Employee status&quot;, y = &quot;Footspeed (mph)&quot;) +
   theme_bw()</code></pre>
 <p>Let’s break down this command (refer back to the tutorial on <code>ggplot2</code> if you need to):</p>
 <ul>
-<li><code>speed_box &lt;- ggplot(jig_dat, aes(employee, footspeed))</code> creates an object called <code>speed_box</code> that contains the plot. The <code>ggplot()</code> function is then used to specify that the plot uses the <code>jig_dat</code> tibble and plots the variable <strong>employee</strong> on the <em>x</em>-axis and the variable <strong>footspeed</strong> on the <em>y</em>-axis.</li>
+<li><code>speed_box &lt;- ggplot(jig_tib, aes(employee, footspeed))</code> creates an object called <code>speed_box</code> that contains the plot. The <code>ggplot()</code> function is then used to specify that the plot uses the <code>jig_tib</code> tibble and plots the variable <strong>employee</strong> on the <em>x</em>-axis and the variable <strong>footspeed</strong> on the <em>y</em>-axis.</li>
 <li><code>speed_box + geom_boxplot() +</code> takes the object <code>speed_box</code> and adds a boxplot geom to it.</li>
 <li><code>labs(x = &quot;Employee status&quot;, y = &quot;Footspeed (mph)&quot;) +</code> applies descriptive labels to the <em>x</em> and <em>y</em> axes.</li>
 <li><code>theme_bw()</code> applies a black and white theme to the plot</li>
@@ -282,14 +282,14 @@ speed_box +
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="spd_box-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>speed_box &lt;- ggplot(jig_dat, aes(employee, footspeed, fill = sex))
+<pre class="text"><code>speed_box &lt;- ggplot(jig_tib, aes(employee, footspeed, fill = sex))
 speed_box +
   geom_boxplot() +
   labs(x = &quot;Employee status&quot;, y = &quot;Footspeed (mph)&quot;) +
   theme_bw()</code></pre>
 </div>
 <p>Job done. If we wanted to split the data by a second grouping variable (for example <strong>sex</strong>) we can do this by specifying that <code>ggplot</code> varies the <code>fill</code> of the boxes or the <code>colour</code> of the lines around the boxes by this second variable. To do this we add this specification to the <code>aes()</code> function in the original command to set up the graph. For example, we’d change the first line to be:</p>
-<p><code>speed_box &lt;- ggplot(jig_dat, aes(employee, footspeed, fill = sex))</code></p>
+<p><code>speed_box &lt;- ggplot(jig_tib, aes(employee, footspeed, fill = sex))</code></p>
 <p>Note that all I have done is to add <code>fill = sex</code> to the initial aesthetic. The rest of the command can stay the same. Adapt the code above to include <code>fill = sex</code> and run it again. Note that the graph now splits the data by <strong>employee</strong> along the <em>x</em>-axis and within that splits it by <strong>sex</strong> using different colours to fill the boxes. Now change the word ‘fill’ to ‘colour’ and run the code again. You should see that now the data and the box outlines and whiskers are coloured differently for men and women.</p>
 <p>Having added another variable to the plot, we might want to exit the label displayed on the graph. Currently we have specified labels for the <em>x</em>- and <em>y</em>-axis by including:</p>
 <p><code>labs(x = &quot;Employee status&quot;, y = &quot;Footspeed (mph)&quot;)</code></p>
@@ -302,7 +302,7 @@ speed_box +
 <p>In which you change <em>“colour_1”</em> etc. to be the name of a colour of a hex code. In this example, we’re using two colours. Let’s change them to be a colour-blind friendly blue (hex code #56B4E9) and a colour-blind friendly orange(hex code #E69F00). The function would be:</p>
 <p><code>scale_fill_manual(values = c(&quot;#56B4E9&quot;, &quot;#E69F00&quot;))</code></p>
 <p>Our completed code would be:</p>
-<pre class="r"><code>speed_box &lt;- ggplot(jig_dat, aes(employee, footspeed, fill = sex))
+<pre class="r"><code>speed_box &lt;- ggplot(jig_tib, aes(employee, footspeed, fill = sex))
 speed_box +
   geom_boxplot() +
   labs(x = &quot;Employee status&quot;, y = &quot;Footspeed (mph)&quot;, fill = &quot;Biological sex&quot;) +
@@ -313,7 +313,7 @@ speed_box +
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="spd_box2-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>speed_box &lt;- ggplot(jig_dat, aes(employee, footspeed, colour = sex))
+<pre class="text"><code>speed_box &lt;- ggplot(jig_tib, aes(employee, footspeed, colour = sex))
 speed_box +
   geom_boxplot() +
   labs(x = &quot;Employee status&quot;, y = &quot;Footspeed (mph)&quot;, fill = &quot;Biological sex&quot;) +
@@ -324,7 +324,7 @@ speed_box +
 <div id="section-plotting-means" class="section level3">
 <h3>Plotting means</h3>
 <p>Plotting means is slightly more tricky. If you want to plot from the raw data (rather than a tibble containing the summary information) then your best bet is to use the <code>stat_summary()</code> function and then specify the geom to use within it. Let’s begin by plotting the mean <strong>strength</strong> split by <strong>employee</strong>. We can do this with the following command:</p>
-<pre class="r"><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength))
+<pre class="r"><code>strength_plot &lt;- ggplot(jig_tib, aes(employee, strength))
 strength_plot +
   stat_summary(fun.y = &quot;mean&quot;, geom = &quot;point&quot;, size = 4)</code></pre>
 <p>All we’re doing here is setting up the plot as normal and then adding <code>stat_summary()</code> to it and within that function asking it to calculate the means and their confidence intervals (<code>fun.y = &quot;mean&quot;</code>) and displaying them using geom_point (<code>geom = &quot;point&quot;</code>). <code>size = 4</code> simply makes the points that display the means bigger than the default (you can omit this option if you like). Copy the code into the code box and run it to see the resulting plot. Bar charts are generally a massive waste of ink, but try replacing <code>geom = &quot;point&quot;</code> with <code>geom = &quot;bar&quot;</code> and re-running the code. Congratulations, you have just displayed the same information as the graph with points but using a tonne more ink!</p>
@@ -332,7 +332,7 @@ strength_plot +
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="stgth_box-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength))
+<pre class="text"><code>strength_plot &lt;- ggplot(jig_tib, aes(employee, strength))
 strength_plot +
   stat_summary(fun.y = &quot;mean&quot;, geom = &quot;point&quot;, size = 4) +
   labs(x = &quot;Employee status&quot;, y = &quot;Maximal push force (n)&quot;) +
@@ -361,7 +361,7 @@ strength_plot +
 </ul>
 <p>The code box below displays the code that you used above to generate the previous plot. Add <code>facet_wrap(~sex)</code> to the command and execute the code to see what happens.</p>
 <div class="tutorial-exercise" data-label="stgth_facet" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="8">
-<pre class="text"><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength))
+<pre class="text"><code>strength_plot &lt;- ggplot(jig_tib, aes(employee, strength))
 strength_plot +
   stat_summary(fun.y = &quot;mean&quot;, geom = &quot;point&quot;, size = 4) +
   labs(x = &quot;Employee status&quot;, y = &quot;Maximal push force (n)&quot;) +
@@ -371,7 +371,7 @@ strength_plot +
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="stgth_facet-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength))
+<pre class="text"><code>strength_plot &lt;- ggplot(jig_tib, aes(employee, strength))
 strength_plot +
   stat_summary(fun.y = &quot;mean&quot;, geom = &quot;point&quot;, size = 4) +
   labs(x = &quot;Employee status&quot;, y = &quot;Maximal push force (n)&quot;) +
@@ -384,11 +384,11 @@ strength_plot +
 <div id="section-the-more-complicated-way" class="section level3">
 <h3>The more complicated way</h3>
 <p>Another approach is to plot <strong>sex</strong> not in different panels, but in different colours or fills. Doing so is a bit more involved. Lets start by varying males and females by colour. To set this up, we can start by adding <code>colour = sex</code> to the aesthetic where we set up the plot:</p>
-<p><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength, colour = sex))</code></p>
+<p><code>strength_plot &lt;- ggplot(jig_tib, aes(employee, strength, colour = sex))</code></p>
 <p>Compare this with the first line of code in the box below (which replicates the plot split solely by <strong>employee</strong>). Add <code>colour = sex</code> into the first line and run the code. What happens?</p>
 <p>You should find that the male and female means and CIs appear in different colours, but they appear at the same horizontal location (that is, the male points are directly above the female ones). For these data that doesn’t particularly matter because the error bars don’t overlap. However, if they did overlap it would be difficult to interpret the plot.</p>
 <div class="tutorial-exercise" data-label="stgth_col1" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="8">
-<pre class="text"><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength))
+<pre class="text"><code>strength_plot &lt;- ggplot(jig_tib, aes(employee, strength))
 strength_plot +
   stat_summary(fun.y = &quot;mean&quot;, geom = &quot;point&quot;, size = 4) +
   labs(x = &quot;Employee status&quot;, y = &quot;Maximal push force (n)&quot;) +
@@ -412,7 +412,7 @@ strength_plot +
 </ul>
 <p>Add this function to the command in the box below (place it <em>before</em> the <code>stat-summary()</code> function). Finally, by adding the raw data we need to extend the y-axis so that we can see all of the scores. Previously we have set the limits (and breaks) to vary from 1000 to 1800, edit these values to show a range between 900 and 2500. When you have made all of those edits to the code, run it to see the plot. Try also adding a <code>scale_colour_manual()</code> function to specify the same colour-blind friendly colours that we used before.</p>
 <div class="tutorial-exercise" data-label="stgth_raw" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="9">
-<pre class="text"><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength, colour = sex))
+<pre class="text"><code>strength_plot &lt;- ggplot(jig_tib, aes(employee, strength, colour = sex))
 strength_plot +
   stat_summary(fun.y = &quot;mean&quot;, geom = &quot;point&quot;, size = 4, position = position_dodge(width = 0.9)) +
   labs(x = &quot;Employee status&quot;, y = &quot;Maximal push force (n)&quot;, colour = &quot;Biological sex&quot;) +
@@ -422,7 +422,7 @@ strength_plot +
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="stgth_raw-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength, colour = sex))
+<pre class="text"><code>strength_plot &lt;- ggplot(jig_tib, aes(employee, strength, colour = sex))
 strength_plot +
   geom_point(position = position_dodge(width = 0.9), alpha = 0.3) +
   stat_summary(fun.y = &quot;mean&quot;, geom = &quot;point&quot;, size = 4, position = position_dodge(width = 0.9)) +
@@ -448,7 +448,7 @@ strength_plot +
 <p><code>geom_point(position = position_dodge(width = 0.9), shape = 4)</code></p>
 <p>Run the code and you should see that the raw data points are crosses.</p>
 <div class="tutorial-exercise" data-label="stgth_shape" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="9">
-<pre class="text"><code>strength_plot &lt;- ggplot(jig_dat, aes(employee, strength, colour = sex))
+<pre class="text"><code>strength_plot &lt;- ggplot(jig_tib, aes(employee, strength, colour = sex))
 strength_plot +
   geom_point(position = position_dodge(width = 0.9), alpha = 0.3) +
   stat_summary(fun.y = &quot;mean&quot;, geom = &quot;point&quot;, size = 4, position = position_dodge(width = 0.9)) +
@@ -464,10 +464,10 @@ strength_plot +
 <div id="section-scatterplots" class="section level2">
 <h2>Scatterplots</h2>
 <p>Zach also showed Dr Tuff a scatterplot of <strong>footspeed</strong> against <strong>strength</strong>. At the simplest level we could set this up as:</p>
-<pre class="r"><code>scat &lt;- ggplot(jig_dat, aes(footspeed, strength))
+<pre class="r"><code>scat &lt;- ggplot(jig_tib, aes(footspeed, strength))
 scat +
   geom_point()</code></pre>
-<p>The first line creates an object called <code>scat</code> that uses the <code>jig_dat</code> tibble and from it plots <strong>footspeed</strong> on the <em>x</em>-axis and <strong>strength</strong> on the <em>y</em>-axis. Try it in the code box below.</p>
+<p>The first line creates an object called <code>scat</code> that uses the <code>jig_tib</code> tibble and from it plots <strong>footspeed</strong> on the <em>x</em>-axis and <strong>strength</strong> on the <em>y</em>-axis. Try it in the code box below.</p>
 <p>We can use the options of <code>geom_point()</code> to change the colour of the points, their size, their shape (see above) and their transparency. For example, to make the points blue (hex code #56B4E9), bigger and more transparent than the defaults we could specify:</p>
 <p><code>geom_point(colour = &quot;#56B4E9&quot;, size = 2, alpha = 0.6)</code></p>
 <p>Edit the code below to include these options and run it to see how the plot is affected. We can also add axis labels and apply a theme by adding these functions:</p>
@@ -479,7 +479,7 @@ scat +
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="scat-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>scat &lt;- ggplot(jig_dat, aes(footspeed, strength))
+<pre class="text"><code>scat &lt;- ggplot(jig_tib, aes(footspeed, strength))
 scat +
   geom_point(colour = &quot;#56B4E9&quot;, size = 2, alpha = 0.6) +
   geom_smooth(method = &quot;lm&quot;, colour = &quot;#E69F00&quot;, fill = &quot;#E69F00&quot;) +
@@ -523,13 +523,13 @@ tutorial_options(exercise.cap = "Exercise")
 
 #Read dat files needed for the tutorial
 
-jig_dat <- adventr::jig_dat
+jig_tib <- adventr::jig_dat
 
 
 #setup objects for code blocks
 
 strength_sum <-
-  jig_dat %>%
+  jig_tib %>%
   group_by(employee, sex) %>%
   summarize(
     mean_strength = mean(strength),
@@ -540,7 +540,7 @@ strength_sum <-
     )
 
 strength_sum <-
-  jig_dat %>%
+  jig_tib %>%
   group_by(employee, sex) %>%
   summarize(
     mean_strength = mean(strength),
@@ -557,9 +557,9 @@ learnr:::register_http_handlers(session, metadata = NULL)
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-`tutorial-exercise-jig_dat_view-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-jig_dat_view-code-editor`)), session)
-output$`tutorial-exercise-jig_dat_view-output` <- renderUI({
-  `tutorial-exercise-jig_dat_view-result`()
+`tutorial-exercise-jig_tib_view-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-jig_tib_view-code-editor`)), session)
+output$`tutorial-exercise-jig_tib_view-output` <- renderUI({
+  `tutorial-exercise-jig_tib_view-result`()
 })
 </script>
  

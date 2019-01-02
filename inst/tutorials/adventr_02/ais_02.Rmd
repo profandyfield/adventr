@@ -21,17 +21,17 @@ hint_text <- function(text, text_color = "#E69F00"){
   return(hint)
 }
 
-ha_dat <- adventr::ha_dat
+ha_tib <- adventr::ha_dat
 ```
 
 # An Adventure in R: Data Basics
 
 ## Overview
 
-This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] by me, [Andy Field](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
 
 * Who is the tutorial aimed at?
-    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+    - Anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/)  may find them useful.
 * What is covered?
     - This tutorial looks at the basic concepts in **R**, such as installing packages, setting the working directory, getting help, getting data into **R**, creating variables, creating data frames and tibbles, reading in data files, manipulating variables within a tibble/data frame. It would be a useful tutorial to run alongside teaching based on Chapters 1 to 3 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
     - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
@@ -446,15 +446,15 @@ enigma_dat
 
 With data frames with large numbers of rows, inspecting them can be difficult - especially if they contain more information than **R** can display in the Console. In these cases consider using the `View()` function (note that the V is capital). For example, `View(enigma_dat)` will open up the data frame in a spreadsheet-like window within **RStudio**.
 
-Tibbles *are* data frames that have been slightly tweaked. They are part of the `tidyverse` package (so, if you want to create one that needs to be loaded). Most users won't particularly notice the difference between a data frame and tibble. However, because I am trying to follow the `tidyverse` ethos I will, in general, use tibbles. To create a tibble instead of a data frame make sure the `tidyverse` package is loaded and use the `tibble()` function instead of the `data.frame()` function. In the code box below, create a tibble called `enigma_dat` that contains all of the variables we've created (`name`, `age`, `sex`, `instru`, and `is_female`), and inspect it.
+Tibbles *are* data frames that have been slightly tweaked. They are part of the `tidyverse` package (so, if you want to create one that needs to be loaded). Most users won't particularly notice the difference between a data frame and tibble. However, because I am trying to follow the `tidyverse` ethos I will, in general, use tibbles. To create a tibble instead of a data frame make sure the `tidyverse` package is loaded and use the `tibble()` function instead of the `data.frame()` function. In the code box below, create a tibble called `enigma_tib` (notice I have used the suffix '_tib' to indicate that the object is a tibble) that contains all of the variables we've created (`name`, `age`, `sex`, `instru`, and `is_female`), and inspect it.
 
 ```{r tibble, exercise = TRUE, exercise.setup = "prepare-vars"}
 
 ```
 
 ```{r tibble-solution}
-enigma_dat <- tibble(name, age, sex, instru, is_female)
-enigma_dat
+enigma_tib <- tibble(name, age, sex, instru, is_female)
+enigma_tib
 ```
 
 You should hopefully see that, superficially, the tibble is no different to the data frame.
@@ -473,72 +473,72 @@ Most likely you will find it easier to input data into a spreadsheet software (e
 
 At a simple level you insert the file name into the function. For example, download the csv file [ais_ch03_ha.csv](./data/ais_ch03_ha.csv), which contains the data that Prof Pincus uses to help Zach explore what attributes women look for in men in Chapter 3 of the book. These data are a subset of data from a study by @RN9017. Assuming that you save this file into the working directory, you could load it using:
 
-`ha_dat <- read_csv("ais_ch03_ha.csv")`
+`ha_tib <- read_csv("ais_ch03_ha.csv")`
 
-This command creates a tibble called `ha_dat` from the file. It assumes that the first row of the file contains variable names (which it does). If this is not the case then override the defaults by including `header = FALSE`:
+This command creates a tibble called `ha_tib` from the file. It assumes that the first row of the file contains variable names (which it does). If this is not the case then override the defaults by including `header = FALSE`:
 
-`ha_dat <- read_csv("ais_ch03_ha.csv", header = FALSE)`
+`ha_tib <- read_csv("ais_ch03_ha.csv", header = FALSE)`
 
 ### Files not in the working directory
 
 If the file is not in your working directory then you need to tell **RStudio** where it is. We saw how to do this earlier on using `file.path()`. Imagine we'd saved **ais_ch03_ha.csv** into a folder called *Data* in our *Documents* folder. We could import this file as follows:
 
 `path_2_file <- file.path(Sys.getenv("HOME"), "Documents", "Data",  "ais_ch03_ha.csv")`
-`ha_dat <- read_csv(path_2_file)`
+`ha_tib <- read_csv(path_2_file)`
 
 The first line creates a text string called `path_2_file` containing the full path to the file we want. The second line inserts this text string into the `read_csv` function. We can combine these into a single command too:
 
-`ha_dat <- read_csv(file.path(Sys.getenv("HOME"), "Documents", "Data", "ais_ch03_ha.csv"))`
+`ha_tib <- read_csv(file.path(Sys.getenv("HOME"), "Documents", "Data", "ais_ch03_ha.csv"))`
 
 ### file.choose()
 
 Alternatively you can use `file.choose()` which opens a standard dialogue box to navigate your file system. For example, executing
 
-`ha_dat <- read_csv(file.choose())`
+`ha_tib <- read_csv(file.choose())`
 
-creates a tibble called `ha_dat` from whatever file you choose through the resulting dialogue box.
+creates a tibble called `ha_tib` from whatever file you choose through the resulting dialogue box.
 
 
 ## Using variables
 
 ### Referencing variables
 
-Let's assume you have loaded the csv file from the previous section into a tibble called `ha_dat`. Using what you already know, inspect the tibble using the code box.
+Let's assume you have loaded the csv file from the previous section into a tibble called `ha_tib`. Using what you already know, inspect the tibble using the code box.
 
 ```{r ha_1, exercise = TRUE}
 
 ```
 
 ```{r ha_1-solution}
-ha_dat
+ha_tib
 ```
 
-You can list names of variables within a tibble (or data frame) using the `names()` function. Just insert the name of the tibble into the function without quotes (e.g., `names(name_of_tibble)`). Use the code box to list the names of the variables in `ha_dat`.
+You can list names of variables within a tibble (or data frame) using the `names()` function. Just insert the name of the tibble into the function without quotes (e.g., `names(name_of_tibble)`). Use the code box to list the names of the variables in `ha_tib`.
 
 ```{r ha_2, exercise = TRUE}
 
 ```
 
 ```{r ha_2-solution}
-names(ha_dat)
+names(ha_tib)
 ```
 
 If you want to reference a variable from a tibble (or data frame) you use the general form:
 
 `name_of_tibble$name_of_variable`
 
-For example, to access the variable called *humour* within the tibble *ha_dat* we would use:
+For example, to access the variable called *humour* within the tibble *ha_tib* we would use:
 
-`ha_dat$humour`
+`ha_tib$humour`
 
-The `$` can be thought of as 'in', so you could read the command as 'the variable called humour in the tibble called ha_dat'. Try executing this command in the code box and see what happens.
+The `$` can be thought of as 'in', so you could read the command as 'the variable called humour in the tibble called ha_tib'. Try executing this command in the code box and see what happens.
 
 ```{r ha_3, exercise = TRUE}
 
 ```
 
 ```{r ha_3-solution}
-ha_dat$humour
+ha_tib$humour
 ```
 
 You should see a list of numbers: these are the scores that make up the variable *humour*
@@ -558,23 +558,26 @@ knitr::kable(data.frame(Operator, What_it_does), caption = "Table 1: Summary of 
 
 Using the pipe we could create a new variable that contains the average scores across the variables **humour** and **kind** by executing:
 
-`ha_dat <- ha_dat %>% mutate(mean_hum_kind = (humour + kind)/2)`
+```
+ha_tib <- ha_dat %>%
+  mutate(mean_hum_kind = (humour + kind)/2)
+```
 
 let's break this command down:
 
-* `ha_dat <-` tells **R** to re-create the tibble *ha_dat* from whatever comes next
-* `ha_dat %>%` starts to recreate the tibble from the original *ha_dat* tibble. The pipe operator tells R that there's some processing on that tibble to follow
+* `ha_tib <-` tells **R** to re-create the tibble *ha_tib* from whatever comes next
+* `ha_tib %>%` starts to recreate the tibble from the original *ha_tib* tibble. The pipe operator tells R that there's some processing on that tibble to follow
 * `mutate(mean_hum_kind = (humour + kind)/2)` uses the `mutate()` function to add a variable called **mean_hum_kind** which contains the scores of **humour** and **kind** added together and divided by two. (Inside mutate is one of the rare occasions you will use a single = sign in **R**).
 
-In the code box, add a variable called **humour_sq** to the `ha_dat` tibble that is the variable **humour** squared. Then view the tibble.
+In the code box, add a variable called **humour_sq** to the `ha_tib` tibble that is the variable **humour** squared. Then view the tibble.
 
 ```{r ha_4, exercise = TRUE}
 
 ```
 
 ```{r ha_4-solution}
-ha_dat <- ha_dat %>% mutate(humour_sq = humour^2)
-ha_dat
+ha_tib <- ha_tib %>% mutate(humour_sq = humour^2)
+ha_tib
 ```
 
 
@@ -582,12 +585,12 @@ ha_dat
 
 The participants in this study were aged between 15 and 18. Imagine we are interested only in the responses of people aged 16 or over. We can extract these data using the `filter()` function from the `tidyverse` package. Using the pipe we could create a new tibble that contains only the 16 to 18 year olds as follows:
 
-`ha_1618_dat <- ha_dat %>% filter(age >= 16)`
+`ha_1618_tib <- ha_tib %>% filter(age >= 16)`
 
 let's break this command down:
 
-* `ha_1618_dat <-` sets the name for the new tibble and the assignment operator indicates to create it from what follows
-* `ha_dat %>%` starts by taking the *ha_dat* tibble but the pipe operator means that some conditions are to follow
+* `ha_1618_tib <-` sets the name for the new tibble and the assignment operator indicates to create it from what follows
+* `ha_tib %>%` starts by taking the *ha_tib* tibble but the pipe operator means that some conditions are to follow
 * `filter(age >= 16)` used the filter function and sets a condition to select cases if the variable **age** is greater than or equal (*>=*) to 16.
 
 Try this in the code box, and inspect the tibble afterwards (by executing its name).
@@ -597,13 +600,13 @@ Try this in the code box, and inspect the tibble afterwards (by executing its na
 ```
 
 ```{r age16-solution}
-ha_1618_dat <- ha_dat %>% filter(age >= 16)
-ha_1618_dat
+ha_1618_tib <- ha_tib %>% filter(age >= 16)
+ha_1618_tib
 ```
 
 We could achieve the same thing in other ways. For example:
 
-`ha_1618_dat <- ha_dat %>% filter(age != 15)`
+`ha_1618_tib <- ha_tib %>% filter(age != 15)`
 
 Does the same thing but sets the filter to be that the variable **age** is not equal (`!=`) to 15, which will have the effect of excluding the 15 year olds. Try this in the code box and inspect the tibble.
 
@@ -612,35 +615,35 @@ Does the same thing but sets the filter to be that the variable **age** is not e
 ```
 
 ```{r age162-solution}
-ha_1618_dat <- ha_dat %>% filter(age != 15)
-ha_1618_dat
+ha_1618_tib <- ha_tib %>% filter(age != 15)
+ha_1618_tib
 ```
 
 
 If we wanted *only* the 15-year olds, we could do this by executing:
 
-`ha_15_dat <- ha_dat %>% filter(age == 15)`
+`ha_15_tib <- ha_tib %>% filter(age == 15)`
 
-to create a tibble called *ha_15_dat* that contains cases in *ha_dat* where the variable **age** is equal to (`==`) 15. Try this in the code box and inspect the resulting tibble.
+to create a tibble called *ha_15_tib* that contains cases in *ha_tib* where the variable **age** is equal to (`==`) 15. Try this in the code box and inspect the resulting tibble.
 
 ```{r age15, exercise = TRUE}
 
 ```
 
 ```{r age15-solution}
-ha_15_dat <- ha_dat %>% filter(age == 15)
-ha_15_dat
+ha_15_tib <- ha_tib %>% filter(age == 15)
+ha_15_tib
 ```
 
-In the code box, create a tibble called `kind_max_dat` that contains only the participants within the `ha_dat` tibble who rated kindness (the variable **kind**) with the maximum score of 10. Inspect the tibble by executing its name.
+In the code box, create a tibble called `kind_max_tib` that contains only the participants within the `ha_tib` tibble who rated kindness (the variable **kind**) with the maximum score of 10. Inspect the tibble by executing its name.
 
 ```{r ha_5, exercise = TRUE}
 
 ```
 
 ```{r ha_5-solution}
-kind_max_dat <- ha_dat %>% filter(kind == 10)
-kind_max_dat
+kind_max_tib <- ha_tib %>% filter(kind == 10)
+kind_max_tib
 ```
 
 ## Other resources

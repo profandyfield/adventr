@@ -27,11 +27,11 @@ hint_text <- function(text, text_color = "#E69F00"){
 
 #Read dat files needed for the tutorial
 
-calcite_dat <- adventr::calcite_dat
+calcite_tib <- adventr::calcite_dat
 
 #setup objects for code blocks
 
-calcite_tidy <- calcite_dat %>% gather(key = "face_type", value = "recognition", -id)
+calcite_tidy <- calcite_tib %>% gather(key = "face_type", value = "recognition", -id)
 
 ```
 
@@ -39,10 +39,10 @@ calcite_tidy <- calcite_dat %>% gather(key = "face_type", value = "recognition",
 
 ## Overview
 
-This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] by me, [Andy Field](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
 
 * Who is the tutorial aimed at?
-    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+    - Anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/)  may find them useful.
 * What is covered?
     - This tutorial looks at how to fit a linear model with a predictor variable that represents two dependent categories. We look at robust variants of the model, and computing a Bayes factor. It would be a useful tutorial to run alongside teaching based on Chapter 15 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
     - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
@@ -125,19 +125,19 @@ This tutorial has the data files pre-loaded so you shouldn't need to do anything
 You can load the file in several ways:
 
 * Assuming that you save this file into the working directory, you can load it by executing:
-    - `calcite_dat <- read_csv("ais_15_calcite.csv")`
+    - `calcite_tib <- read_csv("ais_15_calcite.csv")`
     - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
 * To load the file using a standard dialogue box to navigate your file system, execute:
-    - `calcite_dat <- read_csv(file.choose())`
+    - `calcite_tib <- read_csv(file.choose())`
 * You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
-    - `calcite_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_15_calcite.csv")`
+    - `calcite_tib <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_15_calcite.csv")`
     - This method relies on an internet connection (and my server having not exploded!)
 
 
 ## Categorical predictors with repeated measures
 ### The model
 
-During Zach's visit to the JIG:SAW complex he visits several research buildings. In the first, he discovers experiments being conducted related to invisibility. The second experiment he learns about involves a repeated-measures design. The researchers asked the question of whether they could manipulate the face perceived by a participant when viewing someone wearing calcite invisibility paste. Participants were all so-called Chippers, who had ID chips installed in their brains. Each participant met 40 people who had calcite paste on their face. For each of these people we took a photo of their face (the ‘actual’ face), and found a photo of a different face matched for sex and age (the ‘different’ face). The researchers could send these images to the participant’s visual cortex using their ID chip. For 20 of the encounters an image of the person’s ‘actual’ face was transmitted to the participant’s ID chip during the encounter, for the remaining 20 encounters the ‘different’ face was sent to the chip. As such the design was repeated measures (each participant experienced both the 'actual' and 'different' conditions). During each encounter the participant was shown the photos of the actual and different face and pointed to the one depicting whom they thought they were meeting. Participants scored a point for each person they correctly identified: a score of 0 would mean that they never chose the correct photo, a score of 20 would mean that they always chose the correct photo. The prediction was that the paste would lead to lower recognition when a different face (inconsistent information) was transmitted to the visual cortex than when the actual face (consistent information) was transmitted. The data are in the tibble `calcite_dat`, which has three variables:
+During Zach's visit to the JIG:SAW complex he visits several research buildings. In the first, he discovers experiments being conducted related to invisibility. The second experiment he learns about involves a repeated-measures design. The researchers asked the question of whether they could manipulate the face perceived by a participant when viewing someone wearing calcite invisibility paste. Participants were all so-called Chippers, who had ID chips installed in their brains. Each participant met 40 people who had calcite paste on their face. For each of these people we took a photo of their face (the ‘actual’ face), and found a photo of a different face matched for sex and age (the ‘different’ face). The researchers could send these images to the participant’s visual cortex using their ID chip. For 20 of the encounters an image of the person’s ‘actual’ face was transmitted to the participant’s ID chip during the encounter, for the remaining 20 encounters the ‘different’ face was sent to the chip. As such the design was repeated measures (each participant experienced both the 'actual' and 'different' conditions). During each encounter the participant was shown the photos of the actual and different face and pointed to the one depicting whom they thought they were meeting. Participants scored a point for each person they correctly identified: a score of 0 would mean that they never chose the correct photo, a score of 20 would mean that they always chose the correct photo. The prediction was that the paste would lead to lower recognition when a different face (inconsistent information) was transmitted to the visual cortex than when the actual face (consistent information) was transmitted. The data are in the tibble `calcite_tib`, which has three variables:
 
 * **id**: Participant ID
 * **actual**: How many of the 20 people the participant correctly identified when a picture of the 'actual' person was transmitted to the participant's ID chip
@@ -161,14 +161,14 @@ Recognition scores within participants (*i*) and experimental treatments (*j*) a
 
 ### Making data 'tidy'
 
-Use the code box to inspect the `calcite_dat` tibble.
+Use the code box to inspect the `calcite_tib` tibble.
 
-```{r inspect_dat, exercise = TRUE}
+```{r inspect_tib, exercise = TRUE}
      
 ```
 
-```{r inspect_dat-solution}
-calcite_dat   
+```{r inspect_tib-solution}
+calcite_tib   
 ```
 
 The data are organised in what is known as the *wide format*. In this format, each row represents a different entity and columns represent different scores belonging to that entity. For example, row 1 belongs to participant 1, column 2 tells us that they recognized 12 faces when a photo of the *actual* face was transmitted to their ID chip and column 3 tells us that they recognized 6 faces when a photo of a *different* face was transmitted to their ID chip. As such, the variable representing the type of face is split across two columns. The *wide format* is very common, but is *messy*, and usually we want the data to *tidy*. Although there is a lot more to it than this, pragmatically, @RN10209 distinguished *tidy* and *messy* data structures as follows:
@@ -187,7 +187,7 @@ To make our data 'tidy' we can use the `gather()` function from the `tidyverse` 
 
 Basically, you enter the name of the tibble that you want to restructure. It will stack all of the values from the columns into a single column with the name that you provide in the `value` argument, and it will list the original column names in a variable with the name that you provide in the `key` argument. If you ignore the `key` and `value` arguments the function will use the names **key** and **value**. To get a feel for what happens, try executing:
 
-`gather(calcite_dat)`
+`gather(calcite_tib)`
 
 in the code box below.
 
@@ -195,25 +195,30 @@ Our initial tibble had 20 rows (one for each participant) and 3 columns (**id**,
 
 This structure isn't helpful to us because it has gathered *all* of the original columns, and we need it to gather only the **actual** and **different** columns leaving the **id** column alone (because this column tells us to which participant a score belongs). We can tell the function to leave the **id** column alone by using a minus sign (`-id`). We should also define the `key` and `value` names. We might call the *key* variable **face_type**, because it will represent whether the face beamed to the ID chip was the actual face or a different one, and the *value* variable **recognition** because it contains recognition scores (out of 20). Putting all of this together we could execute:
 
-`gather(calcite_dat, key = "face_type", value = "recognition", -id)`
+`gather(calcite_tib, key = "face_type", value = "recognition", -id)`
 
 Try this command is the code box. The resulting tibble should have 40 rows (each of 20 participants under each of the two conditions) and three columns (**id** tells us the participant number, **face_type** defines the experimental condition, and **recognition** contains the recognition score for each participant in each experimental condition). These data are tidy. So we can use this restructured tibble we need to save it into an object. Let's call it `calcite_tidy`. We can do this by either placing the original tibble into the `gather()` function:
 
-`calcite_tidy <- gather(calcite_dat, key = "face_type", value = "recognition", -id)`
+`calcite_tidy <- gather(calcite_tib, key = "face_type", value = "recognition", -id)`
 
 or by using a pipe:
 
-`calcite_tidy <- calcite_dat %>% gather(key = "face_type", value = "recognition", -id)`
+```
+calcite_tidy <- calcite_tib %>% 
+  gather(key = "face_type", value = "recognition", -id)
+```
 
 Execute one of these commands in the code box, and then inspect the resulting tibble.
 
 
-```{r gather_dat, exercise = TRUE}
+```{r gather_tib, exercise = TRUE}
      
 ```
 
-```{r gather_dat-solution}
-calcite_tidy <- calcite_dat %>% gather(key = "face_type", value = "recognition", -id)
+```{r gather_tib-solution}
+calcite_tidy <- calcite_tib %>%
+  gather(key = "face_type", value = "recognition", -id)
+
 calcite_tidy
 ```
 
@@ -228,10 +233,12 @@ Use what you've learnt in previous tutorials to create a tibble called `calcite_
 ```
 
 ```{r desc-solution}
-calcite_summary <- calcite_tidy %>% group_by(face_type) %>% summarize(
-  mean_recognition = mean(recognition),
-  ci_low_recognition = ci(recognition)["CI lower"],
-  ci_upp_recognition = ci(recognition)["CI upper"]
+calcite_summary <- calcite_tidy %>%
+  group_by(face_type) %>%
+  summarize(
+    mean_recognition = mean(recognition),
+    ci_low_recognition = ci(recognition)["CI lower"],
+    ci_upp_recognition = ci(recognition)["CI upper"]
 )
 calcite_summary              
 ```
@@ -385,8 +392,14 @@ Execute these commands in the code box (if stuck, click ![](./images/solution.pn
 ```
 
 ```{r calcite_wrs-solution}
-actual <- calcite_tidy %>% filter(face_type == "actual") %>% select(recognition)
-different <- calcite_tidy %>% filter(face_type == "different") %>% select(recognition)
+actual <- calcite_tidy %>%
+  filter(face_type == "actual") %>%
+  select(recognition)
+
+different <- calcite_tidy %>%
+  filter(face_type == "different") %>%
+  select(recognition)
+
 yuend(different, actual, tr = 0.2)
 ```
 
@@ -415,8 +428,13 @@ calcite_bf
 The first line creates the object `calcite_bf` as described above and the second line prints it for us to see. Try this in the code box:
 
 ```{r calcite_bf-setup}
-actual <- calcite_tidy %>% filter(face_type == "actual") %>% select(recognition)
-different <- calcite_tidy %>% filter(face_type == "different") %>% select(recognition)
+actual <- calcite_tidy %>%
+  filter(face_type == "actual") %>%
+  select(recognition)
+
+different <- calcite_tidy %>%
+  filter(face_type == "different") %>%
+  select(recognition)
 ```
 
 ```{r calcite_bf, exercise = TRUE}
@@ -442,8 +460,14 @@ summary(calcite_bf_est)
 Try executing these two commands to view the estimates:
 
 ```{r calcite_bf_est-setup}
-actual <- calcite_tidy %>% filter(face_type == "actual") %>% select(recognition)
-different <- calcite_tidy %>% filter(face_type == "different") %>% select(recognition)
+actual <- calcite_tidy %>%
+  filter(face_type == "actual") %>%
+  select(recognition)
+
+different <- calcite_tidy %>%
+  filter(face_type == "different") %>%
+  select(recognition)
+
 calcite_bf <- ttestBF(different$recognition, actual$recognition, paired = TRUE)
 ```
 

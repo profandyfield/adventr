@@ -49,11 +49,11 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <h1>An Adventure in R: Summarizing data (introducing ggplot2)</h1>
 <div id="section-overview" class="section level2">
 <h2>Overview</h2>
-<p>This tutorial is one of a series that accompanies <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> <span class="citation">(Field 2016)</span> and <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(Field, Miles, and Field 2012)</span> by <a href="https://en.wikipedia.org/wiki/Andy_Field_(academic)">me</a>. These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>,<a href="#section-fn1" class="footnote-ref" id="section-fnref1"><sup>1</sup></a></p>
+<p>This tutorial is one of a series that accompanies <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> <span class="citation">(Field 2016)</span> by me, <a href="https://en.wikipedia.org/wiki/Andy_Field_(academic)">Andy Field</a>. These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>,<a href="#section-fn1" class="footnote-ref" id="section-fnref1"><sup>1</sup></a></p>
 <ul>
 <li>Who is the tutorial aimed at?
 <ul>
-<li>Primarily students enrolled on my <em>Linear models in statistics</em> module at the University of Sussex, but anyone teaching from or reading <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> or <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(Field, Miles, and Field 2012)</span> may find them useful.</li>
+<li>Anyone teaching from or reading <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> may find them useful.</li>
 </ul></li>
 <li>What is covered?
 <ul>
@@ -137,16 +137,16 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <ul>
 <li>Assuming that you save this file into the working directory, you can load it by executing:
 <ul>
-<li><code>ha_dat &lt;- read_csv(&quot;ais_ch03_ha.csv&quot;)</code></li>
+<li><code>ha_tib &lt;- read_csv(&quot;ais_ch03_ha.csv&quot;)</code></li>
 <li>If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called <em>adventr_02</em>)</li>
 </ul></li>
 <li>To load the file using a standard dialogue box to navigate your file system, execute:
 <ul>
-<li><code>ha_dat &lt;- read_csv(file.choose())</code></li>
+<li><code>ha_tib &lt;- read_csv(file.choose())</code></li>
 </ul></li>
 <li>You can load the file direct from the URL (i.e., you don’t need to download it first) by executing:
 <ul>
-<li><code>ha_dat &lt;- read_csv(&quot;http://www.discoveringstatistics.com/repository/ais_data/ais_c03_ha.csv&quot;)</code></li>
+<li><code>ha_tib &lt;- read_csv(&quot;http://www.discoveringstatistics.com/repository/ais_data/ais_c03_ha.csv&quot;)</code></li>
 <li>This method relies on an internet connection (and my server having not exploded!)</li>
 </ul></li>
 </ul>
@@ -154,12 +154,12 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 </div>
 <div id="section-ggplot2" class="section level2">
 <h2>ggplot2</h2>
-<p>In Chapter 3 of the book, Zach visits Alice’s boss, Professor Catherine Pincus, in the hope that she might have clues as to where Alice has gone. When inspecting Alice’s file, which he obtained from her counsellor, Zach found completed questionnaires (the relationship assessment scale, RAS) measuring her relationship satisfaction. He is convinced that Alice has left him because she is dissatisfied with their relationship. Prof. Pincus helps Zach to explore this idea by looking at data from a study by <span class="citation">(Ha, Overbeek, and Engels 2010)</span> who investigated what characteristics 1,913 teenagers (aged 13-18) valued in relationship partners. She gave adolescents a list of 21 characteristics of a future partner (reliable, honest, kind, attractive, healthy, sense of humour, gets along with friends, interesting personality, caring, romantic, flexible, intelligent, ambitious, easy going, educated, creative, wants to have children, high salary, good family, has relationship experience, and religious) and asked them to rate each one along a 10-point scale ranging from 1 (not important at all) to 10 (very important).’ A sub-sample of these scores are in a tibble called <code>ha_dat</code>. Use the code box to inspect this tibble.</p>
+<p>In Chapter 3 of the book, Zach visits Alice’s boss, Professor Catherine Pincus, in the hope that she might have clues as to where Alice has gone. When inspecting Alice’s file, which he obtained from her counsellor, Zach found completed questionnaires (the relationship assessment scale, RAS) measuring her relationship satisfaction. He is convinced that Alice has left him because she is dissatisfied with their relationship. Prof. Pincus helps Zach to explore this idea by looking at data from a study by <span class="citation">(Ha, Overbeek, and Engels 2010)</span> who investigated what characteristics 1,913 teenagers (aged 13-18) valued in relationship partners. She gave adolescents a list of 21 characteristics of a future partner (reliable, honest, kind, attractive, healthy, sense of humour, gets along with friends, interesting personality, caring, romantic, flexible, intelligent, ambitious, easy going, educated, creative, wants to have children, high salary, good family, has relationship experience, and religious) and asked them to rate each one along a 10-point scale ranging from 1 (not important at all) to 10 (very important).’ A sub-sample of these scores are in a tibble called <code>ha_tib</code>. Use the code box to inspect this tibble.</p>
 <div class="tutorial-exercise" data-label="ha_data" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="ha_data-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>ha_dat</code></pre>
+<pre class="text"><code>ha_tib</code></pre>
 </div>
 <p>You should see that the tibble contains 13 variables:</p>
 <ul>
@@ -213,14 +213,14 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <p>This command creates a new graph object called <em>my_plot</em>, and within the <code>ggplot()</code> function I have told <code>ggplot2</code> to use the tibble called <em>my_data</em>, and I name the variables to be plotted on the x (horizontal) and y (vertical) axis within the aes() function. We can also set other aesthetic values at this top level. For example, if we had a variable called <strong>sex</strong> representing the biological sex of participants and we wanted our layers/geoms to display data from males and females in different colours then we could execute:</p>
 <p><code>my_plot &lt;- ggplot(my_data, aes(variable for x axis, variable for y axis, colour = sex))</code></p>
 <p>In doing so any subsequent geom that we define will take on the aesthetic of producing different colours for males and females assuming that this is a valid aesthetic for the particular geom. If you set a general aesthetic like this, you can override it within the specific geom function. To plot the ratings given to the characteristic of being humorous we could execute:</p>
-<p><code>humour_hist &lt;- ggplot(ha_dat, aes(humour))</code></p>
-<p>This command creates a new graph object called <em>humour_hist</em> using the tibble called <em>ha_dat</em>, and plotting the variable <strong>humour</strong> on the <em>x</em> axis (for a histogram we don’t need to specify <em>y</em>. This command tells <code>ggplot2</code> <em>what</em> to plot, but not <em>how</em> to plot it. We need to add a geom to display the data. If we want a histogram we could execute:</p>
+<p><code>humour_hist &lt;- ggplot(ha_tib, aes(humour))</code></p>
+<p>This command creates a new graph object called <em>humour_hist</em> using the tibble called <em>ha_tib</em>, and plotting the variable <strong>humour</strong> on the <em>x</em> axis (for a histogram we don’t need to specify <em>y</em>. This command tells <code>ggplot2</code> <em>what</em> to plot, but not <em>how</em> to plot it. We need to add a geom to display the data. If we want a histogram we could execute:</p>
 <p><code>humour_hist + geom_histogram()</code></p>
 <p>This command tells <strong>R</strong> to take the object <em>humour_hist</em> (which we created above) and add (<code>+</code>) a layer to it using <code>geom_histogram()</code>.</p>
 <p><font color='#E69F00'>Tip: for more complex plots you will add lots of different layers, so it is helpful to structure the command with a different layer on each line. I tend to specify a layer then include the + symbol, then hit return to specify the next layer. <strong>RStudio</strong> will indent the lines for you making it easier to read. See the example in the code box below.</font></p>
 <p>The full code is in the box below, execute it to see what happens.</p>
 <div class="tutorial-exercise" data-label="humour_hist" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>humour_hist &lt;- ggplot(ha_dat, aes(humour))
+<pre class="text"><code>humour_hist &lt;- ggplot(ha_tib, aes(humour))
 humour_hist +
   geom_histogram()</code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
@@ -237,7 +237,7 @@ humour_hist +
 <p><code>geom_histogram(binwidth = 1, fill = &quot;#56B4E9&quot;)</code></p>
 <p>Try this below by replacing <code>&quot;red&quot;</code> with <code>&quot;#56B4E9&quot;</code> and running the code. Play around with other hex codes.</p>
 <div class="tutorial-exercise" data-label="humour_hist_fill" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>humour_hist &lt;- ggplot(ha_dat, aes(humour))
+<pre class="text"><code>humour_hist &lt;- ggplot(ha_tib, aes(humour))
 humour_hist +
   geom_histogram(binwidth = 1)</code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
@@ -251,13 +251,13 @@ humour_hist +
 <p><code>labs(y = &quot;Frequency&quot;, x = &quot;Importance of humour (1-10)&quot;)</code></p>
 <p>Do this and run the code again.</p>
 <div class="tutorial-exercise" data-label="humour_hist_labs" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>humour_hist &lt;- ggplot(ha_dat, aes(humour))
+<pre class="text"><code>humour_hist &lt;- ggplot(ha_tib, aes(humour))
 humour_hist +
   geom_histogram(binwidth = 1, fill = &quot;#56B4E9&quot;)</code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="humour_hist_labs-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>humour_hist &lt;- ggplot(ha_dat, aes(humour))
+<pre class="text"><code>humour_hist &lt;- ggplot(ha_tib, aes(humour))
 humour_hist +
   geom_histogram(binwidth = 1, fill = &quot;#56B4E9&quot;) +
   labs(y = &quot;Frequency&quot;, x = &quot;Importance of humour (1-10)&quot;)</code></pre>
@@ -277,14 +277,14 @@ humour_hist +
 <p><code>scale_x_continuous(breaks = 1:10)</code></p>
 <p>Execute this code and pay attention to the numbers displayed along the <em>x</em>-axis.</p>
 <div class="tutorial-exercise" data-label="humour_hist_lims" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>humour_hist &lt;- ggplot(ha_dat, aes(humour))
+<pre class="text"><code>humour_hist &lt;- ggplot(ha_tib, aes(humour))
 humour_hist +
   geom_histogram(binwidth = 1, fill = &quot;#56B4E9&quot;) + 
   labs(y = &quot;Frequency&quot;, x = &quot;Importance of humour (1-10)&quot;)</code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="humour_hist_lims-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>humour_hist &lt;- ggplot(ha_dat, aes(humour))
+<pre class="text"><code>humour_hist &lt;- ggplot(ha_tib, aes(humour))
 humour_hist +
   geom_histogram(binwidth = 1, fill = &quot;#56B4E9&quot;) +
   labs(y = &quot;Frequency&quot;, x = &quot;Importance of humour (1-10)&quot;) +
@@ -298,7 +298,7 @@ humour_hist +
 <p><code>theme_bw()</code></p>
 <p>Add this line to the code box below and run the code to see the theme change:</p>
 <div class="tutorial-exercise" data-label="humour_hist_full" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>humour_hist &lt;- ggplot(ha_dat, aes(humour))
+<pre class="text"><code>humour_hist &lt;- ggplot(ha_tib, aes(humour))
 humour_hist +
   geom_histogram(binwidth = 1, fill = &quot;#56B4E9&quot;) +
   labs(y = &quot;Frequency&quot;, x = &quot;Importance of humour (1-10)&quot;) +
@@ -307,7 +307,7 @@ humour_hist +
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="humour_hist_full-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>humour_hist &lt;- ggplot(ha_dat, aes(humour))
+<pre class="text"><code>humour_hist &lt;- ggplot(ha_tib, aes(humour))
 humour_hist +
   geom_histogram(binwidth = 1, fill = &quot;#56B4E9&quot;) +
   labs(y = &quot;Frequency&quot;, x = &quot;Importance of humour (1-10)&quot;) +
@@ -332,7 +332,7 @@ humour_hist +
 <li>within the <code>freq_poly()</code> I have replace <code>fill</code> with <code>colour</code>. This is because there is no <em>fill</em> option for frequency polygons so if you include <em>fill</em> you will get a warning. By changing to <code>colour</code> I am setting the colour of the line.</li>
 </ul>
 <div class="tutorial-exercise" data-label="humour_poly_full" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>humour_poly &lt;- ggplot(ha_dat, aes(humour))
+<pre class="text"><code>humour_poly &lt;- ggplot(ha_tib, aes(humour))
 humour_poly +
   geom_freqpoly(binwidth = 1, colour = &quot;#56B4E9&quot;) +
   labs(y = &quot;Frequency&quot;, x = &quot;Importance of humour (1-10)&quot;) +
@@ -366,7 +366,7 @@ humour_poly +
 <p>You should see the frequency polygon disappear behind the histogram. This illustrates the idea of layering a plot. <code>ggplot2</code> processes the functions in order. If <code>geom_freqpoly(binwidth = 1)</code> comes before <code>geom_histogram()</code> then <code>ggplot2</code> draws the polygon first and then layers the histogram on top whereas if <code>geom_histogram()</code> comes before <code>geom_freqpoly(binwidth = 1)</code> then the histogram is drawn first and the polygon is layered on top of it.</p>
 <p>You can use what you know to change the frequency polygon’s line to be a pleasant red (“#DF4738”) and size 2.</p>
 <div class="tutorial-exercise" data-label="humour_poly_hist" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>humour_hist &lt;- ggplot(ha_dat, aes(humour))
+<pre class="text"><code>humour_hist &lt;- ggplot(ha_tib, aes(humour))
 humour_hist +
   geom_histogram(binwidth = 1, fill = &quot;#56B4E9&quot;) +
   labs(y = &quot;Frequency&quot;, x = &quot;Importance of humour (1-10)&quot;) +
@@ -376,7 +376,7 @@ humour_hist +
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="humour_poly_hist-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>humour_hist &lt;- ggplot(ha_dat, aes(humour))
+<pre class="text"><code>humour_hist &lt;- ggplot(ha_tib, aes(humour))
 humour_hist +
   geom_histogram(binwidth = 1, fill = &quot;#56B4E9&quot;) +
   geom_freqpoly(binwidth = 1, colour = &quot;#DF4738&quot;, size = 2) +
@@ -435,7 +435,7 @@ hint_text <- function(text, text_color = "#E69F00"){
 #Read dat files needed for the tutorial
 
 
-ha_dat <- adventr::ha_dat
+ha_tib <- adventr::ha_dat
   
 </script>
  

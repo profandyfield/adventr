@@ -16,10 +16,10 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Overview
 
-This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] by me, [Andy Field](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
 
 * Who is the tutorial aimed at?
-    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+    - Anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/)  may find them useful.
 * What is covered?
     - This tutorial looks at how to download, install, and setup **R** and **RStudio**. It would be a useful tutorial to run at the start of a module, or alongside teaching based on Chapter 1 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
     - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)

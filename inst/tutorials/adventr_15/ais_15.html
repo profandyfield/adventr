@@ -49,11 +49,11 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <h1>An Adventure in R: Categorial predictors (two categories)</h1>
 <div id="section-overview" class="section level2">
 <h2>Overview</h2>
-<p>This tutorial is one of a series that accompanies <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> <span class="citation">(Field 2016)</span> and <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(Field, Miles, and Field 2012)</span> by <a href="https://en.wikipedia.org/wiki/Andy_Field_(academic)">me</a>. These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>,<a href="#section-fn1" class="footnote-ref" id="section-fnref1"><sup>1</sup></a></p>
+<p>This tutorial is one of a series that accompanies <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> <span class="citation">(A. P. Field 2016)</span> by me, <a href="https://en.wikipedia.org/wiki/Andy_Field_(academic)">Andy Field</a>. These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>,<a href="#section-fn1" class="footnoteRef" id="section-fnref1"><sup>1</sup></a></p>
 <ul>
 <li>Who is the tutorial aimed at?
 <ul>
-<li>Primarily students enrolled on my <em>Linear models in statistics</em> module at the University of Sussex, but anyone teaching from or reading <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> or <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(Field, Miles, and Field 2012)</span> may find them useful.</li>
+<li>Anyone teaching from or reading <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> may find them useful.</li>
 </ul></li>
 <li>What is covered?
 <ul>
@@ -143,26 +143,36 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <ul>
 <li>Assuming that you save this file into the working directory, you can load it by executing:
 <ul>
-<li><code>mask_dat &lt;- read_csv(&quot;ais_15_masks.csv&quot;)</code></li>
+<li><code>mask_tib &lt;- read_csv(&quot;ais_15_masks.csv&quot;)</code></li>
 <li>If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called <em>adventr_02</em>)</li>
 </ul></li>
 <li>To load the file using a standard dialogue box to navigate your file system, execute:
 <ul>
-<li><code>mask_dat &lt;- read_csv(file.choose())</code></li>
+<li><code>mask_tib &lt;- read_csv(file.choose())</code></li>
 </ul></li>
 <li>You can load the file direct from the URL (i.e., you don’t need to download it first) by executing:
 <ul>
-<li><code>mask_dat &lt;- read_csv(&quot;http://www.discoveringstatistics.com/repository/ais_data/ais_15_masks.csv&quot;)</code></li>
+<li><code>mask_tib &lt;- read_csv(&quot;http://www.discoveringstatistics.com/repository/ais_data/ais_15_masks.csv&quot;)</code></li>
 <li>This method relies on an internet connection (and my server having not exploded!)</li>
 </ul></li>
 </ul>
+</div>
+<div id="section-categorical-variables" class="section level3">
+<h3>Categorical variables</h3>
+<p>When working within the tutorial the data are already prepared for you. However, if you are trying to replicate the tutorial within R or R Studio then you need to explicitly convert categorical predictors to factors. The data for this tutorial contains a variable <strong>mask</strong>, which will be read in from the csv file as a character variable. To convert this variable to a factor we can use the <code>as_factor()</code> function from the <code>forcats</code> package. There are several ways to do this, but the most tidyverse way is to use <code>mutate()</code> from <code>tidyverse</code>, which is a way of adding variables to a tibble or overwriting existing variables. We could execute:</p>
+<pre class="r"><code>library(tidyverse)
+mask_tib &lt;- mask_tib %&gt;% 
+  mutate(
+    mask = forcats::as_factor(mask)
+  )</code></pre>
+<p>This code recreates the <code>mask_tib</code> tibble from itself then uses mutate to recreate the variable <strong>group</strong> from itself by placing it within the <code>as_factor()</code> function. I have explicitly declared that I want to use the <code>as_factor()</code> function from the package <code>forcats</code> because the package <code>haven</code> also has an <code>as_factor()</code> function.</p>
 </div>
 </div>
 <div id="section-categorical-predictors-in-the-glm" class="section level2">
 <h2>Categorical predictors in the GLM</h2>
 <div id="section-the-model" class="section level3">
 <h3>The model</h3>
-<p>During Zach’s visit to the JIG:SAW complex he visits several research buildings. In the first, he discovers experiments being conducted related to invisibility. Each participant sat on a revolving chair in the middle of a circle of 20 people. The 20 people all wore a light deflecting aid on their face. For half of the participants (<em>N</em> = 14) the 20 people wore a calcite-based mask, whereas the other half (<em>N</em> = 14) saw people wearing ‘invisibility paste’, a transparent cream containing calcite micro-crystals. Participants looked at each person and were given two photographs, one depicting the person they were looking at and one depicting a different person matched for age and sex. Participants had to decide which person they were looking at, before turning to the next person and being given two different photographs. Participants scored a point for each person they identified correctly: a score of 0 would mean they always chose the incorrect photo, a score of 20 would mean that they always chose the correct photo. The question is whether the light deflecting aids interfere with facial recognition. The prediction was that the paste would lead to lower recognition than the masks. The data are in the tibble <code>mask_dat</code>, which has three variables:</p>
+<p>During Zach’s visit to the JIG:SAW complex he visits several research buildings. In the first, he discovers experiments being conducted related to invisibility. Each participant sat on a revolving chair in the middle of a circle of 20 people. The 20 people all wore a light deflecting aid on their face. For half of the participants (<em>N</em> = 14) the 20 people wore a calcite-based mask, whereas the other half (<em>N</em> = 14) saw people wearing ‘invisibility paste’, a transparent cream containing calcite micro-crystals. Participants looked at each person and were given two photographs, one depicting the person they were looking at and one depicting a different person matched for age and sex. Participants had to decide which person they were looking at, before turning to the next person and being given two different photographs. Participants scored a point for each person they identified correctly: a score of 0 would mean they always chose the incorrect photo, a score of 20 would mean that they always chose the correct photo. The question is whether the light deflecting aids interfere with facial recognition. The prediction was that the paste would lead to lower recognition than the masks. The data are in the tibble <code>mask_tib</code>, which has three variables:</p>
 <ul>
 <li><strong>id</strong>: Participant ID</li>
 <li><strong>mask</strong>: Whether the person was assigned to the calcite mask condition or the invisibility paste condition</li>
@@ -183,11 +193,11 @@ Y_i &amp; = b_0 + b_1X_i+ ε_i\\
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="scat-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>mem_plot &lt;- ggplot(mask_dat, aes(mask, recognition))
+<pre class="text"><code>mem_plot &lt;- ggplot(mask_tib, aes(mask, recognition))
 mem_plot +
   geom_point(colour = &quot;#E69F00&quot;, position = position_jitter(width = 0.1, height = 0)) +
   stat_summary(fun.data = &quot;mean_cl_normal&quot;, geom = &quot;pointrange&quot;) +
-  labs(x = &quot;Experimental group&quot;, y = &quot;Recoognition (out of 20&quot;) +
+  labs(x = &quot;Experimental group&quot;, y = &quot;Recognition (out of 20&quot;) +
   coord_cartesian(ylim = c(0, 20)) +
   scale_y_continuous(breaks = 0:20) +
   theme_bw()</code></pre>
@@ -210,7 +220,7 @@ mem_plot +
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="lm1-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>mask_mod &lt;- lm(recognition ~ mask, data = mask_dat)
+<pre class="text"><code>mask_mod &lt;- lm(recognition ~ mask, data = mask_tib)
 mask_mod &lt;- lm.beta(mask_mod)
 summary(mask_mod)
 confint(mask_mod)
@@ -223,27 +233,27 @@ plot(mask_mod)</code></pre>
 <tr>
 <td>
 
-<div id="htmlwidget-692639827ad04cda6dc4" style="width:100%;height:auto;", class = "quiz html-widget">
+<div id="htmlwidget-2636e251aa1c98f6c2a4" style="width:100%;height:auto;", class = "quiz html-widget">
 <div class="panel panel-default">
 <div class="panel-body quizArea">
 </div>
 </div>
 </div>
 
-<script type="application/json" data-for="htmlwidget-692639827ad04cda6dc4">{"x":{"question":"How would we interpret the <em>Estimate<\/em> (-3.357) for <em>maskInvisibility Paste<\/em>? [Select <strong>two<\/strong> correct answers.]","answers":[{"option":"As the value of <strong>mask<\/strong> changed from 0 (calcite paste) to 1 (invisibility paste), recognition scores decrease by 3.357.","correct":true,"message":null},{"option":"The difference between group means is 3.357.","correct":true,"message":null},{"option":"As the value of <strong>mask<\/strong> changed from 0 (calcite paste) to 1 (invisibility paste), recognition scores decrease by 3.357 of a standard deviation","correct":false,"message":"This describes the <em>standardized<\/em> B, not the <em>unstandardized<\/em>."},{"option":"Group membership explains -3.36% of the variance in recognition scores","correct":false,"message":"This is what \\(R^2\\) tells us and you can&#39;t have a negative percentage of variance explained!"}],"label":"quiz_b_ex1-1","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"How would we interpret the <em>Estimate<\/em> (-3.357) for <em>maskInvisibility Paste<\/em>? [Select <strong>two<\/strong> correct answers.]","a":[{"option":"As the value of <strong>mask<\/strong> changed from 0 (calcite paste) to 1 (invisibility paste), recognition scores decrease by 3.357.","correct":true,"message":null},{"option":"The difference between group means is 3.357.","correct":true,"message":null},{"option":"As the value of <strong>mask<\/strong> changed from 0 (calcite paste) to 1 (invisibility paste), recognition scores decrease by 3.357 of a standard deviation","correct":false,"message":"This describes the <em>standardized<\/em> B, not the <em>unstandardized<\/em>."},{"option":"Group membership explains -3.36% of the variance in recognition scores","correct":false,"message":"This is what \\(R^2\\) tells us and you can&#39;t have a negative percentage of variance explained!"}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-2636e251aa1c98f6c2a4">{"x":{"question":"How would we interpret the <em>Estimate<\/em> (-3.357) for <em>maskInvisibility Paste<\/em>? [Select <strong>two<\/strong> correct answers.]","answers":[{"option":"As the value of <strong>mask<\/strong> changed from 0 (calcite paste) to 1 (invisibility paste), recognition scores decrease by 3.357.","correct":true,"message":null},{"option":"The difference between group means is 3.357.","correct":true,"message":null},{"option":"As the value of <strong>mask<\/strong> changed from 0 (calcite paste) to 1 (invisibility paste), recognition scores decrease by 3.357 of a standard deviation","correct":false,"message":"This describes the <em>standardized<\/em> B, not the <em>unstandardized<\/em>."},{"option":"Group membership explains -3.36% of the variance in recognition scores","correct":false,"message":"This is what \\(R^2\\) tells us and you can&#39;t have a negative percentage of variance explained!"}],"label":"quiz_b_ex1-1","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"How would we interpret the <em>Estimate<\/em> (-3.357) for <em>maskInvisibility Paste<\/em>? [Select <strong>two<\/strong> correct answers.]","a":[{"option":"As the value of <strong>mask<\/strong> changed from 0 (calcite paste) to 1 (invisibility paste), recognition scores decrease by 3.357.","correct":true,"message":null},{"option":"The difference between group means is 3.357.","correct":true,"message":null},{"option":"As the value of <strong>mask<\/strong> changed from 0 (calcite paste) to 1 (invisibility paste), recognition scores decrease by 3.357 of a standard deviation","correct":false,"message":"This describes the <em>standardized<\/em> B, not the <em>unstandardized<\/em>."},{"option":"Group membership explains -3.36% of the variance in recognition scores","correct":false,"message":"This is what \\(R^2\\) tells us and you can&#39;t have a negative percentage of variance explained!"}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
 </td>
 </tr>
 <tr>
 <td>
 
-<div id="htmlwidget-56a01b354a7664693bfa" style="width:100%;height:auto;", class = "quiz html-widget">
+<div id="htmlwidget-3d49026f8d1397e87423" style="width:100%;height:auto;", class = "quiz html-widget">
 <div class="panel panel-default">
 <div class="panel-body quizArea">
 </div>
 </div>
 </div>
 
-<script type="application/json" data-for="htmlwidget-56a01b354a7664693bfa">{"x":{"question":"How would we interpret the value of 0.0486 in the column labelled <em>Pr(&gt;|t|)<\/em>? [Select <strong>two<\/strong> correct answers.]","answers":[{"option":"The probability of getting a value of <em>t<\/em> at least as small as -2.069 if the true value of <em>b<\/em> were 0 is 0.0486","correct":true,"message":null},{"option":"The difference between group means is significantly different at <em>p<\/em> = 0.0486.","correct":true,"message":null},{"option":"The probability of this being a chance result is 0.0486","correct":false,"message":"<em>p<\/em>-values are long run probabilities and do not tell us anything about the probability associated with the particular samplew ehave collected."},{"option":"The probability of <em>b<\/em> being -3.357 in the population is 0.0486","correct":false,"message":"<em>p<\/em>-values don&#39;t tell us about the probability of values in the populatrion*"}],"label":"quiz_b_ex1-2","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"How would we interpret the value of 0.0486 in the column labelled <em>Pr(&gt;|t|)<\/em>? [Select <strong>two<\/strong> correct answers.]","a":[{"option":"The probability of getting a value of <em>t<\/em> at least as small as -2.069 if the true value of <em>b<\/em> were 0 is 0.0486","correct":true,"message":null},{"option":"The difference between group means is significantly different at <em>p<\/em> = 0.0486.","correct":true,"message":null},{"option":"The probability of this being a chance result is 0.0486","correct":false,"message":"<em>p<\/em>-values are long run probabilities and do not tell us anything about the probability associated with the particular samplew ehave collected."},{"option":"The probability of <em>b<\/em> being -3.357 in the population is 0.0486","correct":false,"message":"<em>p<\/em>-values don&#39;t tell us about the probability of values in the populatrion*"}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-3d49026f8d1397e87423">{"x":{"question":"How would we interpret the value of 0.0486 in the column labelled <em>Pr(&gt;|t|)<\/em>? [Select <strong>two<\/strong> correct answers.]","answers":[{"option":"The probability of getting a value of <em>t<\/em> at least as small as -2.069 if the true value of <em>b<\/em> were 0 is 0.0486","correct":true,"message":null},{"option":"The difference between group means is significantly different at <em>p<\/em> = 0.0486.","correct":true,"message":null},{"option":"The probability of this being a chance result is 0.0486","correct":false,"message":"<em>p<\/em>-values are long run probabilities and do not tell us anything about the probability associated with the particular samplew ehave collected."},{"option":"The probability of <em>b<\/em> being -3.357 in the population is 0.0486","correct":false,"message":"<em>p<\/em>-values don&#39;t tell us about the probability of values in the populatrion*"}],"label":"quiz_b_ex1-2","skipStartButton":true,"perQuestionResponseAnswers":true,"perQuestionResponseMessaging":true,"preventUnanswered":true,"displayQuestionCount":false,"displayQuestionNumber":false,"disableRanking":true,"nextQuestionText":"","checkAnswerText":"Submit Answer","allowRetry":true,"randomSortAnswers":true,"json":{"info":{"name":"","main":""},"questions":[{"q":"How would we interpret the value of 0.0486 in the column labelled <em>Pr(&gt;|t|)<\/em>? [Select <strong>two<\/strong> correct answers.]","a":[{"option":"The probability of getting a value of <em>t<\/em> at least as small as -2.069 if the true value of <em>b<\/em> were 0 is 0.0486","correct":true,"message":null},{"option":"The difference between group means is significantly different at <em>p<\/em> = 0.0486.","correct":true,"message":null},{"option":"The probability of this being a chance result is 0.0486","correct":false,"message":"<em>p<\/em>-values are long run probabilities and do not tell us anything about the probability associated with the particular samplew ehave collected."},{"option":"The probability of <em>b<\/em> being -3.357 in the population is 0.0486","correct":false,"message":"<em>p<\/em>-values don&#39;t tell us about the probability of values in the populatrion*"}],"correct":"Correct - well done!","incorrect":"Incorrect."}]}},"evals":[],"jsHooks":[]}</script>
 </td>
 </tr>
 </table>
@@ -259,23 +269,23 @@ plot(mask_mod)</code></pre>
 <li><code>new_model</code>: an object created that contains information about the model. We can get summary statistics for this model by executing the name of the model.</li>
 <li><code>outcome</code>: the variable that contains the scores for the outcome measure (in this case <strong>recognition</strong>).</li>
 <li><code>predictor</code>: the variable that contains information about to which group a score belongs (in this case <strong>mask</strong>).</li>
-<li><code>tibble</code>: the name of the tibble containing the data (in this case <code>mask_dat</code>)</li>
+<li><code>tibble</code>: the name of the tibble containing the data (in this case <code>mask_tib</code>)</li>
 <li><code>paired</code>: by default scores are treated as independent (<code>paired = FALSE</code>), but if you have a repeated measures design and want to treat scores as dependent change this to <code>paired = TRUE</code></li>
 <li><code>var.equal</code>: by default the function assumes that variances are unequal (<code>var.equal = FALSE</code>) and applies Welch’s correction (a sensible thing to do). If for some reason you want to assume equal variances include the option <code>var.equal = TRUE</code>.</li>
 <li><code>conf.level</code>: determines the alpha level for the <em>p</em>-value and confidence intervals. By default it is 0.95 (for 95% confidence intervals) and usually you’d exclude this option, but if you want to use a different value, say 99%, you could include <code>conf.level = 0.99</code>.</li>
 <li><code>na.action</code>: If you have complete data (as we have here) exclude this option, but if you have missing values (i.e., ‘NA’s in the data frame) then it can be useful to include <code>na.action = na.exclude</code>, which will exclude all cases with missing values</li>
 </ul>
 <p>To get a <em>t</em>-test for the current data we would execute:</p>
-<pre class="r"><code>t.test(recognition ~ mask, data = mask_dat)</code></pre>
+<pre class="r"><code>t.test(recognition ~ mask, data = mask_tib)</code></pre>
 <p>or to create an object that we can use later:</p>
-<pre class="r"><code>mask_t &lt;- t.test(recognition ~ mask, data = mask_dat)
+<pre class="r"><code>mask_t &lt;- t.test(recognition ~ mask, data = mask_tib)
 mask_t</code></pre>
 <p>Try this in the code box:</p>
 <div class="tutorial-exercise" data-label="t1" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="t1-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>mask_t &lt;- t.test(recognition ~ mask, data = mask_dat, var.equal = T)
+<pre class="text"><code>mask_t &lt;- t.test(recognition ~ mask, data = mask_tib, var.equal = T)
 mask_t</code></pre>
 </div>
 <p>The value of <em>t</em> (2.0689) and the corresponding <em>p</em> (0.04956) are slightly different to when we fitted a linear model. This is because Welch’s correction has been applied (and usually this is a good idea). Try adding <code>var.equal = T</code> to the <code>t-test()</code> function and re-running the code. You should find that the values of <em>t</em> and <em>p</em> match those from the <code>lm()</code> function. [Actually the <em>t</em> is 2.0689 rather than -2.0689 but this is just because of how the groups are dummy coded in one function compared to the other. In other words whether you subtract the calcite mean from the paste mean or vice versa.] All of which goes to highlight that the <em>t</em>-test is a special case of the linear model.</p>
@@ -288,18 +298,18 @@ mask_t</code></pre>
 <p>To apply a Welch-style correction to the linear model we can use one of the methods we learnt before for producing standard errors (and hence confidence intervals) that are robust to heteroscedasticity. Remember that we compute these using the <code>robust()</code> function from the <code>sjstats</code> package (so execute <code>library(sjstats)</code> if you’re doing this outside of the tutorial). Remember that we simply place the model we created with <code>lm()</code> (in this case <code>mask_mod</code>) into the function. For example, we could execute:</p>
 <ul>
 <li><code>robust(mask_mod, conf.int = T)</code> to use the default “HC3” method and request 95% confidence intervals</li>
-<li><code>robust(mask_mod, vcov = &quot;HC4&quot;, conf.int = T)</code> to use “HC4” and request 95% confidence intervals</li>
+<li><code>robust(mask_mod, vcov.type = &quot;HC4&quot;, conf.int = T)</code> to use “HC4” and request 95% confidence intervals</li>
 </ul>
 <p>The HC3 and HC4 refer to different methods to correct the standard errors (refer back to the tutorial <em>adventr_14</em>). Try these commands in the code box and compare the results.</p>
 <div class="tutorial-exercise-support" data-label="mask_mod_hc4-setup" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>mask_mod &lt;- lm(recognition ~ mask, data = mask_dat)</code></pre>
+<pre class="text"><code>mask_mod &lt;- lm(recognition ~ mask, data = mask_tib)</code></pre>
 </div>
 <div class="tutorial-exercise" data-label="mask_mod_hc4" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="mask_mod_hc4-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>robust(mask_mod, conf.int = T)
-robust(mask_mod, vcov = &quot;HC4&quot;, conf.int = T)</code></pre>
+robust(mask_mod, vcov.type = &quot;HC4&quot;, conf.int = T)</code></pre>
 </div>
 </div>
 <div id="section-robust-estimates" class="section level3">
@@ -309,7 +319,7 @@ robust(mask_mod, vcov = &quot;HC4&quot;, conf.int = T)</code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="mask_mod_robust-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>mask_rob &lt;- lmRob(recognition ~ mask, data = mask_dat)
+<pre class="text"><code>mask_rob &lt;- lmRob(recognition ~ mask, data = mask_tib)
 summary(mask_rob)   </code></pre>
 </div>
 <p>Note that the parameter for the effect of mask has changed from -3.357 to -1.833, which is because it no longer represents the difference between arithmetic means but instead represents a robust estimate of that difference</p>
@@ -329,7 +339,7 @@ boot_lm &lt;- function(formula, data, index){
 }
 
 #The following runs the bootstrap and extracts the CIs
-boot_result &lt;- boot(boot_lm, formula = recognition ~ mask, data = mask_dat, R = 2000)
+boot_result &lt;- boot(boot_lm, formula = recognition ~ mask, data = mask_tib, R = 2000)
 boot.ci(boot_result, type = &quot;bca&quot;, index = 1) #for the intercept
 boot.ci(boot_result, type = &quot;bca&quot;, index = 2) #for the effect of mask </code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
@@ -346,10 +356,10 @@ boot.ci(boot_result, type = &quot;bca&quot;, index = 2) #for the effect of mask 
 <p>These functions have similar arguments:</p>
 <ul>
 <li><code>formula</code>: the functions use a formula like that for <code>lm()</code>, son in this case we could again use <code>recognition ~ mask</code>.</li>
-<li><code>data = tibble</code>: replace tibble with the name of the tibble or data frame in which the data are stored (in this case <code>data = mask_dat</code>)</li>
+<li><code>data = tibble</code>: replace tibble with the name of the tibble or data frame in which the data are stored (in this case <code>data = mask_tib</code>)</li>
 <li><code>tr = 0.2</code>: determines the level of trim. The default is a 20% trim, which has been shown to perform well, but you could change this to 0.1 (10% trim) or any value up to 0.5 (although if you want to compare medians you should a function called <code>pb2gen()</code>). You can omit this argument if you’re happy with a 20% trim.</li>
 <li><code>nboot = 599</code>: specifies the number of bootstrap samples. There is a case for increasing the defaults to 1000.</li>
-<li><code>side = TRUE</code>: performs a two-tailed test. You can usually omit this argument because this default is sensible: one-tailed tests are usually a bad idea <span class="citation">(Field 2016)</span>!</li>
+<li><code>side = TRUE</code>: performs a two-tailed test. You can usually omit this argument because this default is sensible: one-tailed tests are usually a bad idea <span class="citation">(A. P. Field 2016)</span>!</li>
 <li><code>alpha = 0.05</code>: the alpha level for the confidence interval for the effect size measure. You can usually omit this argument because this default is sensible.</li>
 </ul>
 <p>See if you can run the three commands in the code box below based on my description (if not, press <img src="images/solution.png" />)</p>
@@ -357,9 +367,9 @@ boot.ci(boot_result, type = &quot;bca&quot;, index = 2) #for the effect of mask 
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="mask_wrs-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>yuen(recognition ~ mask, data = mask_dat)
-yuenbt(recognition ~ mask, data = mask_dat, nboot = 1000)
-yuen.effect.ci(recognition ~ mask, data = mask_dat, nboot = 1000)</code></pre>
+<pre class="text"><code>yuen(recognition ~ mask, data = mask_tib)
+yuenbt(recognition ~ mask, data = mask_tib, nboot = 1000)
+yuen.effect.ci(recognition ~ mask, data = mask_tib, nboot = 1000)</code></pre>
 </div>
 <p>Note that the trimmed mean difference is 2.3 (rather than the raw mean difference of 3.357). This difference is not significant both when using a bootstrap and when not. Also, in both tests the confidence intervals cross zero, indicating that if this is one of the 95% of samples where the confidence interval contains the population value, then the population difference between means could be positive, negative or zero.</p>
 <p>The effect size is a robust variant of Cohen’s <em>d</em> so can be interpreted as invisibility paste producing recognition scores 0.54 of a standard deviation below that for a calcite mask. The confidence interval is quite wide, ranging from 0 to 0.92.</p>
@@ -372,17 +382,17 @@ yuen.effect.ci(recognition ~ mask, data = mask_dat, nboot = 1000)</code></pre>
 <p>Like in <em>adventr_11</em> and <em>adventr_14</em> we can use the <a href="http://bayesfactorpcl.r-forge.r-project.org/">BayesFactor package</a>. In this scenario we’d use the <code>ttestBF()</code> function because this gives us a simple Bayes factor that compares the alternative (the two means differ) to the null (the two means do not differ). This function was explained in <em>adventr_11</em>; it has basically the same format as most of the other functions in this tutorial:</p>
 <p><code>object = ttestBF(formula = outcome ~ group_variable, data = tibble, paired = FALSE, rscale = &quot;medium&quot;)</code></p>
 <p>To recap, by default the function assumes independent scores (<code>paired = FALSE</code>) so for dependent scores (see <em>adventr_15_rm</em>) we’d change this to <code>paired = TRUE</code>. The function uses default priors that can be specified as a number or as “medium” (the default), “wide”, and “ultrawide”. These labels correspond to <em>r</em> scale values of <span class="math inline">\(^\sqrt{2}/_2\)</span>, 1, and <span class="math inline">\(\sqrt{2}\)</span>. These priors were explained in <em>adventr_11</em>.</p>
-<p>So we would use the same formula that we have used throughout, and specify our tibble as <code>mask_dat</code>. It’s a good idea to save this model into a new object (lets call it <code>mask_bf</code>) because you can do useful things with it (we didn’t do this for the <code>yuen()</code> functions, but you could).</p>
+<p>So we would use the same formula that we have used throughout, and specify our tibble as <code>mask_tib</code>. It’s a good idea to save this model into a new object (lets call it <code>mask_bf</code>) because you can do useful things with it (we didn’t do this for the <code>yuen()</code> functions, but you could).</p>
 <p><font color='#E69F00'>Tip: if you are using a tibble (rather than a data frame) then place the tibble’s name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn’t accept tibbles.</font></p>
 <p>For our data (using the default prior) we could execute:</p>
-<pre class="r"><code>mask_bf &lt;- ttestBF(formula = recognition ~ mask, data = data.frame(mask_dat))
+<pre class="r"><code>mask_bf &lt;- ttestBF(formula = recognition ~ mask, data = data.frame(mask_tib))
 mask_bf</code></pre>
 <p>The first line creates the object <code>mask_bf</code> as described above and the second line prints it for us to see. Try this in the code box:</p>
 <div class="tutorial-exercise" data-label="mask_bf" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="mask_bf-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>mask_bf &lt;- ttestBF(formula = recognition ~ mask, data = data.frame(mask_dat))
+<pre class="text"><code>mask_bf &lt;- ttestBF(formula = recognition ~ mask, data = data.frame(mask_tib))
 mask_bf</code></pre>
 </div>
 <p>The value matches that in the book (<em>an adventure in statistics</em>). As Milton explains ‘for Experiment 1 the Bayes factor is 1.64, which means that the data are 1.64 times more likely given the alternative hypothesis compared to the null hypothesis. Put another way, you should shift your belief in the alternative hypothesis relative to the null by a factor of 1.64.’ The result favours the alternative hypothesis over the null but only by a small amount. Jeffreys would say it was ‘barely worth mentioning’.</p>
@@ -394,7 +404,7 @@ mask_bf</code></pre>
 summary(mask_bf_est)</code></pre>
 <p>Try executing these two commands to view the estimates:</p>
 <div class="tutorial-exercise-support" data-label="mask_bf_est-setup" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>mask_bf &lt;- ttestBF(formula = recognition ~ mask, data = data.frame(mask_dat)) </code></pre>
+<pre class="text"><code>mask_bf &lt;- ttestBF(formula = recognition ~ mask, data = data.frame(mask_tib)) </code></pre>
 </div>
 <div class="tutorial-exercise" data-label="mask_bf_est" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
@@ -415,7 +425,7 @@ summary(mask_bf_est)</code></pre>
 <div id="section-statistics" class="section level3">
 <h3>Statistics</h3>
 <ul>
-<li>The tutorials typically follow examples described in detail in <span class="citation">Field (2016)</span>, so for most of them there’s a thorough account in there. You might also find <span class="citation">Field, Miles, and Field (2012)</span> useful for the <strong>R</strong> stuff.</li>
+<li>The tutorials typically follow examples described in detail in <span class="citation">A. P. Field (2016)</span>, so for most of them there’s a thorough account in there. You might also find <span class="citation">A. P. Field, Miles, and Field (2012)</span> useful for the <strong>R</strong> stuff.</li>
 <li>There are free lectures and screen casts on my <a href="https://www.youtube.com/user/ProfAndyField/">YouTube channel</a></li>
 <li>There are free statistical resources on my website <a href="http://www.discoveringstatistics.com">www.discoveringstatistics.com</a></li>
 </ul>
@@ -455,7 +465,7 @@ hint_text <- function(text, text_color = "#E69F00"){
 
 #Read dat files needed for the tutorial
 
-mask_dat <- adventr::mask_dat
+mask_tib <- adventr::mask_dat
 
 #setup objects for code blocks
 
@@ -556,7 +566,7 @@ output$`tutorial-exercise-mask_bf_est-output` <- renderUI({
 <p>Morey, Richard D., and Jeffrey N. Rouder. 2014. “BayesFactor: Computation of Bayes Factors for Common Designs.” Journal Article R package version 0.9.9. <a href=" http://CRAN.R-project.org/package=BayesFactor">http://CRAN.R-project.org/package=BayesFactor</a>.</p>
 </div>
 <div id="section-ref-RN11411">
-<p>Wang, Jiahui, Ruben Zamar, Alfio Marazzi, Victor Yohai, Matias Salibian-Barrera, Ricardo Maronna, Eric Zivot, et al. 2017. “Robust: Port of the S+ &quot;Robust Library&quot;.” Journal Article. <em>R Package Version 0.4-18.</em> <a href="https://CRAN.R-project.org/package=robust" class="uri">https://CRAN.R-project.org/package=robust</a>.</p>
+<p>Wang, Jiahui, Ruben Zamar, Alfio Marazzi, Victor Yohai, Matias Salibian-Barrera, Ricardo Maronna, Eric Zivot, et al. 2017. “Robust: Port of the S+ ‘Robust Library’.” Journal Article. <em>R Package Version 0.4-18.</em> <a href="https://CRAN.R-project.org/package=robust" class="uri">https://CRAN.R-project.org/package=robust</a>.</p>
 </div>
 <div id="section-ref-RN11407">
 <p>Wickham, Hadley. 2017. “Tidyverse: Easily Install and Load ’Tidyverse’ Packages.” Journal Article. <em>R Package Version 1.1.1.</em> <a href="https://CRAN.R-project.org/package=tidyverse" class="uri">https://CRAN.R-project.org/package=tidyverse</a>.</p>
@@ -573,7 +583,7 @@ output$`tutorial-exercise-mask_bf_est-output` <- renderUI({
 <div class="footnotes">
 <hr />
 <ol>
-<li id="section-fn1"><p>Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.<a href="#section-fnref1" class="footnote-back">↩</a></p></li>
+<li id="section-fn1"><p>Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.<a href="#section-fnref1">↩</a></p></li>
 </ol>
 </div>
 

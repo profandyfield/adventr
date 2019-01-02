@@ -25,18 +25,22 @@ hint_text <- function(text, text_color = "#E69F00"){
 }
 
 #Read dat files needed for the tutorial
-recovery_dat <- adventr::recovery_dat
+recovery_tib <- adventr::recovery_dat
 
 #setup objects for code blocks
 
 ```
 
 ```{r echo = FALSE, prepare-data}
-recovery_dat$id <- as_factor(recovery_dat$id)
-recovery_dat$treatment <- as_factor(recovery_dat$treatment) %>% fct_relevel("No toggle switch")
-recovery_dat$recovered <- as_factor(recovery_dat$recovered) %>% fct_relevel("Not recovered")
 
-recovery_freq <- recovery_dat %>%
+recovery_tib <- recovery_tib %>% 
+  mutate(
+    id = forcats::as_factor(id),
+    treatment = as_factor(treatment) %>% fct_relevel("No toggle switch"),
+    recovered = as_factor(recovered) %>% fct_relevel("Not recovered")
+    )
+
+recovery_freq <- recovery_tib %>%
   group_by(treatment, dose, recovered) %>%
   summarize(n = n()) %>% 
   group_by(treatment, dose) %>% 
@@ -45,17 +49,17 @@ recovery_freq <- recovery_dat %>%
     perc = rel_freq*100
   )
 
-recovery_mod<- glm(recovered ~ treatment*dose, data = recovery_dat, family = binomial())
+recovery_mod<- glm(recovered ~ treatment*dose, data = recovery_tib, family = binomial())
 ```
 
 # An Adventure in R: Categorical outcomes
 
 ## Overview
 
-This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] by me, [Andy Field](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
 
 * Who is the tutorial aimed at?
-    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+    - Anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/)  may find them useful.
 * What is covered?
     - This tutorial looks at how to fit a linear model with one and more predictor variables when the outcome is a categorical dichotomy. In other words it introduces generalized linear models (specifically logistic regression). We look at robust variants of the model. It would be a useful tutorial as a follow up to chapter 17 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
     - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
@@ -138,19 +142,19 @@ This tutorial has the data files pre-loaded so you shouldn't need to do anything
 You can load the file in several way:
 
 * Assuming that you save this file into the working directory, you can load it by executing:
-    - `recovery_dat <- read_csv("ais_rehab_log.csv")`
+    - `recovery_tib <- read_csv("ais_rehab_log.csv")`
     - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
 * To load the file using a standard dialogue box to navigate your file system, execute:
-    - `recovery_dat <- read_csv(file.choose())`
+    - `recovery_tib <- read_csv(file.choose())`
 * You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
-    - `recovery_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_log.csv")`
+    - `recovery_tib <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_log.csv")`
     - This method relies on an internet connection (and my server having not exploded!)
 
 
 ## Recovered zombies! A generalized linear model
 ### The model
 
-At the end of the story it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset relates to her final attempt. It contains data from 400 code 1318 workers. Workers were randomly assigned to two arms of a trial (C-gene therapy and C-gene therapy with a toggle switch). They were also given one of five different doses of C-gene: 0 (no dose) or 1, 2, 3, or 4 doses. The outcome was whether (or not) the worker had fully recovered after the treatment. The data are in the tibble `recovery_dat`, which has five variables:
+At the end of the story it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset relates to her final attempt. It contains data from 400 code 1318 workers. Workers were randomly assigned to two arms of a trial (C-gene therapy and C-gene therapy with a toggle switch). They were also given one of five different doses of C-gene: 0 (no dose) or 1, 2, 3, or 4 doses. The outcome was whether (or not) the worker had fully recovered after the treatment. The data are in the tibble `recovery_tib`, which has five variables:
 
 * **id**: Participant ID
 * **treatment**: character vector that codes which arm of the trial the participant was randomized to (no toggle switch or toggle switch)
@@ -169,44 +173,47 @@ $$
 ## Exploring the data
 ### Preparing the data
 
-The data are already in *tidy* format, so we don't need to restructure them. Use the code box to inspect the `recovery_dat` tibble.
+The data are already in *tidy* format, so we don't need to restructure them. Use the code box to inspect the `recovery_tib` tibble.
 
-```{r inspect_dat, exercise = TRUE}
+```{r inspect_tib, exercise = TRUE}
      
 ```
 
-```{r inspect_dat-solution}
-recovery_dat  
+```{r inspect_tib-solution}
+recovery_tib  
 ```
 
-However, the variables **id**, **treatment**, and **recovered** currently have the data type of character. This is fine (because **R** is fairly intelligent about how it treats character variables). However, it does obscure how dummy coding will be applied. It's generally good practice to be explicit about which category you want to act as a baseline (i.e. be coded as zero). One way to achieve this is to convert these variables to factors and relevel them such that the baseline category is first. In previous tutorials we have done this using the `factor()` function, but for variety, we can also use the `as_factor()` function from the `forcats` package (which has a more *tidyverse* flavour). We also want to specify the baseline category for each factor. In previous tutorials we did this in two steps, but we can combine the tasks using a pipe:
+However, the variables **id**, **treatment**, and **recovered** currently have the data type of character. This is fine (because **R** is fairly intelligent about how it treats character variables). However, it does obscure how dummy coding will be applied. It's generally good practice to be explicit about which category you want to act as a baseline (i.e. be coded as zero). One way to achieve this is to convert these variables to factors and relevel them such that the baseline category is first. In previous tutorials we have done this using the `factor()` function, but for variety, we can also use the `as_factor()` function from the `forcats` package (which has a more *tidyverse* flavour). We also want to specify the baseline category for each factor. We can combine the tasks using a pipe:
 
 ```{r echo = TRUE, eval = FALSE}
 library(forcats); library(tidyverse) #Not nessesary inside this tutorial
 
-recovery_dat$id <- as_factor(recovery_dat$id)
-
-recovery_dat$treatment <- as_factor(recovery_dat$treatment) %>%
-  fct_relevel("No toggle switch")
-
-recovery_dat$recovered <- as_factor(recovery_dat$recovered) %>%
-  fct_relevel("Not recovered")
+recovery_tib <- recovery_tib %>% 
+  mutate(
+    id = forcats::as_factor(id),
+    treatment = as_factor(treatment) %>% fct_relevel("No toggle switch"),
+    recovered = as_factor(recovered) %>% fct_relevel("Not recovered")
+    )
 ```
 
-Outside of the tutorial we'd load the libraries `forcats` and `tidyverse`. The next line re-creates **id** from itself but as a factor. The remaining lines do the same for **treatment** and **recovered** but also use `fct_relevel()` to specify the category to be used as the baseline (first) category. In the case of **treatment** we're asking to use the *No toggle switch* condition as the first level. Finally, we do much the same for **recovered** specifying "Not recovered" as the first category. (Be careful to check the spelling and use of upper case letters when you specify the first category - it needs to exactly match what is in the variable.)
+Outside of the tutorial we'd load the libraries `forcats` and `tidyverse`. The first line creates `recovery_tib` from itself. We then use the `mutate()` function to over-write each categorical variable with a version of itself that is converted to a factor. Within `mutate()`, the first line re-creates **id** from itself but as a factor. The remaining lines do the same for **treatment** and **recovered** but also use `fct_relevel()` to specify the category to be used as the baseline (first) category. In the case of **treatment** we're asking to use the *No toggle switch* condition as the first level. Finally, we do much the same for **recovered** specifying "Not recovered" as the first category. (Be careful to check the spelling and use of upper case letters when you specify the first category - it needs to exactly match what is in the variable.)
 
-Try the above code in the box and then use the `levels()` function (e.g., `levels(recovery_dat$recovered)`) on **treatment** and **recovered** to see how **R** has assigned 'levels' of the factors.
+Try the above code in the box and then use the `levels()` function (e.g., `levels(recovery_tib$recovered)`) on **treatment** and **recovered** to see how **R** has assigned 'levels' of the factors.
 
 ```{r factors, exercise = TRUE, exercise.lines = 6}
            
 ```
 
 ```{r factors-solution}
-recovery_dat$id <- as_factor(recovery_dat$id)
-recovery_dat$treatment <- as_factor(recovery_dat$treatment) %>% fct_relevel("No toggle switch")
-recovery_dat$recovered <- as_factor(recovery_dat$recovered) %>% fct_relevel("Not recovered")
-levels(recovery_dat$treatment)
-levels(recovery_dat$recovered)
+recovery_tib <- recovery_tib %>% 
+  mutate(
+    id = forcats::as_factor(id),
+    treatment = as_factor(treatment) %>% fct_relevel("No toggle switch"),
+    recovered = as_factor(recovered) %>% fct_relevel("Not recovered")
+    )
+
+levels(recovery_tib$treatment)
+levels(recovery_tib$recovered)
 ```
 
 Note that levels have been assigned as requested: "No toggle switch" is the first category for **treatment** and "Not recovered" is the base category for **recovered**.
@@ -219,11 +226,11 @@ Our outcome variable is categorical so there is little sense in looking at means
 
 Essentially we list any variables that we want to decompose the data by, and specify the tibble containing the data. The order in which we list variables determines whether they form rows, columns or different tables. For example, to look at the table of frequencies for the variables of **recovered** and **treatment** we'd execute:
 
-`recovery_xtab <- xtabs(~ treatment + recovered, data = recovery_dat)`
+`recovery_xtab <- xtabs(~ treatment + recovered, data = recovery_tib)`
 
 The result would be a 2 × 2 contingency tables with the rows representing different levels of **treatment** and the columns the different levels of **recovered**. We could create 5 different versions of this 2 × 2 table, one for each level of **dose**, by including it as a third variable in the formula:
 
-`recovery_full_xtab <- xtabs(~ treatment + recovered + dose, data = recovery_dat)`
+`recovery_full_xtab <- xtabs(~ treatment + recovered + dose, data = recovery_tib)`
 
 Try both of these commands in the code box, and inspect the results. You could try changing the order of variables to see how this affects which variables are presented in the rows and columns of the tables.
 
@@ -232,8 +239,8 @@ Try both of these commands in the code box, and inspect the results. You could t
 ```
 
 ```{r xtab-solution}
-recovery_xtab <- xtabs(~ treatment + recovered, data = recovery_dat)
-recovery_full_xtab <- xtabs(~ treatment + recovered + dose, data = recovery_dat)
+recovery_xtab <- xtabs(~ treatment + recovered, data = recovery_tib)
+recovery_full_xtab <- xtabs(~ treatment + recovered + dose, data = recovery_tib)
 recovery_xtab
 recovery_full_xtab
 ```
@@ -241,7 +248,7 @@ recovery_full_xtab
 A different approach is to use the `dplyr` functions from `tidyverse` and a pipe. This is good practice for seeing the power of the pipe, and allows us to compute relative frequencies (which are useful to plot). However, it is quite complicated so feel free to skip ahead. I'll show you the pipe and then explain it line by line:
 
 ```{r echo = TRUE, eval = FALSE}
-recovery_freq <- recovery_dat %>%
+recovery_freq <- recovery_tib %>%
   group_by(treatment, dose, recovered) %>%
   summarize(n = n()) %>% 
   group_by(treatment, dose) %>% 
@@ -253,7 +260,7 @@ recovery_freq <- recovery_dat %>%
 
 Let's look at each line:
 
-1. This creates an object `recovery_freq`. We begin by passing the `recovery_dat` tibble into the pipe.
+1. This creates an object `recovery_freq`. We begin by passing the `recovery_tib` tibble into the pipe.
 2. This groups the data by all combinations of **treatment**, **dose** and **recovered**. It effectively creates 20 cells (2 treatments × 5 doses × 2 categories of recovery).
 3. Uses the `summarize()` function to create a variable called **n** using the function `n()`. Because in the previous line we grouped the data by all combinations of variables, line 3, in effect counts the number of observations in each of the 20 cells. In effect, up to this point we have calculated the cell frequencies for all combinations of **treatment**, **dose** and **recovered**. It can be instructive to execute the pipe only up to this point to see what has been done so far.
 4. Up to this point we have a tibble containing all 20 combinations of **treatment**, **dose** and **recovered** and a variable called **n** that contains the cell frequencies. Line 4 now groups this tibble by **treatment** and **dose**. Any subsequent calculations will therefore be conducted on the 10 combinations of **treatment** and **dose**.
@@ -272,7 +279,7 @@ As I said, it can be useful to execute parts of the pipe to see how it builds up
 ```
 
 ```{r freqs-solution}
-recovery_freq <- recovery_dat %>%
+recovery_freq <- recovery_tib %>%
   group_by(treatment, dose, recovered) %>%
   summarize(n = n()) %>% 
   group_by(treatment, dose) %>% 
@@ -290,7 +297,7 @@ You should see a tibble with 20 rows representing the different combinations of 
 The first plot we'll do uses the original data and plots the number recovered over the top of the number not recovered. We'll plot the **dose** along the *x*-axis and create different panels for the two treatment conditions. This is the code:
 
 ```{r echo = TRUE, eval = FALSE}
-recovery_plot <- ggplot(recovery_dat, aes(dose, fill = recovered, colour = recovered))
+recovery_plot <- ggplot(recovery_tib, aes(dose, fill = recovered, colour = recovered))
 recovery_plot +
   geom_histogram(binwidth = 1, position = "identity", alpha = 0.6) +
   scale_colour_manual(values = c("#DF4738", "#009E73")) +
@@ -301,7 +308,7 @@ recovery_plot +
 
 Let's explore this command line by line:
 
-1. Creates an object `recovery_plot` using the `ggplot()` function. Within this function we specify the data as the tibble called `recovery_dat`, then within `aes()` we set **dose** along the *x*-axis, and then set the fill and colour to both vary by the variable **recovered**. This will ensure we get different coloured/filled bars for recovered and non-recovered cases.
+1. Creates an object `recovery_plot` using the `ggplot()` function. Within this function we specify the data as the tibble called `recovery_tib`, then within `aes()` we set **dose** along the *x*-axis, and then set the fill and colour to both vary by the variable **recovered**. This will ensure we get different coloured/filled bars for recovered and non-recovered cases.
 2. We start adding layers to the `recovery_plot` object.
 3. The first layer we add is a histogram. We set the binwidth to 1 to ensure that we get a bar for each level of **dose**, and set the alpha to 0.6 to make the bars transparent (otherwise the recovered bars will obscure the not recovered bars and vice versa). By default ggplot with stack the recovered and non recovered bars on top of each other (which you might like) but by setting the position to "identity" we force ggplot to overlay the bars. I find this easier to read because all bars start at zero on the scale but if you prefer stacked bars then remove 'position = "identity"' (and probably also the 'alpha = 0.6').
 4. This line is optional: it over-rides the default colours to be a red and green that I like to use because they are colour-blind friendly (apparently).
@@ -318,7 +325,7 @@ Use the code box to draw this plot. Try deleting lines and observing the effect 
 ```
 
 ```{r plot_1-solution}
-recovery_plot <- ggplot(recovery_dat, aes(dose, fill = recovered, colour = recovered))
+recovery_plot <- ggplot(recovery_tib, aes(dose, fill = recovered, colour = recovered))
 recovery_plot +
   geom_histogram(binwidth = 1, position = "identity", alpha = 0.6) +
   scale_colour_manual(values = c("#DF4738", "#009E73")) +
@@ -367,7 +374,8 @@ Use the code box to draw this plot. Try deleting lines and observing the effect 
 ```
 
 ```{r plot_2-solution}
-recover_percent <- recovery_freq %>% filter(recovered == "Recovered")
+recover_percent <- recovery_freq %>%
+  filter(recovered == "Recovered")
 
 percent_plot <- ggplot(recover_percent, aes(dose, perc, colour = treatment))
 percent_plot +
@@ -390,14 +398,14 @@ To fit the model we use the function `glm()` which stands for 'generalized linea
 Let's remind ourselves of these arguments:
 
 * `outcome ~ predictor(s)`: the way we specify the model is basically to write out the model equation but ignoring the *b* values and using a tilde (~) instead of =. For example, if we want the model to predict **recovered** from the variable **treatment** we write the model as `recovered ~ treatment`. If, we want to add **dose** into the mix as a second predictor then we could fit this model by specifying `recovered ~ treatment + dose`. If we want to include the interaction term as well, we could specify `recovered ~ treatment + dose + treatment:dose` or use the equivalent expression of `recovered ~ treatment*dose`. The model specification maps onto the equation describing the model we're fitting.
-* `data`: you use this argument to specify the tibble containing the data (e.g., `data = recovery_dat`). If you're using `glm()` within a pipe where you've previously input a tibble then remember you use `data = .`
-* `subset`: this argument allows you to specify a condition by which you subset data (a bit like you might use in the `filter()` function). For example, we will fit separate models for the toggle switch and no toggle switch groups using `subset = treatment == "Toggle switch"`. Of course, you can also achieve the same thing using a pipe (`recovery_dat %>% treatment == "Toggle switch" %>% glm(recovered ~ treatment*dose, data = ., family = binomial())`)
+* `data`: you use this argument to specify the tibble containing the data (e.g., `data = recovery_tib`). If you're using `glm()` within a pipe where you've previously input a tibble then remember you use `data = .`
+* `subset`: this argument allows you to specify a condition by which you subset data (a bit like you might use in the `filter()` function). For example, we will fit separate models for the toggle switch and no toggle switch groups using `subset = treatment == "Toggle switch"`. Of course, you can also achieve the same thing using a pipe (`recovery_tib %>% treatment == "Toggle switch" %>% glm(recovered ~ treatment*dose, data = ., family = binomial())`)
 * `na.action`: this option determines how to treat missing values. By default it is set to `na.fail` which means that the model fails (it is not fit). If you have missing values then set this option to `na.omit` which removes cases, or `na.exclude` which excluded cases from the model (but does not remove them). See **adventr_14** for more detail.
 * `family = guassian()` determines the distribution of errors. By default the family is set to `guassian()` (a posh word for 'normal') and the function will fit a standard linear model. However, we have changed it to `binomial()` because we want a logistic linear model.
 
 We could fit our model by executing:
 
-`recovery_mod<- glm(recovered ~ treatment*dose, data = recovery_dat, family = binomial())`
+`recovery_mod<- glm(recovered ~ treatment*dose, data = recovery_tib, family = binomial())`
 
 and summarize it using the `summary()` function to get the model parameters and `anova()` to get deviance statistics for each step of the model. Try these commands in the code box below.
 
@@ -407,9 +415,10 @@ and summarize it using the `summary()` function to get the model parameters and 
 ```
 
 ```{r recovery_mod_sum-solution}
-recovery_mod<- glm(recovered ~ treatment*dose, data = recovery_dat, family = binomial())
+recovery_mod<- glm(recovered ~ treatment*dose, data = recovery_tib, family = binomial())
 summary(recovery_mod)
 anova(recovery_mod)
+
 ```
 
 ### Model parameters
@@ -423,16 +432,20 @@ The deviance statistics (the -2LL) can be used to tell us whether adding predict
 
 We can test whether these changes are significant using the `pchisq(x, df, lower.tail = TRUE)` function, which returns the value of *x* from the probability density function of the chi-square distribution with degrees of freedom equal to *df*. In other words, you enter into the function a chi-square value, and a value for the degrees of freedom, and (by default) it returns the probability of obtaining a value as large as the value entered or smaller (i.e. the lower tail of the distribution, hence `lower.tail = TRUE`). Remember that the *p*-value is the probability of getting a value as big as the one observed *or larger* so to convert the output of `pchisq()` to a *p*-value we need to include `lower.tail = FALSE` to return the upper tail of the distribution.
 
-The question is, what values do we enter into the function? Notice that the object returned by `anova(recovery_mod)` is a table with a column called *Deviance* containing the change in the deviance statistic at each stage of the model, and a column called `Df` that contains the corresponding degrees of freedom. We can use these columns as the *x* and *df* that we input into `pchisq()`. We could do this in a single line of code, but I'm going to break it down to make it a bit easier to explain:
+The question is, what values do we enter into the function? Notice that the object returned by `anova(recovery_mod)` is a table with a column called *Deviance* containing the change in the deviance statistic at each stage of the model, and a column called `Df` that contains the corresponding degrees of freedom. We can use these columns as the *x* and *df* that we input into `pchisq()`. We could do this in a single pipe:
 
 ```{r echo = TRUE, eval = FALSE}
-model_dev <- as_tibble(anova(recovery_mod))
-model_dev %>% mutate(
+model_dev <- recovery_mod %>%
+  anova() %>%
+  as_tibble() %>%
+  mutate(
   chi_p = pchisq(Deviance, Df, lower.tail = FALSE)
 )
+
+model_dev
 ```
 
-The first line uses the `as_tibble()` function to force the table of deviances returned by `anova(recovery_mod)` to be a tibble. I've stored the resulting tibble as an object called `model_dev`. In the next line I take this tibble, and use `mutate()` to add a column to it. I call this column `chi_p` and the values in it are created by entered the value from the **Deviance** variable (already in the `model_dev` tibble) as the chi-square value, the corresponding value from the **Df** variable (also in the `model_dev` tibble) as the df value, and asking for the probability from the upper tail by setting `lower.tail = FALSE`. The result will be the same table that the `anova()` function returned but with an additional column containing the *p*-values. (You could combine the two lines of code into 1 if you prefer, and there are other ways to achieve the same goal too.) Try the code above in the code box.
+First we feed the `recovery_mod` object into the `anova()` function to get the table of deviances, which we then feed into the `as_tibble()` function to convert the table to a tibble. We then use `mutate()` to add a column to this tibble. I call this column `chi_p` and the values in it are created by entered the value from the **Deviance** variable (already in the tibble) as the chi-square value, the corresponding value from the **Df** variable (also already in the tibble) as the df value, and asking for the probability from the upper tail by setting `lower.tail = FALSE`. The result will be the same table that the `anova()` function returned but with an additional column containing the *p*-values. I store the resulting tibble in an object called `model_dev`. Try the code above in the code box.
 
 ```{r dev_p, exercise = TRUE, exercise.setup = "prepare-data"}
      
@@ -440,10 +453,14 @@ The first line uses the `as_tibble()` function to force the table of deviances r
 ```
 
 ```{r dev_p-solution}
-model_dev <- as_tibble(anova(recovery_mod))
-model_dev %>% mutate(
+model_dev <- recovery_mod %>%
+  anova() %>%
+  as_tibble() %>%
+  mutate(
   chi_p = pchisq(Deviance, Df, lower.tail = FALSE)
 )
+
+model_dev
 ```
 
 ## Odds ratios: exp(*b*)
@@ -477,9 +494,16 @@ exp(b_ci)
 An alternative might be to do something a little more 'tidyverse' and use a pipe. Some people find this easier to get to grips with than nested functions Again, we could do the below as a single pipe, but I've broken it down to make things simpler:
 
 ```{r echo = TRUE, eval = FALSE}
-b_values <- coef(recovery_mod) %>% as_tibble()
-b_ci <- confint(recovery_mod) %>% as_tibble()
-b_values %>% bind_cols(b_ci) %>% exp() %>% rename("odds ratio" = value)
+b_values <- coef(recovery_mod) %>%
+  as_tibble()
+
+b_ci <- confint(recovery_mod) %>%
+  as_tibble()
+
+b_values %>%
+  bind_cols(b_ci) %>%
+  exp() %>%
+  rename("odds ratio" = value)
 ```
 
 The first line creates an object called `b_values` by using `coef()` to extract the *b*-values from `recovery_mod` and then converting the results to a tibble using `as_tibble()`. The second line does the same to create a tibble called `b_ci` by using `confint()` to extract the 95% confidence intervals for the *b*-values from `recovery_mod`. The final line takes the object `b_values` and binds the columns from `b_ci` to it, which gives us a table containing the values of the *b*s and their confidence intervals. These are then passed into `exp()` to convert them to odds ratios. The *b*-values are stored in a variable called **value** so to make the tibble a little more friendly we use `rename()` to rename the variable **value** as **odds ratio**. Try this out in the code box:
@@ -491,9 +515,16 @@ The first line creates an object called `b_values` by using `coef()` to extract 
 ```
 
 ```{r or_tidy-solution}
-b_values <- coef(recovery_mod) %>% as_tibble()
-b_ci <- confint(recovery_mod) %>% as_tibble()
-b_values %>% bind_cols(b_ci) %>% exp() %>% rename("odds ratio" = value)
+b_values <- coef(recovery_mod) %>%
+  as_tibble()
+
+b_ci <- confint(recovery_mod) %>%
+  as_tibble()
+
+b_values %>%
+  bind_cols(b_ci) %>%
+  exp() %>%
+  rename("odds ratio" = value)
 ```
 
 If the value of the odds ratio is greater than 1 then it indicates that as the predictor increases, the odds of the outcome occurring increase. Conversely, a value less than 1 indicates that as the predictor increases, the odds of the outcome occurring decrease. The important thing about the confidence intervals is whether they cross 1. This is important because values greater than 1 mean that as the predictor variable increases, so do the odds of (in this case) being cured. Values less than 1 mean the opposite: as the predictor variable increases, the odds of being cured decrease. Assuming our confidence intervals are from the 95% of samples that contain the population value, then if the interval contains 1 it means that the population value could reflect an effect in one direction, but could also reflect an effect in the opposite direction, or even no effect at all (an odds ratio of 1).
@@ -519,11 +550,16 @@ quiz(
 For the interaction, which was significant, the odds ratio is 2.79 [1.79, 4.43], which means that the *odds ratio*b*-value for dose is 2.79 times higher in the intervention group than the control. To see what this value of 2.79 represents, let's use the subset argument to run the same model separately for the no toggle switch or toggle switch groups.
 
 ```{r echo = TRUE, eval = FALSE}
-no_toggle_mod <- glm(recovered ~ dose, data = recovery_dat, family = binomial(), subset = treatment == "No toggle switch")
-toggle_mod <- glm(recovered ~ dose, data = recovery_dat, family = binomial(), subset = treatment == "Toggle switch")
+no_toggle_mod <- glm(recovered ~ dose, data = recovery_tib, family = binomial(), subset = treatment == "No toggle switch")
+toggle_mod <- glm(recovered ~ dose, data = recovery_tib, family = binomial(), subset = treatment == "Toggle switch")
 
-no_tog_dose_or <- no_toggle_mod %>% coef() %>% exp()
-tog_dose_or <- toggle_mod %>% coef() %>% exp()
+no_tog_dose_or <- no_toggle_mod %>%
+  coef() %>%
+  exp()
+
+tog_dose_or <- toggle_mod %>%
+  coef() %>%
+  exp()
 
 tog_dose_or/no_tog_dose_or
 ```
@@ -539,10 +575,17 @@ The next two lines create objects called `no_tog_dose_or` and `tog_dose_or` resp
 ```
 
 ```{r or_int-solution}
-no_toggle_mod <- glm(recovered ~ dose, data = recovery_dat, family = binomial(), subset = treatment == "No toggle switch")
-toggle_mod <- glm(recovered ~ dose, data = recovery_dat, family = binomial(), subset = treatment == "Toggle switch")
-no_tog_dose_or <- no_toggle_mod %>% coef() %>% exp()
-tog_dose_or <- toggle_mod %>% coef() %>% exp()
+no_toggle_mod <- glm(recovered ~ dose, data = recovery_tib, family = binomial(), subset = treatment == "No toggle switch")
+toggle_mod <- glm(recovered ~ dose, data = recovery_tib, family = binomial(), subset = treatment == "Toggle switch")
+
+no_tog_dose_or <- no_toggle_mod %>%
+  coef() %>%
+  exp()
+
+tog_dose_or <- toggle_mod %>%
+  coef() %>%
+  exp()
+
 tog_dose_or/no_tog_dose_or
 ```
 
@@ -553,12 +596,14 @@ We can plot the interaction effect using the `allEffects()` function from the pa
 
 ```{r plot_int, exercise = TRUE, exercise.setup = "prepare-data"}
 library(effects)
-allEffects(recovery_mod) %>% plot()           
+allEffects(recovery_mod) %>%
+  plot()           
 ```
 
 ```{r plot_int-solution}
 library(effects)
-allEffects(recovery_mod) %>% plot()
+allEffects(recovery_mod) %>%
+  plot()
 ```
 
 
@@ -566,7 +611,7 @@ allEffects(recovery_mod) %>% plot()
 
 It is also possible to create a robust model using the `glmRob()` function from the `robust` package. This takes the same form as the `glm()` function but returns robust estimates of parameters and associated standard errors and *p*-values. To create a robust variant of the model we would execute:
 
-`recovery_rob <- glmRob(recovered ~ treatment*dose, data = recovery_dat, family = binomial())`
+`recovery_rob <- glmRob(recovered ~ treatment*dose, data = recovery_tib, family = binomial())`
 
 which creates an object `recovery_rob` that contains robust model parameters. We can summarise it with `summary()`. Try this in the code box below and compare the resulting model to the one you created earlier. Basically, the parameter estimates (*b*s) don't change much and the conclusions of the model stay largely the same. Having generated a robust model you would, of course, compute odds ratios (but not confidence intervals). Try doing this too by adapting the code you used earlier.
 
@@ -576,10 +621,11 @@ which creates an object `recovery_rob` that contains robust model parameters. We
 ```
 
 ```{r robust_mod-solution}
-recovery_rob<- glmRob(recovered ~ treatment*dose, data = recovery_dat, family = binomial())
+recovery_rob<- glmRob(recovered ~ treatment*dose, data = recovery_tib, family = binomial())
 summary(recovery_rob)
 
-coef(recovery_rob) %>% exp()
+coef(recovery_rob) %>%
+  exp()
 ```
 
 

@@ -46,21 +46,22 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div class="topics">
 
 <div class="tutorial-exercise-support" data-label="prepare-data" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>rehab_growth_dat$id &lt;- factor(rehab_growth_dat$id)
-rehab_growth_dat$intervention &lt;- factor(rehab_growth_dat$intervention)
-rehab_growth_dat$time &lt;- factor(rehab_growth_dat$time)
-rehab_growth_dat$intervention &lt;- fct_relevel(rehab_growth_dat$intervention, &quot;Wait list&quot;)
-rehab_growth_dat$time &lt;- fct_relevel(rehab_growth_dat$time, &quot;t12&quot;, after = Inf)</code></pre>
+<pre class="text"><code>rehab_growth_tib &lt;- rehab_growth_tib %&gt;% 
+  mutate(
+    id = forcats::as_factor(id),
+    intervention = forcats::as_factor(intervention) %&gt;% fct_relevel(&quot;Wait list&quot;),
+    time = forcats::as_factor(time) %&gt;% fct_relevel(&quot;t12&quot;, after = Inf)
+  )</code></pre>
 </div>
 <div id="section-an-adventure-in-r-growth-models" class="section level1">
 <h1>An Adventure in R: Growth models</h1>
 <div id="section-overview" class="section level2">
 <h2>Overview</h2>
-<p>This tutorial is one of a series that accompanies <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> <span class="citation">(Field 2016)</span> and <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(Field, Miles, and Field 2012)</span> by <a href="https://en.wikipedia.org/wiki/Andy_Field_(academic)">me</a>. These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>,<a href="#section-fn1" class="footnote-ref" id="section-fnref1"><sup>1</sup></a></p>
+<p>This tutorial is one of a series that accompanies <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> <span class="citation">(Field 2016)</span> by me, <a href="https://en.wikipedia.org/wiki/Andy_Field_(academic)">Andy Field</a>. These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>,<a href="#section-fn1" class="footnote-ref" id="section-fnref1"><sup>1</sup></a></p>
 <ul>
 <li>Who is the tutorial aimed at?
 <ul>
-<li>Primarily students enrolled on my <em>Linear models in statistics</em> module at the University of Sussex, but anyone teaching from or reading <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> or <a href="https://www.discoveringstatistics.com/books/discovering-statistics-using-r/">Discovering Statistics Using R</a> <span class="citation">(Field, Miles, and Field 2012)</span> may find them useful.</li>
+<li>Anyone teaching from or reading <a href="https://www.discoveringstatistics.com/books/an-adventure-in-statistics/">An Adventure in Statistics</a> may find them useful.</li>
 </ul></li>
 <li>What is covered?
 <ul>
@@ -146,16 +147,16 @@ rehab_growth_dat$time &lt;- fct_relevel(rehab_growth_dat$time, &quot;t12&quot;, 
 <ul>
 <li>Assuming that you save this file into the working directory, you can load it by executing:
 <ul>
-<li><code>rehab_growth_dat &lt;- read_csv(&quot;ais_rehab_growth_model.csv&quot;)</code></li>
+<li><code>rehab_growth_tib &lt;- read_csv(&quot;ais_rehab_growth_model.csv&quot;)</code></li>
 <li>If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called <em>adventr_02</em>)</li>
 </ul></li>
 <li>To load the file using a standard dialogue box to navigate your file system, execute:
 <ul>
-<li><code>rehab_growth_dat &lt;- read_csv(file.choose())</code></li>
+<li><code>rehab_growth_tib &lt;- read_csv(file.choose())</code></li>
 </ul></li>
 <li>You can load the file direct from the URL (i.e., you don’t need to download it first) by executing:
 <ul>
-<li><code>rehab_growth_dat &lt;- read_csv(&quot;http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_growth_model.csv&quot;)</code></li>
+<li><code>rehab_growth_tib &lt;- read_csv(&quot;http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_growth_model.csv&quot;)</code></li>
 <li>This method relies on an internet connection (and my server having not exploded!)</li>
 </ul></li>
 </ul>
@@ -163,7 +164,7 @@ rehab_growth_dat$time &lt;- fct_relevel(rehab_growth_dat$time, &quot;t12&quot;, 
 </div>
 <div id="section-the-model" class="section level2">
 <h2>The model</h2>
-<p>At the end of the book it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset relates to her second attempt. She obtained data from 141 code 1318 workers measured at four time points (baseline and 1, 6, and 12 month follow-up). Workers were randomly assigned to two arms of the trial (wait list vs. C-gene therapy) and the outcome was how much they resembled their pre-zombie state (as a percentage). Alice predicted that resemblance scores would increase over time in the gene therapy group relative to those on the wait list (because this would indicate that those workers’ appearances would more closely resemble their pre-zombification state). The data are in the tibble <code>rehab_growth_dat</code> which has 564 rows (141 participants measured at each of 4 time points) and 5 variables:</p>
+<p>At the end of the book it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset relates to her second attempt. She obtained data from 141 code 1318 workers measured at four time points (baseline and 1, 6, and 12 month follow-up). Workers were randomly assigned to two arms of the trial (wait list vs. C-gene therapy) and the outcome was how much they resembled their pre-zombie state (as a percentage). Alice predicted that resemblance scores would increase over time in the gene therapy group relative to those on the wait list (because this would indicate that those workers’ appearances would more closely resemble their pre-zombification state). The data are in the tibble <code>rehab_growth_tib</code> which has 564 rows (141 participants measured at each of 4 time points) and 5 variables:</p>
 <ul>
 <li><strong>id</strong>: Participant ID</li>
 <li><strong>intervention</strong>: character vector that codes which arm of the trial the participant was randomized to (wait list or gene therapy)}</li>
@@ -200,41 +201,41 @@ rehab_growth_dat$time &lt;- fct_relevel(rehab_growth_dat$time, &quot;t12&quot;, 
 <h2>Exploring the data</h2>
 <div id="section-preparing-the-data" class="section level3">
 <h3>Preparing the data</h3>
-<p>The data are already in <em>tidy</em> format, so we don’t need to restructure them. Use the code box to inspect the <code>rehab_growth_dat</code> tibble.</p>
-<div class="tutorial-exercise" data-label="inspect_dat" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<p>The data are already in <em>tidy</em> format, so we don’t need to restructure them. Use the code box to inspect the <code>rehab_growth_tib</code> tibble.</p>
+<div class="tutorial-exercise" data-label="inspect_tib" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
-<div class="tutorial-exercise-support" data-label="inspect_dat-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>rehab_growth_dat   </code></pre>
+<div class="tutorial-exercise-support" data-label="inspect_tib-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>rehab_growth_tib   </code></pre>
 </div>
 <p>However, the variables <strong>id</strong>, <strong>intervention</strong>, and <strong>time</strong> currently have the data type of character. This is fine for a lot of what we want to do (because <strong>R</strong> is fairly intelligent about how it treats character variables). However, for some things (like assigning contrasts) we need these variables to be defined as factors. We can do this by using the <code>factor()</code> function, which we have met before. For example, we could execute:</p>
-<pre class="r"><code>rehab_growth_dat$id &lt;- factor(rehab_growth_dat$id)
-rehab_growth_dat$intervention &lt;- factor(rehab_growth_dat$intervention)
-rehab_growth_dat$time &lt;- factor(rehab_growth_dat$time)</code></pre>
-<p>Try this in the code box and then use the <code>levels()</code> function (e.g., <code>levels(rehab_growth_dat$time)</code>) on the three variables to see how <strong>R</strong> has assigned ‘levels’ of the factors.</p>
+<pre class="r"><code>rehab_growth_tib$id &lt;- factor(rehab_growth_tib$id)
+rehab_growth_tib$intervention &lt;- factor(rehab_growth_tib$intervention)
+rehab_growth_tib$time &lt;- factor(rehab_growth_tib$time)</code></pre>
+<p>Try this in the code box and then use the <code>levels()</code> function (e.g., <code>levels(rehab_growth_tib$time)</code>) on the three variables to see how <strong>R</strong> has assigned ‘levels’ of the factors.</p>
 <div class="tutorial-exercise" data-label="factors" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="6">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="factors-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>rehab_growth_dat$id &lt;- factor(rehab_growth_dat$id)
-rehab_growth_dat$intervention &lt;- factor(rehab_growth_dat$intervention)
-rehab_growth_dat$time &lt;- factor(rehab_growth_dat$time)
-levels(rehab_growth_dat$id)
-levels(rehab_growth_dat$intervention)
-levels(rehab_growth_dat$time)</code></pre>
+<pre class="text"><code>rehab_growth_tib$id &lt;- factor(rehab_growth_tib$id)
+rehab_growth_tib$intervention &lt;- factor(rehab_growth_tib$intervention)
+rehab_growth_tib$time &lt;- factor(rehab_growth_tib$time)
+levels(rehab_growth_tib$id)
+levels(rehab_growth_tib$intervention)
+levels(rehab_growth_tib$time)</code></pre>
 </div>
 <p>Note that levels have been assigned alphabetically. So, for <strong>intervention</strong> the first level is <em>Gene therapy</em> and the second is <em>Wait list</em>. This is a problem because the levels of <strong>time</strong> have been ordered as <em>t0</em>, <em>t1</em>, <em>t12</em> and <em>t6</em>, which are out of sequence (we’d want <em>t12</em> to be after <em>t6</em>), and for <strong>intervention</strong> it will make the interpretation of the model parameter (<em>b</em>) more straightforward if the base/first category is the wait list not the gene therapy group. We could use <code>fct_relevel()</code> from the <code>forcats</code> package to change the order (see <strong>adventr_mlm</strong>). For example, we could execute:</p>
-<pre class="r"><code>rehab_growth_dat$intervention &lt;- fct_relevel(rehab_growth_dat$intervention, &quot;Wait list&quot;)
-rehab_growth_dat$time &lt;- fct_relevel(rehab_growth_dat$time, &quot;t12&quot;, after = Inf)</code></pre>
+<pre class="r"><code>rehab_growth_tib$intervention &lt;- fct_relevel(rehab_growth_tib$intervention, &quot;Wait list&quot;)
+rehab_growth_tib$time &lt;- fct_relevel(rehab_growth_tib$time, &quot;t12&quot;, after = Inf)</code></pre>
 <p>In both case we re-create each factor from itself. In the case of <strong>intervention</strong>, by specifying only <em>Wait list</em> we invoke the default behaviour of moving this level to the first level (which simply swaps the order or the two levels). In the case of <strong>time</strong> we use <code>after = Inf</code> to move <em>t12</em> to the end of the list. Use the code box to execute these commands, but also use <code>levels</code> to inspect the order of levels of the two variables as we did before.</p>
 <div class="tutorial-exercise" data-label="factor_2" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="factor_2-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>rehab_growth_dat$intervention &lt;- fct_relevel(rehab_growth_dat$intervention, &quot;Wait list&quot;)
-rehab_growth_dat$time &lt;- fct_relevel(rehab_growth_dat$time, &quot;t12&quot;, after = Inf)
-levels(rehab_growth_dat$intervention)
-levels(rehab_growth_dat$time)</code></pre>
+<pre class="text"><code>rehab_growth_tib$intervention &lt;- fct_relevel(rehab_growth_tib$intervention, &quot;Wait list&quot;)
+rehab_growth_tib$time &lt;- fct_relevel(rehab_growth_tib$time, &quot;t12&quot;, after = Inf)
+levels(rehab_growth_tib$intervention)
+levels(rehab_growth_tib$time)</code></pre>
 </div>
 <p>You should see that <em>Wait list</em> is now the first level of <strong>intervention</strong> and that the levels of time are now in the correct order of <em>t0</em>, <em>t1</em>, <em>t6</em>, and <em>t12</em>.</p>
 </div>
@@ -246,10 +247,12 @@ levels(rehab_growth_dat$time)</code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="desc-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>growth_summary &lt;-  rehab_growth_dat %&gt;% group_by(intervention, time) %&gt;% summarize(
-  mean = mean(resemblance),
-  ci_low = ci(resemblance)[&quot;CI lower&quot;],
-  ci_upp = ci(resemblance)[&quot;CI upper&quot;]
+<pre class="text"><code>growth_summary &lt;-  rehab_growth_tib %&gt;%
+  group_by(intervention, time) %&gt;%
+  summarize(
+    mean = mean(resemblance),
+    ci_low = ci(resemblance)[&quot;CI lower&quot;],
+    ci_upp = ci(resemblance)[&quot;CI upper&quot;]
 )
 growth_summary              </code></pre>
 </div>
@@ -267,7 +270,7 @@ growth_summary              </code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="lin_plot-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>growth_plot &lt;- ggplot(rehab_growth_dat, aes(time_num, resemblance, colour = intervention, fill = intervention))
+<pre class="text"><code>growth_plot &lt;- ggplot(rehab_growth_tib, aes(time_num, resemblance, colour = intervention, fill = intervention))
 growth_plot +
   geom_point(size = 1, position = position_jitter(width = 0.1, height = 0.1), alpha = 0.6) + 
   geom_smooth(method = &quot;lm&quot;, alpha = 0.3) +
@@ -286,7 +289,7 @@ growth_plot +
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="err_bar-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>growth_mean_plot &lt;- ggplot(rehab_growth_dat, aes(time, resemblance, colour = intervention))
+<pre class="text"><code>growth_mean_plot &lt;- ggplot(rehab_growth_tib, aes(time, resemblance, colour = intervention))
 growth_mean_plot +
   stat_summary(fun.data = &quot;mean_cl_normal&quot;, size = 1, position = position_dodge(width = 0.5), alpha = 0.6) +
   scale_y_continuous(breaks = seq(20, 60, 5)) +
@@ -321,12 +324,12 @@ growth_mean_plot +
 <li><code>outcome</code>: the variable that contains the scores for the outcome measure (in this case <strong>resemblance</strong>).</li>
 <li><code>predictor</code>: the variable that contains information about the time at which resemblance scores were measured (in this case <strong>time_num</strong>).</li>
 <li><code>random</code>: defines the random parts of the model. This takes a formula in the style <code>~ predictor|context</code>. In this case our context is participants, which is represented by the variable <strong>id</strong>. If we want only to let intercepts vary by participant we could use <code>~ 1|id</code>, but we also want to let the effect of <strong>time_num</strong> vary by participant so we’d use <code>~ time_num|id</code>.</li>
-<li><code>tibble</code>: the name of the tibble containing the data (in this case <code>rehab_growth_dat</code>).</li>
+<li><code>tibble</code>: the name of the tibble containing the data (in this case <code>rehab_growth_tib</code>).</li>
 <li><code>method</code>: defines which estimation method is used. By default restricted maximum likelihood is used (REML), but if you want to compare models you should override the default and use maximum likelihood (<code>method = &quot;ML&quot;</code>).</li>
 <li><code>na.action</code>: If you have complete data (as we have here) exclude this option, but if you have missing values (i.e., ‘NA’s in the data frame) then by default the model will fail, so include <code>na.action = na.exclude</code> to exclude cases with missing values.</li>
 </ul>
 <p>We might want to test formally whether the effect of time varies by individuals (i.e., a random slope of time), in which case we can specify a random intercept model, then add the random slope, and compare the two. We can do this as:</p>
-<pre class="r"><code>rehab_ri &lt;- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_dat, method = &quot;ML&quot;)
+<pre class="r"><code>rehab_ri &lt;- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_tib, method = &quot;ML&quot;)
 rehab_rs &lt;- update(rehab_ri, random = ~ time_num|id)
 anova(rehab_ri,rehab_rs)</code></pre>
 <p>The first line creates an object called <code>rehab_ri</code> which predicts resemblance scores from the effect of <strong>time_num</strong> and with intercepts allowed to vary across participants (I appended <code>_ri</code> to the name to remind me it is a <em>r</em>andom <em>i</em>ntercepts). The second line uses the <code>update()</code> function to update the model we just created (<code>rehab_ri</code>) to include a random slope of time (we did this by changing the random part of the model to be <code>random = ~ time_num|id</code>). I named this model <code>rehab_rs</code> with the <code>_rs</code> to remind me it is a <em>r</em>andom <em>s</em>lopes model. The final line uses the <code>anova()</code> function to compare the two models. Try executing these commands in the code box.</p>
@@ -334,7 +337,7 @@ anova(rehab_ri,rehab_rs)</code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <div class="tutorial-exercise-support" data-label="lme_1-solution" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>rehab_ri &lt;- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_dat, method = &quot;ML&quot;)
+<pre class="text"><code>rehab_ri &lt;- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_tib, method = &quot;ML&quot;)
 rehab_rs &lt;- update(rehab_ri, random = ~ time_num|id)
 anova(rehab_ri,rehab_rs)</code></pre>
 </div>
@@ -344,8 +347,8 @@ anova(rehab_ri,rehab_rs)</code></pre>
 anova(rehab_ri,rehab_rs, rehab_quad)</code></pre>
 <p>The first line creates an object called <code>rehab_quad</code> using the <code>update()</code> function to update the random slope model (<code>rehab_rs</code>) to include the quadratic trend of time. We did this by changing the formula so that it included the previous outcome but <strong>not</strong> any of the previous predictors (that’s what the <code>.~</code> does, and note that there is no dot after the tilde, which means that we’re excluding all predictors from the model we’re updating). We add the linear and quadratic trends using the <code>poly()</code> function (<code>poly(time_num, 2)</code>). I named this model <code>rehab_quad</code> with the <code>_quad</code> to remind me it contains the quadratic trend of time. The second line uses the <code>anova()</code> function to compare the three models we have created. Try executing these commands in the code box.</p>
 <div class="tutorial-exercise-support" data-label="lme_2-setup" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>rehab_ri &lt;- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_dat, method = &quot;ML&quot;)
-rehab_rs &lt;- lme(resemblance ~ time_num, random = ~  time_num|id, data = rehab_growth_dat, method = &quot;ML&quot;)</code></pre>
+<pre class="text"><code>rehab_ri &lt;- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_tib, method = &quot;ML&quot;)
+rehab_rs &lt;- lme(resemblance ~ time_num, random = ~  time_num|id, data = rehab_growth_tib, method = &quot;ML&quot;)</code></pre>
 </div>
 <div class="tutorial-exercise" data-label="lme_2" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
@@ -368,9 +371,9 @@ anova(rehab_ri,rehab_rs, rehab_quad)</code></pre>
 anova(rehab_ri,rehab_rs, rehab_quad, rehab_mod)</code></pre>
 <p>The first line creates an object called <code>rehab_mod</code> using the <code>update()</code> function to update the quadratic trend model (<code>rehab_quad</code>) to include the effects of <strong>intervention</strong> and its interactions with time. We did this by changing the formula so that it included all previous outcomes and predictors (that’s what the <code>.~.</code> does) but adding in the new effects (<code>+ intervention + poly(time_num, 2):intervention</code>). I named this model <code>rehab_mod</code>. The second line uses the <code>anova()</code> function to compare the three models we have created. Try executing these commands in the code box.</p>
 <div class="tutorial-exercise-support" data-label="lme_3-setup" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>rehab_ri &lt;- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_dat, method = &quot;ML&quot;)
-rehab_rs &lt;- lme(resemblance ~ time_num, random = ~  time_num|id, data = rehab_growth_dat, method = &quot;ML&quot;)
-rehab_quad &lt;- lme(resemblance ~ poly(time_num, 2), random = ~  time_num|id, data = rehab_growth_dat, method = &quot;ML&quot;)</code></pre>
+<pre class="text"><code>rehab_ri &lt;- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_tib, method = &quot;ML&quot;)
+rehab_rs &lt;- lme(resemblance ~ time_num, random = ~  time_num|id, data = rehab_growth_tib, method = &quot;ML&quot;)
+rehab_quad &lt;- lme(resemblance ~ poly(time_num, 2), random = ~  time_num|id, data = rehab_growth_tib, method = &quot;ML&quot;)</code></pre>
 </div>
 <div class="tutorial-exercise" data-label="lme_3" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
@@ -385,7 +388,7 @@ summary(rehab_mod)
 intervals(rehab_mod, which = &quot;fixed&quot;)</code></pre>
 <p>Try these commands in the code box.</p>
 <div class="tutorial-exercise-support" data-label="sum_rehab-setup" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>rehab_mod &lt;- lme(resemblance ~ poly(time_num, 2) + intervention + poly(time_num, 2):intervention, random = ~  time_num|id, data = rehab_growth_dat, method = &quot;ML&quot;)</code></pre>
+<pre class="text"><code>rehab_mod &lt;- lme(resemblance ~ poly(time_num, 2) + intervention + poly(time_num, 2):intervention, random = ~  time_num|id, data = rehab_growth_tib, method = &quot;ML&quot;)</code></pre>
 </div>
 <div class="tutorial-exercise" data-label="sum_rehab" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
@@ -411,26 +414,26 @@ intervals(rehab_mod, which = &quot;fixed&quot;)</code></pre>
 <p>This section is entirely unnecessary other than as a learning exercise to demonstrate how the multilevel model approach to repeated measures designs is a more flexible version of the analysis of variance approach (which, I’ll refer to as RM-ANOVA). Skip to the end if you’re not interested.</p>
 <p>Anyway, in case, you come across a mixed design and you’re unconvinced by using a multilevel model (or you have a small sample) I’ll show you how to analyse the current example using RM-ANOVA. We’d execute (trust me):</p>
 <div class="tutorial-exercise" data-label="rm_anova" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>rehab_aov &lt;- aov(resemblance ~ time*intervention + Error(id), data = rehab_growth_dat)
+<pre class="text"><code>rehab_aov &lt;- aov(resemblance ~ time*intervention + Error(id), data = rehab_growth_tib)
 summary(rehab_aov)</code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
 </div>
 <p>Note that we use the <code>aov()</code> function (which is essentially the <code>lm()</code> function but spews the model information out in a more <em>F</em>-statistic based way). We specify the model as <code>resemblance ~ time*intervention</code>, which means that we’re predicting resemblance scores from the effects of <strong>time</strong>, <strong>intervention</strong> and the interaction between the two <strong>time:intervention</strong>. We also include <code>+ Error(id)</code> in the formula to tell <strong>R</strong> to compute an error term from within the <strong>id</strong> variable. Execute the code in the box and look at the output.</p>
 <p>To fit the same model using a multilevel approach let’s start with a random slopes model. To mimic what the ANOVA does (i.e. treat time as a categorical variable) we’ll use <strong>time</strong> rather than <strong>time_num</strong> (which we used in our growth models). We’d define this model as in the code box:</p>
 <div class="tutorial-exercise" data-label="lme_anova" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>rehab_lme &lt;- lme(resemblance ~ time*intervention, random = ~ intervention|id, data = rehab_growth_dat)
+<pre class="text"><code>rehab_lme &lt;- lme(resemblance ~ time*intervention, random = ~ intervention|id, data = rehab_growth_tib)
 anova(rehab_lme)</code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
 </div>
 <p>Execute the code in the box and see that the results of the <em>F</em>-statistics and their significance values are not too dissimilar to the RM-ANOVA model, but not exactly the same. The growth model allows the effect of <strong>intervention</strong> to vary across participants, whereas RM-ANOVA does not. So, let’s restrict the model so that it retains a random intercept (overall recall can vary across participants) but not a random slope (the effect of <strong>intervention</strong> is constant across participants). We achieve this restriction by changing <code>random = ~ intervention|id</code> to <code>random = ~ 1|id</code> (I’ve also added the suffix <code>_ri</code> for <em>r</em>andom <em>i</em>ntercept):</p>
 <div class="tutorial-exercise" data-label="ri_anova" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>rehab_lme_ri &lt;- lme(resemblance ~ time*intervention, random = ~ 1|id, data = rehab_growth_dat)
+<pre class="text"><code>rehab_lme_ri &lt;- lme(resemblance ~ time*intervention, random = ~ 1|id, data = rehab_growth_tib)
 anova(rehab_lme_ri)</code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
 </div>
 <p>Execute the code and see that the results are basically the same as the RM-ANOVA now (probably because there wasn’t a major deviation from the assumption of compound symmetry). The second restriction is to assume that covariances across conditions are equal. We can add this restriction by including the statement <code>correlation = corCompSymm(form = ~ intervention|id)</code> in the model above. This argument sets the covariance structure to have compound symmetry across the <strong>intervention</strong> variable (which is nested within participants). I’ll change the suffix to this model to <code>_cs</code> (for <em>c</em>ompound <em>s</em>ymmetry):</p>
 <div class="tutorial-exercise" data-label="cs_anova" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
-<pre class="text"><code>rehab_lme_cs&lt;- lme(resemblance ~ time*intervention, random = ~ 1|id, data = rehab_growth_dat, correlation = corCompSymm(form = ~ intervention|id))
+<pre class="text"><code>rehab_lme_cs&lt;- lme(resemblance ~ time*intervention, random = ~ 1|id, data = rehab_growth_tib, correlation = corCompSymm(form = ~ intervention|id))
 anova(rehab_lme_cs)</code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.setup":"prepare-data","exercise.checker":"NULL"}</script>
 </div>
@@ -479,7 +482,7 @@ hint_text <- function(text, text_color = "#E69F00"){
 
 #Read dat files needed for the tutorial
 
-rehab_growth_dat <- adventr::rehab_growth_dat
+rehab_growth_tib <- adventr::rehab_growth_dat
 
 #setup objects for code blocks
 
@@ -490,9 +493,9 @@ learnr:::register_http_handlers(session, metadata = NULL)
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-`tutorial-exercise-inspect_dat-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-inspect_dat-code-editor`)), session)
-output$`tutorial-exercise-inspect_dat-output` <- renderUI({
-  `tutorial-exercise-inspect_dat-result`()
+`tutorial-exercise-inspect_tib-result` <- learnr:::setup_exercise_handler(reactive(req(input$`tutorial-exercise-inspect_tib-code-editor`)), session)
+output$`tutorial-exercise-inspect_tib-output` <- renderUI({
+  `tutorial-exercise-inspect_tib-result`()
 })
 </script>
  

@@ -28,9 +28,16 @@ The tutorials are named to correspond (roughly) to the relevant chapter of the b
 To use `adventr` you first need to install **R** and **RStudio**. There are detailed instructions on how to do this at the end of this webpage along with some introductory material to get you oriented to **R** and **RStudio**. Once you have installed **R** and **RStudio** you can install `adventr`. The package is in development so you have to install it from github. To install the package execute (in **RStudio**):
 
 ```{r, eval = FALSE}
-install.packages("devtools") #if you don’t already have it installed
-library(devtools)
+install.packages("remotes") #if you don’t already have it installed
+library(remotes)
 install_github("profandyfield/adventr")
+```
+
+If you are trying to install on a networked computer the install might fail (it's to do install.packages not liking UNC paths, which I'm not even going to pretend to understand). The solution is to specify the location of your R library at the point of install. Most networks will map network locations to a drive name (for example, at my own University, users accounts are on the 'N' drive). Find the location of your R library (e.g., `N:/Documents/R/win-library/3.5`), possibly executing `.libPaths()` to help you, and specify this location using the `lib` argument:
+
+```
+library(remotes) 
+remotes::install_github("profandyfield/adventr", lib = "N:/Documents/R/win-library/3.5")
 ```
 
 To run a particular tutorial execute:

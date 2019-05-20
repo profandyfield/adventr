@@ -22,7 +22,7 @@ library(WRS2)
 
 
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
 hint_text <- function(text, text_color = "#E69F00"){
@@ -141,17 +141,17 @@ You can load the file in several ways:
 
 ### Categorical variables
 
-When working within the tutorial the data are already prepared for you. However, if you are trying to replicate the tutorial within R or R Studio then you need to explicitly convert categorical predictors to factors. The data for this tutorial contains a variable **group**, which will be read in from the csv file as a character variable. To convert this variable to a factor we can use the `as_factor()` function from the `forcats` package. There are several ways to do this, but the most tidyverse way is to use `mutate()` from `tidyverse`, which is a way of adding variables to a tibble or overwriting existing variables. We could execute:
+When working within the tutorial the data are already prepared for you. However, if you are trying to replicate the tutorial within R or R Studio then you need to explicitly convert categorical predictors to factors. The data for this tutorial contains a variable **group**, which will be read in from the csv file as a character variable. To convert this variable to a factor we can use the `as_factor()` function from the `forcats` package. There are several ways to do this, but the most tidyverse way is to use `mutate()` from `dplyr` (part of `tidyverse`), which is a way of adding variables to a tibble or overwriting existing variables. We could execute:
 
 ```{r, echo = TRUE, eval = FALSE}
 library(tidyverse)
 memory_tib <- memory_tib %>% 
-  mutate(
+  dplyr::mutate(
     group = forcats::as_factor(group)
   )
 ```
 
-This code recreates the `memory_tib` tibble from itself then uses mutate to recreate the variable **group** from itself by placing it within the `as_factor()` function. I have explicitly declared that I want to use the `as_factor()` function from the package `forcats` because the package `haven` also has an `as_factor()` function.
+This code recreates the `memory_tib` tibble from itself then uses mutate to recreate the variable **group** from itself by placing it within the `as_factor()` function which we met in an earlier tutorial.
 
 ## Exploring the data
 ### The model
@@ -200,11 +200,11 @@ Using what you've learnt in previous tutorials, create a tibble called `mem_summ
 
 ```{r desc-solution}
 mem_summary <-  memory_tib %>%
-  group_by(group) %>%
-  summarize(
+  dplyr::group_by(group) %>%
+  dplyr::summarize(
     mean = mean(recall),
-    ci_low = ci(recall)["CI lower"],
-    ci_upp = ci(recall)["CI upper"]
+    ci_low = gmodels::ci(recall)["CI lower"],
+    ci_upp = gmodels::ci(recall)["CI upper"]
 )
 mem_summary              
 ```
@@ -220,7 +220,7 @@ Let's plot the data. Use the code box below to create an error bar chart with **
 ```
 
 ```{r scat-solution}
-mem_plot <- ggplot(memory_tib, aes(group, recall))
+mem_plot <- ggplot2::ggplot(memory_tib, aes(group, recall))
 mem_plot +
   geom_point(colour = "#E69F00", position = position_jitter(width = 0.1, height = 0)) +
   stat_summary(fun.data = "mean_cl_normal", geom = "pointrange", colour = "grey35") +
@@ -418,7 +418,7 @@ As well as defining our own contrasts, we can use pre-defined ones. For example,
 
 `contrasts(memory_tib$group) <- contr.poly(3)`
 
-`r hint_text("Tip: R will order the groups alphabetically (in this case control, erase, replace). For the current data this is a sensible order because we expect recall to get progressively worse across those groups. However, if the alphabetical order of groups does not represent the order that you want, you can use the fct_relevel() function in the forcats package to re-order the levels of your grouping variable into the order you want.")`
+`r hint_text("Tip: Our factor levels are ordered as: control, erase, replace. This order is sensible because we expect recall to get progressively worse across those groups. However, if the levels of your grouping variable do not represent the order that you want, you can use the fct_relevel() function in the forcats package to re-order the levels more sensibly.")`
 
 Set the variable **group** to have polynomial contrast (as above) then create and summarize a model called `mem_mod_poly` that fits a linear model predicting **recall** from **group**.
 
@@ -442,7 +442,7 @@ As in previous tutorials, we can use one of the methods (HC0 to HC5) for produci
 
 `r hint_text("Tip: if you're doing this outside of the tutorial you need the sjstats package installed and you need to execute library(sjstats).")`
 
-Remember that we place the model we created with `lm()` (in this case `mem_mod`) into the function `robust()`. For example, we could execute:
+Remember that we place the model we created with `lm()` (in this case `mem_mod`) into the function `robust()` from the `sjstats` package. For example, we could execute:
 
 * `robust(mem_mod, conf.int = T)` to use the default "HC3" method and request 95% confidence intervals
 * `robust(mem_mod, vcov.type = "HC4", conf.int = T)` to use "HC4" and request 95% confidence intervals
@@ -459,8 +459,8 @@ mem_mod <- lm(recall ~ group, data = memory_tib)
 ```
 
 ```{r mem_mod_hc4-solution}
-robust(mem_mod, conf.int = T)
-robust(mem_mod, vcov.type = "HC4", conf.int = T)
+sjstats::robust(mem_mod, conf.int = T)
+sjstats::robust(mem_mod, vcov.type = "HC4", conf.int = T)
 ```
 
 ### Robust estimates
@@ -473,7 +473,7 @@ In *adventr_14* we used the `lmRob()` function from the `robust` package (again,
 ```
 
 ```{r mem_mod_robust-solution}
-mem_rob <- lmRob(recall ~ group, data = memory_tib)
+mem_rob <- robust::lmRob(recall ~ group, data = memory_tib)
 summary(mem_rob)   
 ```
 
@@ -496,10 +496,10 @@ boot_lm <- function(formula, data, index){
 }
 
 #The following runs the bootstrap and extracts the CIs
-boot_result <- boot(boot_lm, formula = recall ~ group, data = memory_tib, R = 2000)
-boot.ci(boot_result, type = "bca", index = 1) #for the intercept
-boot.ci(boot_result, type = "bca", index = 2) #for the first dummy variable for group (this code will run the default unless you also include a line to add contrasts to the variable, group.)
-boot.ci(boot_result, type = "bca", index = 3) #for the second dummy variable for group (this code will run the default unless you also include a line to add contrasts to the variable, group.)
+boot_result <- boot::boot(boot_lm, formula = recall ~ group, data = memory_tib, R = 2000)
+boot::boot.ci(boot_result, type = "bca", index = 1) #for the intercept
+boot::boot.ci(boot_result, type = "bca", index = 2) #for the first dummy variable for group (this code will run the default unless you also include a line to add contrasts to the variable, group.)
+boot::boot.ci(boot_result, type = "bca", index = 3) #for the second dummy variable for group (this code will run the default unless you also include a line to add contrasts to the variable, group.)
 ```
 
 
@@ -526,10 +526,10 @@ See if you can run the three commands in the code box below based on my descript
 ```
 
 ```{r mask_wrs-solution}
-t1way(recall ~ group, data = memory_tib)
-lincon(recall ~ group, data = memory_tib)
-t1waybt(recall ~ group, data = memory_tib, nboot = 1000)
-mcppb20(recall ~ group, data = memory_tib, nboot = 1000)
+WRS2::t1way(recall ~ group, data = memory_tib)
+WRS2::lincon(recall ~ group, data = memory_tib)
+WRS2::t1waybt(recall ~ group, data = memory_tib, nboot = 1000)
+WRS2::mcppb20(recall ~ group, data = memory_tib, nboot = 1000)
 ```
 
 Based on `t1way` we'd conclude that the group means were significantly different, $F_t(2, 13.9) = 4.13, p = 0.039$, with recall scores similar in the control and erase conditions, $\hat{\psi} = 1 [-1.92, 3.92], p = 0.372$, and in the erase and replace groups, $\hat{\psi} = 2.5 [-0.69, 5.669], p = 0.053$, but were significantly lower in the replace group than both the control group, $\hat{\psi} = 3.5 [0.24, 6.76], p = 0.012$.
@@ -552,7 +552,8 @@ So we would use the same formula that we have used throughout, and specify our t
 For our data (using the default prior) we could execute:
 
 ```{r echo = T, eval = F}
-mem_bf <- anovaBF(formula = recall ~ group, data = data.frame(memory_tib))
+mem_bf <- memory_tib %>% 
+  BayesFactor::anovaBF(formula = recall ~ group, data = .)
 mem_bf
 ```
 
@@ -563,7 +564,8 @@ The first line creates the object `mem_bf` as described above and the second lin
 ```
 
 ```{r mem_bf-solution}
-mem_bf <- anovaBF(formula = recall ~ group, data = data.frame(memory_tib))
+mem_bf <- memory_tib %>% 
+  BayesFactor::anovaBF(formula = recall ~ group, data = .)
 mem_bf
 ```
 

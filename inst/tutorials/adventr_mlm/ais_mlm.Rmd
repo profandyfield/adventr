@@ -16,7 +16,7 @@ library(tidyverse)
 library(nlme)
 library(gmodels)
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
 hint_text <- function(text, text_color = "#E69F00"){
@@ -138,14 +138,14 @@ When working within the tutorial the data are already prepared for you. However,
 ```{r, echo = TRUE, eval = FALSE}
 library(tidyverse)
 rehab_tib <- rehab_tib %>% 
-  mutate(
+  dplyr::mutate(
     intervention = forcats::as_factor(intervention),
     gep_level = forcats::as_factor(gep_level),
     id_clin = forcats::as_factor(id_clin)
   )
 ```
 
-This code recreates the `rehab_tib` tibble from itself then uses mutate to recreate the variables **intervention** and **gep_level**, and **id_clin** from themselves by placing each one in turn within the `as_factor()` function. I have explicitly declared that I want to use the `as_factor()` function from the package `forcats` because the package `haven` also has an `as_factor()` function.
+This code recreates the `rehab_tib` tibble from itself then uses mutate to recreate the variables **intervention** and **gep_level**, and **id_clin** from themselves by placing each one in turn within the `as_factor()` function.
 
 
 ## The model
@@ -256,25 +256,51 @@ At some point in your relationship with **R** you will face this kind of situati
 So you place the name of the factor that you want to relevel, then list any levels you want to move (or simply list the levels in the order you want them), and then use `after = ""` to say which level you want them placed after. Let's look at **rehab_alt_tib$id_clin**. The current level order is: "clinic_1", "clinic_10", "clinic_2", "clinic_3", "clinic_4", "clinic_5", "clinic_6", "clinic_7", "clinic_8", "clinic_9". We'd prefer "clinic_10" to be at the end. We can achieve this in one of three ways, in each case we recreate each categorical variable from itself but with re-ordered levels):
 
 ```{r echo = T, eval = F}
-rehab_alt_tib$id_clin <- fct_relevel(rehab_alt_tib$id_clin, "clinic_1", "clinic_2", "clinic_3", "clinic_4", "clinic_5", "clinic_6", "clinic_7", "clinic_8", "clinic_9", "clinic_10")
-rehab_alt_tib$id_clin <- fct_relevel(rehab_alt_tib$id_clin, "clinic_10", after = 9)
-rehab_alt_tib$id_clin <- fct_relevel(rehab_alt_tib$id_clin, "clinic_10", after = Inf)
+rehab_alt_tib <- rehab_alt_tib %>%
+  dplyr::mutate(
+    id_clin = forcats::fct_relevel(id_clin, "clinic_1", "clinic_2", "clinic_3", "clinic_4", "clinic_5", "clinic_6", "clinic_7", "clinic_8", "clinic_9", "clinic_10")
+  )
+
+rehab_alt_tib <- rehab_alt_tib %>%
+  dplyr::mutate(
+    id_clin = forcats::fct_relevel(id_clin, "clinic_10", after = 9)
+  )
+
+rehab_alt_tib <- rehab_alt_tib %>%
+  dplyr::mutate(
+    id_clin = forcats::fct_relevel(id_clin, "clinic_10", after = Inf)
+  )
 ```
 
-In the first line we achieve what we want by simply listing the factor levels in the order we want them. This method is inefficient for the current example because we only want to move one level, so it's annoying to have to list all 10 levels. The second line achieves the same goal but by asking for "clinic_10" to be moved to after level 9. This code, therefore, will move "clinic_10" to level 10. The third line uses `Inf` (short for infinite) to move "clinic_10" to the final level (whatever that may be). This final method is particularly useful when you want to move a level to the end but you don't know how many levels there are off the top of your head.
+In the first pipe we achieve what we want by simply listing the factor levels in the order we want them. This method is inefficient for the current example because we only want to move one level, so it's annoying to have to list all 10 levels. The second pipe achieves the same goal but by asking for "clinic_10" to be moved to after level 9. This code, therefore, will move "clinic_10" to level 10. The third line uses `Inf` (short for infinite) to move "clinic_10" to the final level (whatever that may be). This final method is particularly useful when you want to move a level to the end but you don't know how many levels there are off the top of your head.
 
 `r hint_text("Tip: When you specify levels of a factor the text must exactly match that of the variable level. In the example above if you type \"Clinic_10\" or \"clinic 10\" the command will fail because neither exactly match the factopr level of \"clinic_10\". Check that upper and lower case letters match with the factor level and so on.")`
 
 We could re-order the levels of **intervention** (to make the wait list first) in a similar way using any of these 4 ways:
 
 ```{r echo = T, eval = F}
-rehab_alt_tib$intervention <- fct_relevel(rehab_alt_tib$intervention, "Wait list", "Gene therapy")
-rehab_alt_tib$intervention <- fct_relevel(rehab_alt_tib$intervention, "Gene therapy", after = 1)
-rehab_alt_tib$intervention <- fct_relevel(rehab_alt_tib$intervention, "Gene therapy", after = Inf)
-rehab_alt_tib$intervention <- fct_relevel(rehab_alt_tib$intervention, "Wait list", after = 0)
+rehab_alt_tib <- rehab_alt_tib %>%
+  dplyr::mutate(
+    intervention = forcats::fct_relevel(intervention, "Wait list", "Gene therapy")
+  )
+
+rehab_alt_tib <- rehab_alt_tib %>%
+  dplyr::mutate(
+    intervention = forcats::fct_relevel(intervention, "Gene therapy", after = 1)
+  )
+
+rehab_alt_tib <- rehab_alt_tib %>%
+  dplyr::mutate(
+    intervention = forcats::fct_relevel(intervention, "Gene therapy", after = Inf)
+  )
+
+rehab_alt_tib <- rehab_alt_tib %>%
+  dplyr::mutate(
+    intervention = forcats::fct_relevel(intervention,  "Wait list", after = 0)
+  )
 ```
 
-Again, the first command lists re-orders the levels using a list of the levels in the order we want them. The second command places "Gene therapy" after level 1 (and, therefore, as level 2), the third moves "Gene therapy" to be the final level (i.e., level 2), and the fourth moves "Wait list" to after level 0 (in other words it places it as the first level). Use the code box to re-create **intervention**, **id_clin** and **gep_level** from `rehab_alt_tib` but with re-ordered levels that match the corresponding variables in `rehab_tib`. Remember to use `levels()` to check your handywork!
+Again, the first pipe re-orders the levels using a list of the levels in the order we want them. The second pipe places "Gene therapy" after level 1 (and, therefore, as level 2), the third moves "Gene therapy" to be the final level (i.e., level 2), and the fourth moves "Wait list" to after level 0 (in other words it places it as the first level). Use the code box to re-create **intervention**, **id_clin** and **gep_level** from `rehab_alt_tib` but with re-ordered levels that match the corresponding variables in `rehab_tib`. Remember to use `levels()` to check your handywork!
 
 ```{r relevel_fcts-setup}
 rehab_alt_tib <- read.csv("http://www.discoveringstatistics.com/repository/ais_data/ais_zombie_rehab.csv")
@@ -286,9 +312,14 @@ rehab_alt_tib <- read.csv("http://www.discoveringstatistics.com/repository/ais_d
 
 ```{r relevel_fcts-solution}
 #There are various ways (see text for details) but this will work
-rehab_alt_tib$id_clin <- fct_relevel(rehab_alt_tib$id_clin, "clinic_10", after = Inf)
-rehab_alt_tib$intervention <- fct_relevel(rehab_alt_tib$intervention, "Gene therapy", after = 1)
-rehab_alt_tib$gep_level <- fct_relevel(rehab_alt_tib$gep_level, "High intensity", after = 1)
+
+rehab_alt_tib <- rehab_alt_tib %>% 
+  dplyr::mutate(
+    id_clin = forcats::fct_relevel(id_clin, "clinic_10", after = Inf),
+    intervention = forcats::fct_relevel(intervention, "Gene therapy", after = 1),
+    gep_level = forcats::fct_relevel(gep_level, "High intensity", after = 1),
+  )
+
 
 levels(rehab_alt_tib$intervention)
 levels(rehab_alt_tib$id_clin)
@@ -310,14 +341,14 @@ Using what you've learnt in previous tutorials, create a tibble called `rehab_su
 
 ```{r desc-solution}
 rehab_summary <- rehab_tib %>%
-  group_by(id_clin, intervention) %>%
-  summarize(
+  dplyr::group_by(id_clin, intervention) %>%
+  dplyr::summarize(
     mean_resemblance = mean(resemblance),
-    ci_low_resemblance = ci(resemblance)["CI lower"],
-    ci_upp_resemblance = ci(resemblance)["CI upper"],
+    ci_low_resemblance = gmodels::ci(resemblance)["CI lower"],
+    ci_upp_resemblance = gmodels::ci(resemblance)["CI upper"],
     mean_tse = mean(tse_months),
-    ci_low_tse = ci(tse_months)["CI lower"],
-    ci_upp_tse = ci(tse_months)["CI upper"]
+    ci_low_tse = gmodels::ci(tse_months)["CI lower"],
+    ci_upp_tse = gmodels::ci(tse_months)["CI upper"]
 )
 rehab_summary              
 ```
@@ -330,19 +361,19 @@ It would be useful to get some means for the main effects of **intervention** an
 
 ```{r me-solution}
 intervention_main <- rehab_tib %>%
-  group_by(intervention) %>%
-  summarize(
+  dplyr::group_by(intervention) %>%
+  dplyr::summarize(
     mean = mean(resemblance),
-    ci_low = ci(resemblance)["CI lower"],
-    ci_upp = ci(resemblance)["CI upper"]
+    ci_low = gmodels::ci(resemblance)["CI lower"],
+    ci_upp = gmodels::ci(resemblance)["CI upper"]
 )
 
 gep_main <- rehab_tib %>%
-  group_by(gep_level) %>%
-  summarize(
+  dplyr::group_by(gep_level) %>%
+  dplyr::summarize(
     mean = mean(resemblance),
-    ci_low = ci(resemblance)["CI lower"],
-    ci_upp = ci(resemblance)["CI upper"]
+    ci_low = gmodels::ci(resemblance)["CI lower"],
+    ci_upp = gmodels::ci(resemblance)["CI upper"]
 )
 
 intervention_main  
@@ -357,7 +388,7 @@ Let's plot the data by recreating the image from my lecture slides. I will expla
 The code is:
 
 ```{r echo = T, eval = F}
-rehab_plot <- ggplot(rehab_tib, aes(intervention, resemblance, colour = id_clin))
+rehab_plot <- ggplot2::ggplot(rehab_tib, aes(intervention, resemblance, colour = id_clin))
 rehab_plot +
   geom_point(size = 1, position = position_dodge(width = 0.1), alpha = 0.6) + 
   stat_summary(fun.y = mean, geom="line", aes(group = id_clin)) +
@@ -379,7 +410,7 @@ rehab_plot +
 ```
 
 ```{r plot-solution}
-rehab_plot <- ggplot(rehab_tib, aes(intervention, resemblance, colour = id_clin))
+rehab_plot <- ggplot2::ggplot(rehab_tib, aes(intervention, resemblance, colour = id_clin))
 rehab_plot +
   geom_point(size = 1, position = position_dodge(width = 0.1), alpha = 0.6) + 
   stat_summary(fun.y = mean, geom="line", aes(group = id_clin)) +
@@ -393,13 +424,13 @@ rehab_plot +
 
 To ascertain whether there is variation in the outcome (**resemblance**) over contexts (clinics) we need to fit a baseline model in which we include only the intercept; next, we fit a model that allows intercepts to vary over contexts; finally we compare these models to see whether the fit has improved as a result of allowing intercepts to vary. We fit a baseline model that includes only the intercept using the `gls()` (generalized least squares) function from the `nlme` package. The format of the `gls()` function is very much like the `lm()` function that we have encountered before. For example, we could execute:
 
-`rehab_base <- gls(resemblance ~ 1, data = rehab_tib, method = "ML")`
+`rehab_base <- nlme::gls(resemblance ~ 1, data = rehab_tib, method = "ML")`
 
 to create an object called `rehab_base` that contains a model that predicts resemblance scores from the intercept (`resemblance ~ 1`) using the rehab data (`data = rehab_tib`) and based on maximum likelihood estimation (`method = "ML"`). If we had missing data we could also include `na.action = na.exclude`.
 
 The estimation method is important (note we are *not* using least squares estimation). We have to over-ride the default method of REML (restricted maximum likelihood) because models are only comparable if we use maximum likelihood estimation. Having fit the model we don't particularly need to inspect. In itself it isn;t that interesting, but it acts as a baseline against which to compare a model in which intercepts vary across contexts. We do this using the `lme()` function from the `nlme` package. The format of this function is much the same as `lm()` and `gls()`; the only difference is that we need to specify the random part of the model using the option `random = x|y`, in which *x* is an equation specifying the random parts of the model and *y* is the contextual variable or variables across which we want to model variance. In the current example, we are trying to model intercepts that vary across clinics; therefore, we could add the instruction `random = ~1|id_clin`. Remember that we use `1` to denote the intercept, and that `id_clin` is the variable that contains information about the clinic that a given zombie attended. To create the model and store it in an object called `rehab_ri` we'd execute:
 
-`rehab_ri <- lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_tib, method = "ML")`
+`rehab_ri <- nlme::lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_tib, method = "ML")`
 
 To compare this model to the baseline one we must use maximum likelihood estimation (`method = "ML"`). To see whether allowing the intercepts to vary improves the model we can use the `anova()` function, which will produce useful statistics such as the AIC, BIC and log-likelihood. To compare models they must be nested (that is, models higher up the chain need to contain all of the effects that were in models earlier in the chain). We can use this function as follows to compare our two models:
 
@@ -413,8 +444,8 @@ Note that we have simply put the names of the two models we created into the fun
 ```
 
 ```{r base_ri-solution}
-rehab_base <- gls(resemblance ~ 1, data = rehab_tib, method = "ML")
-rehab_ri <- lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_tib, method = "ML")
+rehab_base <- nlme::gls(resemblance ~ 1, data = rehab_tib, method = "ML")
+rehab_ri <- nlme::lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_tib, method = "ML")
 anova(rehab_base, rehab_ri)
 ```
 
@@ -424,7 +455,7 @@ First, we can compare the fit of the model using indices such as AIC and BIC. In
 
 We have seen that intercepts vary significantly across clinics. Now that we have a baseline model with random intercepts we can start to add predictors. Let’s first add our main predictor of **interventon**,  which defines whether a person had gene therapy or was on the waiting list. To add this predictor we  create a new object (which we might call **rehab_int**, short for rehabilitation intervention) using the `lme()` function. We would use the same command as before except replacing `resemblance ~ 1` with `resemblance ~ intervention`:
 
-`rehab_int <- lme(resemblance ~ intervention, random = ~ 1|id_clin, data = rehab_tib, method = "ML")`
+`rehab_int <- nlme::lme(resemblance ~ intervention, random = ~ 1|id_clin, data = rehab_tib, method = "ML")`
 
 All we're doing is changing the model so that rather than resemblance scores being predicted from the intercept (`resemblance ~ 1`) they are predicted from the intercept *and* main effect of **intervention** (`resemblance ~ intervention`). You might think that the intercept has disappeared because we don't specify it explicitly in the model, but it hasn't: it is implied when any predictor is added to the model so when we write 'as `resemblance ~ intervention` we are, in effect, specifying as `resemblance ~ 1 + intervention`.
 
@@ -441,8 +472,8 @@ We can then use the `anova()` function to compare the three models we have creat
 Use the code box to create the model `rehab_int` and compare it to the previous two using the `anova()` function.
 
 ```{r rehab_int-setup}
-rehab_base <- gls(resemblance ~ 1, data = rehab_tib, method = "ML")
-rehab_ri <- lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_tib, method = "ML")
+rehab_base <- nlme::gls(resemblance ~ 1, data = rehab_tib, method = "ML")
+rehab_ri <- nlme::lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_tib, method = "ML")
 ```
 
 ```{r rehab_int, exercise = TRUE}
@@ -461,7 +492,7 @@ The AIC and BIC are reduced by including **intervention** as a predictor, which 
 
 We might now want to allow the effect of the intervention to vary across clinics to acknowledge that treatment effects might vary across clinics. In doing so we'll add a random slope to the effect of **intervention**. Again we can do this either by re-specifying the entire model, or by using the `update()` function to update the previous model (`rehab_int`). In either case, the crucial change will be to change the specification of the random intercept (`random = ~ 1|id_clin`) to be a random slope (`random = ~ intervention|id_clin`). The `intervention|id_clin` means 'the effect of **intervention** varies within the variable **id_clinic**. In other words the 'slope' for **intervention** is random (across clinics). Again, the intercept is implied, so this model includes both a random slope and a random intercept. Let's call the resulting model `rehab_rs` (the *rs* meaning *random slope*). If we specify the model in full we would execute:
 
-`rehab_rs <- lme(resemblance ~ intervention, random = ~ intervention|id_clin, data = rehab_tib, method = "ML")`
+`rehab_rs <- nlme::lme(resemblance ~ intervention, random = ~ intervention|id_clin, data = rehab_tib, method = "ML")`
 
 If we use update, we'd execute:
 
@@ -472,8 +503,8 @@ Note that in the `update()` function we don't need to include `.~.` because we'r
 Use the code box to create the model `rehab_rs` and compare it to the previous three using the `anova()` function.
 
 ```{r rehab_rs-setup}
-rehab_base <- gls(resemblance ~ 1, data = rehab_tib, method = "ML")
-rehab_ri <- lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_tib, method = "ML")
+rehab_base <- nlme::gls(resemblance ~ 1, data = rehab_tib, method = "ML")
+rehab_ri <- nlme::lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_tib, method = "ML")
 rehab_int <- update(rehab_ri, .~. + intervention)
 ```
 
@@ -506,8 +537,8 @@ We could then compare all of the models we have created by executing:
 Try this in the code box:
 
 ```{r rehab_tse-setup}
-rehab_base <- gls(resemblance ~ 1, data = rehab_tib, method = "ML")
-rehab_ri <- lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_tib, method = "ML")
+rehab_base <- nlme::gls(resemblance ~ 1, data = rehab_tib, method = "ML")
+rehab_ri <- nlme::lme(resemblance ~ 1, random = ~ 1|id_clin, data = rehab_tib, method = "ML")
 rehab_int <- update(rehab_ri, .~. + intervention)
 rehab_rs <- update(rehab_int, random = ~ intervention|id_clin)
 ```
@@ -535,7 +566,7 @@ intervals(rehab_tse, 0.95)
 In the `intervals()` it isn't necessary to include 0.95 if you want 95% confidence intervals, I merely included it to make clear that you could change this to get other intervals (for example, 0.9 for 90% confidence intervals or 0.99 for 99% confidence intervals). Execute these commands in the code box.
 
 ```{r sum_tse-setup}
-rehab_tse <- lme(resemblance ~ intervention + gep_level + tse_months, random = ~ intervention|id_clin, data = rehab_tib, method = "ML")
+rehab_tse <- nlme::lme(resemblance ~ intervention + gep_level + tse_months, random = ~ intervention|id_clin, data = rehab_tib, method = "ML")
 ```
 
 ```{r sum_tse, exercise = TRUE}

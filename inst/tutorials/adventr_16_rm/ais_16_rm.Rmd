@@ -18,7 +18,7 @@ library(gmodels)
 library(nlme)
 library(WRS2)
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
 hint_text <- function(text, text_color = "#E69F00"){
@@ -176,21 +176,20 @@ Use the code box to inspect the `implant_tib` tibble.
 implant_tib   
 ```
 
-The data are organised in what is known as the *wide format* (see **adventr_15_rm**. The *wide format* is common but *messy*. Usually we want the data to *tidy*. To make these data 'tidy' we can follow the same process as in **adventr_15_rm**: use the `gather()` function from the `tidyverse` suite of packages to gather the columns representing different types of memory interference together. To recap, the function takes the form:
+The data are organised in what is known as the *wide format* (see **adventr_15_rm**. The *wide format* is common but *messy*. Usually we want the data to *tidy*. To make these data 'tidy' we can follow the same process as in **adventr_15_rm**: use the `gather()` function from the `tidyverse` suite of packages (`tidyr` specifically) to gather the columns representing different types of memory interference together. To recap, the function takes the form:
 
 `gather(data, key = "name_of_column_containing_variable_information", value = "name_of_column_containing_values")`
 
 Our initial tibble has 5 rows (one for each participant) and 4 columns (**id**, **no_interference**, **verbal**, **visual**). We need to gather only the **no_interference**, **verbal**, and **visual** columns and leave the **id** column alone (because this column tells us to which participant a score belongs). To do this, we execute:
 
-`gather(implant_tib, key = "interference", value = "recall", -id)`
+`tidyr::gather(implant_tib, key = "interference", value = "recall", -id)`
 
-Try this command is the code box. The resulting tibble should have 15 rows (each of 5 participants under each of the three interference conditions) and three columns (**id** tells us the participant number, **interference** defines the experimental condition, and **recall** contains the recall score for each participant in each experimental condition). These data are tidy. So we can use this restructured tibble we need to save it into an object. Let's call it `implant_tidy`. We can do this by either placing the original tibble directly into the `gather()` function:
+Try this command is the code box. The resulting tibble should have 15 rows (each of 5 participants under each of the three interference conditions) and three columns (**id** tells us the participant number, **interference** defines the experimental condition, and **recall** contains the recall score for each participant in each experimental condition). These data are tidy. So we can use this restructured tibble we need to save it into an object. Let's call it `implant_tidy`. We can do this using a pipe:
 
-`implant_tidy <- gather(implant_tib, key = "interference", value = "recall", -id)`
-
-or by using a pipe:
-
-`implant_tidy <- implant_tib %>% gather(key = "interference", value = "recall", -id)`
+```
+implant_tidy <- implant_tib %>%
+  tidyr::gather(key = "interference", value = "recall", -id)
+```
 
 Execute one of these commands in the code box, and then inspect the resulting tibble.
 
@@ -201,17 +200,20 @@ Execute one of these commands in the code box, and then inspect the resulting ti
 
 ```{r gather_tib-solution}
 implant_tidy <- implant_tib %>%
-  gather(key = "interference", value = "recall", -id)
+  tidyr::gather(key = "interference", value = "recall", -id)
 implant_tidy
 ```
 
 ### Creating factors
 
-The variables **id** and **interference** currently have the data type of character. This would be fine for a lot of what we want to do (because **R** is fairly intelligent about how it treats character variables). However, for some things (like assigning contrasts) we need these variables to be defined as factors. We can do this by using the `factor()` function, which we hae met before. For example, we could execute:
+The variables **id** and **interference** currently have the data type of character. This would be fine for a lot of what we want to do (because **R** is fairly intelligent about how it treats character variables). However, for some things (like assigning contrasts) we need these variables to be defined as factors. We can do this by using the `mutate` function from `dplyr` to save each variable as a version of itself converted to a factor using the `as_factor()` function from `forcats`, which we have met before. For example, we could execute:
 
 ```{r echo = TRUE, eval = FALSE}
-implant_tidy$id <- factor(implant_tidy$id)
-implant_tidy$interference <- factor(implant_tidy$interference)
+implant_tidy <- implant_tidy %>% 
+  dplyr::mutate(
+    id = forcats::as_factor(id),
+    interference = forcats::as_factor(interference)
+  )
 ```
 
 Try this in the code box and then execute the name of the variables to see how **R** has converted the variables and assigned 'levels' of the factors.
@@ -221,13 +223,17 @@ Try this in the code box and then execute the name of the variables to see how *
 ```
 
 ```{r factors-solution}
-implant_tidy$id <- factor(implant_tidy$id)
-implant_tidy$interference <- factor(implant_tidy$interference)
+implant_tidy <- implant_tidy %>% 
+  dplyr::mutate(
+    id = forcats::as_factor(id),
+    interference = forcats::as_factor(interference)
+  )
+
 implant_tidy$id
 implant_tidy$interference
 ```
 
-Note that levels have been assigned alphabetically. So, for **interference** the first level is *no_interference*, the second is *verbal* and the last *visual*. This is a sensible order for us, but if it wasn't we could use `fct_relevel()` from the `forcats` package to change the order (see **adventr_mlm**).
+Note that levels have been assigned in the order that they they occur in the data. So, for **interference** the first level is *no_interference*, the second is *verbal* and the last *visual*. This is a sensible order for us, but if it wasn't we could use `fct_relevel()` from the `forcats` package to change the order (see **adventr_02**).
 
 ## Exploring the data
 ### Descriptive statistics
@@ -242,11 +248,11 @@ Using what you've learnt in previous tutorials, create a tibble called `implant_
 
 ```{r desc-solution}
 implant_summary <-  implant_tidy %>%
-  group_by(interference) %>%
-  summarize(
+  dplyr::group_by(interference) %>%
+  dplyr::summarize(
     mean = mean(recall),
-    ci_low = ci(recall)["CI lower"],
-    ci_upp = ci(recall)["CI upper"]
+    ci_low = gmodels::ci(recall)["CI lower"],
+    ci_upp = gmodels::ci(recall)["CI upper"]
 )
 implant_summary              
 ```
@@ -262,7 +268,7 @@ Use the code box below to create an error bar chart with **interference** on the
 ```
 
 ```{r scat-solution}
-implant_plot <- ggplot(implant_tidy, aes(interference, recall))
+implant_plot <- ggplot2::ggplot(implant_tidy, aes(interference, recall))
 implant_plot +
     stat_summary(fun.data = "mean_cl_normal", geom = "pointrange") +
   geom_point(colour = "#E69F00", position = position_jitter(width = 0.1, height = 0)) +
@@ -276,7 +282,7 @@ implant_plot +
 ## Predictors with several categories
 ### Fitting the model
 
-To fit the model we use the `lme()` function, because we are fitting a linear model with a categorical predictor, but we want to also model the dependency between scores. This function is explained in the tutorial **adventr_mlm**, just to recap it takes the following general form (I've retained only the key options):
+To fit the model we use the `lme()` function from `nlme`, because we are fitting a linear model with a categorical predictor, but we want to also model the dependency between scores. This function is explained in the tutorial **adventr_mlm**, just to recap it takes the following general form (I've retained only the key options):
 
 `new_object <- lme(outcome ~ predictors, random = formula, data = tibble, method = "REML", na.action = na.fail)`
 
@@ -291,7 +297,7 @@ To fit the model we use the `lme()` function, because we are fitting a linear mo
 We could, therefore, specify the model as:
 
 ```{r echo = TRUE, eval = FALSE}
-implant_rs <- lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")
+implant_rs <- nlme::lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")
 anova(implant_rs)
 summary(implant_rs)
 intervals(implant_rs, which = "fixed")
@@ -306,7 +312,7 @@ Try executing these commands in the code box.
 ```
 
 ```{r lme_1-solution}
-implant_rs <- lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")
+implant_rs <- nlme::lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")
 anova(implant_rs)
 summary(implant_rs)
 intervals(implant_rs, which = "fixed")
@@ -377,7 +383,7 @@ We can implement these contrasts in the same way as in **adventr_16.** All that 
 interference_vs_none <- c(-2, 1, 1)
 verbal_vs_visual <- c(0, -1, 1)
 contrasts(implant_tidy$interference) <- cbind(interference_vs_none, verbal_vs_visual)
-implant_rs <- lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")
+implant_rs <- nlme::lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")
 anova(implant_rs)
 summary(implant_rs)
 intervals(implant_rs, which = "fixed")
@@ -394,7 +400,7 @@ The first and second lines creates variables that contain the contrast codes tha
 interference_vs_none <- c(-2, 1, 1)
 verbal_vs_visual <- c(0, -1, 1)
 contrasts(implant_tidy$interference) <- cbind(interference_vs_none, verbal_vs_visual)
-implant_rs <- lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")
+implant_rs <- nlme::lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")
 anova(implant_rs)
 summary(implant_rs)
 intervals(implant_rs, which = "fixed")
@@ -418,20 +424,20 @@ summary(implant_aov)
 
 These values match those in Output 16.8 of the book (which are from IBM SPSS Statistics). To fit the same model using a multilevel approach let's start with the model we already used and then add in the two restrictions listed above. The model we used was created by executing:
 
-`implant_rs <- lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")`
+`implant_rs <- nlme::lme(recall ~ interference, random = ~ interference|id, data = implant_tidy, method = "ML")`
 
 This model allows the effect of **interference** to vary across participants, whereas RM-ANOVA does not. So, let's restrict the model so that it retains a random intercept (overall recall can vary across participants) but not a random slope (the effect of **intervention** is constant across participants). We achieve this restriction by changing `random = ~ interference|id` to `random = ~ 1|id` (I've also changed the suffix of the model to be `_ri` for *r*andom *i*ntercept):
 
-`implant_ri <- lme(recall ~ interference, random = ~ 1|id, data = implant_tidy, method = "ML")`
+`implant_ri <- nlme::lme(recall ~ interference, random = ~ 1|id, data = implant_tidy, method = "ML")`
 
 The second restriction is to assume that covariances across conditions are equal. We can add this restriction by including the statement `correlation = corCompSymm(form = ~ interference|id)` in the model above. This argument sets the covariance structure to have compound symmetry across the **intereference** variable (which is nested within participants). I'll change the suffix to this model to `_cs` (for *c*ompound *s*ymmetry):
 
-`implant_cs <- lme(recall ~ interference, random = ~ 1|id, data = implant_tidy, method = "ML", correlation = corCompSymm(form = ~ interference|id))`
+`implant_cs <- nlme::lme(recall ~ interference, random = ~ 1|id, data = implant_tidy, method = "ML", correlation = corCompSymm(form = ~ interference|id))`
 
 We can summarise this model with the `anova()` function. The code is already in the box below. Remember, all we have done is taken our original multilevel model and applied the two constraints present in the RM-ANOVA approach. Execute this code:
 
 ```{r lme_cs, exercise = TRUE}
-implant_cs <- lme(recall ~ interference, random = ~ 1|id, data = implant_tidy, method = "ML", correlation = corCompSymm(form = ~ interference|id))
+implant_cs <- nlme::lme(recall ~ interference, random = ~ 1|id, data = implant_tidy, method = "ML", correlation = corCompSymm(form = ~ interference|id))
 anova(implant_cs)
 ```
 
@@ -454,8 +460,8 @@ These functions have similar arguments:
 Because the functions do not allow us to specify a tibble within which variables are stored, we have to instead place `tibble_name$` in front of each variable. For example, instead of entering `recognition` we must enter `implant_tidy$recognition` so that the function knows where to find the variable. So, we'd execute:
 
 ```{r echo = TRUE, eval = FALSE}
-rmanova(implant_tidy$recall, implant_tidy$interference, implant_tidy$id, tr = 0.2)
-rmmcp(implant_tidy$recall, implant_tidy$interference, implant_tidy$id, tr = 0.2)
+WRS2::rmanova(implant_tidy$recall, implant_tidy$interference, implant_tidy$id, tr = 0.2)
+WRS2::rmmcp(implant_tidy$recall, implant_tidy$interference, implant_tidy$id, tr = 0.2)
 ```
 
 Try this in the code box (leave out `tr = 0.2` if you're happy with a 20% trim, which you should be).
@@ -465,8 +471,8 @@ Try this in the code box (leave out `tr = 0.2` if you're happy with a 20% trim, 
 ```
 
 ```{r implant_wrs-solution}
-rmanova(implant_tidy$recall, implant_tidy$interference, implant_tidy$id)
-rmmcp(implant_tidy$recall, implant_tidy$interference, implant_tidy$id)
+WRS2::rmanova(implant_tidy$recall, implant_tidy$interference, implant_tidy$id)
+WRS2::rmmcp(implant_tidy$recall, implant_tidy$interference, implant_tidy$id)
 ```
 
 Based on `rmanova` we'd conclude that the group means were significantly different, $F_t(2, 4) = 9.18, p = 0.032$, with recall scores similar in the no interference and verbal conditions, $\hat{\psi} = 0.67 [-2.46, 3.79], p = 0.244$, but significantly lower in the visual condition compared to both the no-interference, $\hat{\psi} = 4.33 [1.21, 7.46], p = 0.009$, and verbal, $\hat{\psi} = 3.67 [0.544, 6.79], p = 0.012$, conditions.
@@ -487,7 +493,8 @@ The main difference with repeated-measures designs is that we need to add in the
 For our data (using the default prior) we could execute:
 
 ```{r echo = T, eval = F}
-implant_bf <- anovaBF(formula = recall ~ interference + id, whichRandom = "id", data = data.frame(implant_tidy))
+implant_bf <- implant_tidy %>% 
+  BayesFactor::anovaBF(formula = recall ~ interference + id, whichRandom = "id")
 implant_bf
 ```
 
@@ -498,7 +505,8 @@ implant_bf
 ```
 
 ```{r implant_bf-solution}
-implant_bf <- anovaBF(formula = recall ~ interference + id, whichRandom = "id", data = data.frame(implant_tidy))
+implant_bf <- implant_tidy %>% 
+  BayesFactor::anovaBF(formula = recall ~ interference + id, whichRandom = "id")
 implant_bf
 ```
 

@@ -18,7 +18,7 @@ library(robust)
 library(sjstats)
 library(WRS2)
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
 hint_text <- function(text, text_color = "#E69F00"){
@@ -143,7 +143,7 @@ When working within the tutorial the data are already prepared for you. However,
 ```{r, echo = TRUE, eval = FALSE}
 library(tidyverse)
 mask_tib <- mask_tib %>% 
-  mutate(
+  dplyr::mutate(
     mask = forcats::as_factor(mask)
   )
 ```
@@ -179,7 +179,7 @@ Let's plot the data. Use the code box below to create an error bar chart with **
 ```
 
 ```{r scat-solution}
-mem_plot <- ggplot(mask_tib, aes(mask, recognition))
+mem_plot <- ggplot2::ggplot(mask_tib, aes(mask, recognition))
 mem_plot +
   geom_point(colour = "#E69F00", position = position_jitter(width = 0.1, height = 0)) +
   stat_summary(fun.data = "mean_cl_normal", geom = "pointrange") +
@@ -309,8 +309,8 @@ mask_mod <- lm(recognition ~ mask, data = mask_tib)
 ```
 
 ```{r mask_mod_hc4-solution}
-robust(mask_mod, conf.int = T)
-robust(mask_mod, vcov.type = "HC4", conf.int = T)
+sjstats::robust(mask_mod, conf.int = T)
+sjstats::robust(mask_mod, vcov.type = "HC4", conf.int = T)
 ```
 
 ### Robust estimates
@@ -323,7 +323,7 @@ We also saw in *advetr_14* that we can get robust parameter estimates using the 
 ```
 
 ```{r mask_mod_robust-solution}
-mask_rob <- lmRob(recognition ~ mask, data = mask_tib)
+mask_rob <- robust::lmRob(recognition ~ mask, data = mask_tib)
 summary(mask_rob)   
 ```
 
@@ -347,9 +347,9 @@ boot_lm <- function(formula, data, index){
 }
 
 #The following runs the bootstrap and extracts the CIs
-boot_result <- boot(boot_lm, formula = recognition ~ mask, data = mask_tib, R = 2000)
-boot.ci(boot_result, type = "bca", index = 1) #for the intercept
-boot.ci(boot_result, type = "bca", index = 2) #for the effect of mask 
+boot_result <- boot::boot(boot_lm, formula = recognition ~ mask, data = mask_tib, R = 2000)
+boot::boot.ci(boot_result, type = "bca", index = 1) #for the intercept
+boot::boot.ci(boot_result, type = "bca", index = 2) #for the effect of mask 
                
 ```
 
@@ -377,9 +377,9 @@ See if you can run the three commands in the code box below based on my descript
 ```
 
 ```{r mask_wrs-solution}
-yuen(recognition ~ mask, data = mask_tib)
-yuenbt(recognition ~ mask, data = mask_tib, nboot = 1000)
-yuen.effect.ci(recognition ~ mask, data = mask_tib, nboot = 1000)
+WRS2::yuen(recognition ~ mask, data = mask_tib)
+WRS2::yuenbt(recognition ~ mask, data = mask_tib, nboot = 1000)
+WRS2::yuen.effect.ci(recognition ~ mask, data = mask_tib, nboot = 1000)
 ```
 
 Note that the trimmed mean difference is 2.3 (rather than the raw mean difference of 3.357). This difference is not significant both when using a bootstrap and when not. Also, in both tests the confidence intervals cross zero, indicating that if this is one of the 95% of samples where the confidence interval contains the population value, then the population difference between means could be positive, negative or zero.
@@ -402,7 +402,8 @@ So we would use the same formula that we have used throughout, and specify our t
 For our data (using the default prior) we could execute:
 
 ```{r echo = T, eval = F}
-mask_bf <- ttestBF(formula = recognition ~ mask, data = data.frame(mask_tib))
+mask_bf <- mask_tib %>% 
+  BayesFactor::ttestBF(formula = recognition ~ mask, data = .)
 mask_bf
 ```
 
@@ -413,7 +414,8 @@ The first line creates the object `mask_bf` as described above and the second li
 ```
 
 ```{r mask_bf-solution}
-mask_bf <- ttestBF(formula = recognition ~ mask, data = data.frame(mask_tib))
+mask_bf <- mask_tib %>% 
+  BayesFactor::ttestBF(formula = recognition ~ mask, data = .)
 mask_bf
 ```
 
@@ -424,14 +426,16 @@ The value matches that in the book (*an adventure in statistics*). As Milton exp
 We can get estimate of the parameters in the model using the `posterior()` function that we used in *adventr_14* to extract the same information. The process is identical to what we did in that previous tutorial. We place the object we just created (`mask_bf`) into the function and specify a number of iterations, then use the `summary()` function to view what we have created:
 
 ```{r echo = T, eval = F}
-mask_bf_est <- posterior(mask_bf, iterations = 10000)
+mask_bf_est <- mask_bf %>% 
+  BayesFactor::posterior(iterations = 10000)
 summary(mask_bf_est)
 ```
 
 Try executing these two commands to view the estimates:
 
 ```{r mask_bf_est-setup}
-mask_bf <- ttestBF(formula = recognition ~ mask, data = data.frame(mask_tib)) 
+mask_bf <- mask_tib %>% 
+  BayesFactor::ttestBF(formula = recognition ~ mask, data = .) 
 ```
 
 ```{r mask_bf_est, exercise = TRUE}
@@ -439,7 +443,8 @@ mask_bf <- ttestBF(formula = recognition ~ mask, data = data.frame(mask_tib))
 ```
 
 ```{r mask_bf_est-solution}
-mask_bf_est <- posterior(mask_bf, iterations = 10000)
+mask_bf_est <- mask_bf %>% 
+  BayesFactor::posterior(iterations = 10000)
 summary(mask_bf_est)
 ```
 

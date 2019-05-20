@@ -16,7 +16,7 @@ library(effsize)
 library(gmodels)
 
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
 #Read dat files needed for the tutorial
@@ -26,11 +26,11 @@ zhang_female_tib <- adventr::zhang_female_dat
 
 #setup objects for code blocks
 
-teddy_sum <- teddy_tib %>% group_by(study_n, group) %>% summarize(
+teddy_sum <- teddy_tib %>% dplyr::group_by(study_n, group) %>% dplyr::summarize(
   mean = mean(self_esteem),
   sd = sd(self_esteem),
-  ci_low = ci(self_esteem)["CI lower"],
-  ci_upp = ci(self_esteem)["CI upper"]
+  ci_low = gmodels::ci(self_esteem)["CI lower"],
+  ci_upp = gmodels::ci(self_esteem)["CI upper"]
 )
 
 ```
@@ -153,12 +153,14 @@ Using what you have learnt to date, can you create a tibble called `teddy_sum` c
 ```
 
 ```{r teddy_means-solution}
-teddy_sum <- teddy_tib %>% group_by(study_n, group) %>% summarize(
-  mean = mean(self_esteem),
-  sd = sd(self_esteem),
-  ci_low = ci(self_esteem)["CI lower"],
-  ci_upp = ci(self_esteem)["CI upper"]
-)
+teddy_sum <- teddy_tib %>%
+  dplyr::group_by(study_n, group) %>%
+  dplyr::summarize(
+    mean = mean(self_esteem),
+    sd = sd(self_esteem),
+    ci_low = gmodels::ci(self_esteem)["CI lower"],
+    ci_upp = gmodels::ci(self_esteem)["CI upper"]
+    )
 ```
 
 Now try plotting an error bar graph using `facet_wrap()` to display graphs for the two studies side by side. use `coord_cartesian()` to set the *y*-limits to be 0-20,  `scale_y_continuous()` to set ticks along the axis every two (e.g., 0, 2, 4, 6 ....), and `labs()` to define labels foe the *x*- and *y*-axes.
@@ -168,7 +170,7 @@ Now try plotting an error bar graph using `facet_wrap()` to display graphs for t
 ```
 
 ```{r teddy_mean_plot-solution}
-ted_plot <- ggplot(teddy_tib, aes(group, self_esteem))
+ted_plot <- ggplot2::ggplot(teddy_tib, aes(group, self_esteem))
 ted_plot +
   stat_summary(fun.data = "mean_cl_normal", size = 1) +
   facet_wrap(~ study_n) +
@@ -232,7 +234,7 @@ Let's look at computing Cohen's *d* using the pooled estimate in **R**. We're go
 
 * **id**: Participant ID
 * **group**: whether the participant cuddled a teddy bear or the cardboard box that contained the teddy bear
-* **study_n**: Factor that distinguishes the two studies in the data set. The first was based on a total *N* of 20 and the second was based on a total *N* of 200. We're going to use this variable to `filter()` the tibble before we compute *d*.
+* **study_n**: Factor that distinguishes the two studies in the data set. The first was based on a total *N* of 20 and the second was based on a total *N* of 200. We're going to use this variable to `dplyr::filter()` the tibble before we compute *d*.
 * **self_esteem**: Self-reported self-esteem scores
 
 
@@ -252,13 +254,13 @@ The arguments within this function are:
 The function returns an object that contains the value of *d*, the confidence interval and some other information. We're going to use a pipe (`%>%`) to link:
 
 * `teddy_tib`: our input will be the tibble of raw data
-* `filter(study_n == "Total N = 20")`: we're going to filter that tibble to extract the experiment based on a sample size of 20
+* `dplyr::filter(study_n == "Total N = 20")`: we're going to filter that tibble to extract the experiment based on a sample size of 20
 * `cohen.d()` the function described above will compute the effect size.
 
 ```{r echo = T, eval = F}
 teddy_tib %>%
-  filter(study_n == "Total N = 20") %>%
-  cohen.d(formula = self_esteem ~ group, data = .)
+  dplyr::filter(study_n == "Total N = 20") %>%
+  effsize::cohen.d(formula = self_esteem ~ group, data = .)
 ```
 
 This command takes the `teddy_tib` tibble, extracts the study based on 20 participants, then applies the `cohen.d()` function. Within this function we have left the defaults as they are, our formula specifies that we're predicting **self_esteem** from the variable **group** (which defines whether the individual hugs a teddy or a box), and we specify the data within the function with a period (`data = .`). By using a period we're telling the function to use the data coming through from the pipe. Copy this command in the code box below and run the code. Then edit it to apply Hedges' correction, then edit the code again to get the effect size for the experiment that had 200 participants.
@@ -271,14 +273,14 @@ This command takes the `teddy_tib` tibble, extracts the study based on 20 partic
 # To get the Hedges' correction we'd add hedges.correction = T:
 
 teddy_tib %>%
-  filter(study_n == "Total N = 20") %>%
-  cohen.d(formula = self_esteem ~ group, data = ., hedges.correction = T)
+  dplyr::filter(study_n == "Total N = 20") %>%
+  effsize::cohen.d(formula = self_esteem ~ group, data = ., hedges.correction = T)
 
 # To get effectsizes we'd change the filter() function to extract the study based on 200 participants:
 
 teddy_tib %>%
-  filter(study_n == "Total N = 200") %>%
-  cohen.d(formula = self_esteem ~ group, data = ., hedges.correction = T)
+  dplyr::filter(study_n == "Total N = 200") %>%
+  effsize::cohen.d(formula = self_esteem ~ group, data = ., hedges.correction = T)
 
 ```
 
@@ -286,12 +288,12 @@ Applying the Hedges' correction to both studies, we'd get these outputs:
 
 ```{r echo = F}
 teddy_tib %>%
-  filter(study_n == "Total N = 20") %>%
-  cohen.d(formula = self_esteem ~ group, data = ., hedges.correction = T)
+  dplyr::filter(study_n == "Total N = 20") %>%
+  effsize::cohen.d(formula = self_esteem ~ group, data = ., hedges.correction = T)
 
 teddy_tib %>%
-  filter(study_n == "Total N = 200") %>%
-  cohen.d(formula = self_esteem ~ group, data = ., hedges.correction = T)
+  dplyr::filter(study_n == "Total N = 200") %>%
+  effsize::cohen.d(formula = self_esteem ~ group, data = ., hedges.correction = T)
 ```
 
 This shows that for the smaller study, the effect of cuddling a teddy compared to a box on self-esteem was *g* = -0.80 [-1.78, 0.18]. Whether *d* (or *g*) has a positive or negative sign reflects which way around you subtracted the group means. The teddy group had a mean of 15 and and box group a mean of 10. The difference between these means will be 5 if you subtract the box mean from the teddy mean (15 - 10 = 5), but -5 if you subtract the teddy mean from the box mean (10 - 15 = -5). So, to interpret the effect size look at the group means (not the plus of minus sign of *g*). In this case, self-esteem is 0.80 of a standard deviation higher after cuddling a teddy than after cuddling a box. The confidence interval for this effect size suggests (if we assume this sample is one of the 95% that contain the population value) that the population effect could range between -1.78 and 0.18. Crucially this means the effect could be 0, and could reflect higher self-esteem in the box group OR in the teddy group.
@@ -324,17 +326,17 @@ Restructuring data using the *tidyverse* package *tidyr* is something that I fin
 
 ```{r echo = T, eval = F}
 teddy_wide <-  teddy_sum %>%
-  gather(measure, value, -c(study_n, group)) %>%
-  unite(gp_measure, group, measure) %>% 
-  spread(gp_measure, value)
+  tidyr::gather(measure, value, -c(study_n, group)) %>%
+  tidyr::unite(gp_measure, group, measure) %>% 
+  tidyr::spread(gp_measure, value)
 ```
 
 It's a pipe that could carry gas across the Atlantic. Let's break it down.
 
 * `teddy_sum %>%`: we begin with the `teddy_sum` tibble and carry that into the next function using the pipe operator (`%>%`).
-* `gather(measure, value, -c(study_n, group))`: this takes each variable in `teddy_sum` and places its value in a variable called **value** (you can name it what you like, I chose 'value') and creates a variable called **measure** (again, you can name it differently) in which it identifies to what the value relates. For example, the if the value is from the column **mean** then the value placed in **measure** will be the word 'mean'. Crucially, I have used `-c(study_n, group)` to exclude the variables **study_n** and **group** from this process. These variables retain their existing values. To get a feel for what's happening execute the pipe just to this point in the code box (i.e., execute `teddy_sum %>% gather(measure, value, -c(study_n, group))`). Essentially the variables **mean**, **sd**, **ci_low** and **ci_upp** which were in 4 columns have been replaced by two columns: one (**measure**) contains the name of the original column and the other (**value**) contains the value.
-* `unite(gp_measure, group, measure)` is used to unite the variables **group** and **measure** into a single variable called **gp_measure** (again, choose a different name if you like). It basically combines the values from the columns and separates them with an underscore. For example, if the value of **group** is *Box* and the value of **measure** is *mean* then the resulting value in **gp_measure** will be *Box_mean*. In effect, we're creating a variable to contain column names to use when we transform the data back. Again, if you want to see what's going on use the code box to run the pipe up to this point (`teddy_sum %>% gather(measure, value, -c(study_n, group)) %>% unite(gp_measure, group, measure)`).
-* `spread(gp_measure, value)`: Finally, we spread the data back out into separate columns using **gp_measure** to define the column names and **value** to define the values placed with each column.
+* `tidyr::gather(measure, value, -c(study_n, group))`: this takes each variable in `teddy_sum` and places its value in a variable called **value** (you can name it what you like, I chose 'value') and creates a variable called **measure** (again, you can name it differently) in which it identifies to what the value relates. For example, the if the value is from the column **mean** then the value placed in **measure** will be the word 'mean'. Crucially, I have used `-c(study_n, group)` to exclude the variables **study_n** and **group** from this process. These variables retain their existing values. To get a feel for what's happening execute the pipe just to this point in the code box (i.e., execute `teddy_sum %>% tidyr::gather(measure, value, -c(study_n, group))`). Essentially the variables **mean**, **sd**, **ci_low** and **ci_upp** which were in 4 columns have been replaced by two columns: one (**measure**) contains the name of the original column and the other (**value**) contains the value.
+* `tidyr::unite(gp_measure, group, measure)` is used to unite the variables **group** and **measure** into a single variable called **gp_measure** (again, choose a different name if you like). It basically combines the values from the columns and separates them with an underscore. For example, if the value of **group** is *Box* and the value of **measure** is *mean* then the resulting value in **gp_measure** will be *Box_mean*. In effect, we're creating a variable to contain column names to use when we transform the data back. Again, if you want to see what's going on use the code box to run the pipe up to this point (`teddy_sum %>% tidyr::gather(measure, value, -c(study_n, group)) %>% tidyr::unite(gp_measure, group, measure)`).
+* `tidyr::spread(gp_measure, value)`: Finally, we spread the data back out into separate columns using **gp_measure** to define the column names and **value** to define the values placed with each column.
 
 ```{r ted_restruc, exercise = TRUE, exercise.lines = 8}
 
@@ -342,9 +344,9 @@ It's a pipe that could carry gas across the Atlantic. Let's break it down.
 
 ```{r ted_restruc-solution}
 teddy_wide <-  teddy_sum %>%
-  gather(measure, value, -c(study_n, group)) %>%
-  unite(gp_measure, group, measure) %>% 
-  spread(gp_measure, value)
+  tidyr::gather(measure, value, -c(study_n, group)) %>%
+  tidyr::unite(gp_measure, group, measure) %>% 
+  tidyr::spread(gp_measure, value)
 teddy_wide
 ```
 
@@ -363,7 +365,8 @@ Run the full pipe to create this new tibble (which I've called `teddy_wide`). Ex
 The variables for the teddy bear group have been named a bit clunkily (because we'd defined the group as 'Teddy Bear'). Let's tidy these names up using the `rename()` function:
 
 ```{r echo = T, eval = F}
-teddy_wide <- teddy_wide %>% rename(
+teddy_wide <- teddy_wide %>%
+  rename(
    teddy_ci_low = `Teddy Bear_ci_low`,
    teddy_ci_upp = `Teddy Bear_ci_upp`,
    teddy_mean = `Teddy Bear_mean`,
@@ -374,7 +377,10 @@ teddy_wide <- teddy_wide %>% rename(
 This code recreates the `teddy_wide` tibble from itself but creates a variable **teddy_ci_low** from the variable currently called **\`Teddy Bear_ci_low\`** and do on. In effect I'm renaming the 'Teddy Bear' variables to omit spaces and remove upper case letters (and be shorter). Try this in the code box and inspect the resulting tibble.
 
 ```{r ted_rename-setup}
-teddy_wide <-  teddy_sum %>% gather(measure, value, -c(study_n, group)) %>% unite(gp_measure, group, measure) %>% spread(gp_measure, value)
+teddy_wide <-  teddy_sum %>%
+  tidyr::gather(measure, value, -c(study_n, group)) %>%
+  tidyr::unite(gp_measure, group, measure) %>%
+  tidyr::spread(gp_measure, value)
 ```
 
 ```{r ted_rename, exercise = TRUE, exercise.lines = 8}
@@ -382,7 +388,8 @@ teddy_wide <-  teddy_sum %>% gather(measure, value, -c(study_n, group)) %>% unit
 ```
 
 ```{r ted_rename-solution}
-teddy_wide <- teddy_wide %>% rename(
+teddy_wide <- teddy_wide %>%
+  rename(
    teddy_ci_low = `Teddy Bear_ci_low`,
    teddy_ci_upp = `Teddy Bear_ci_upp`,
    teddy_mean = `Teddy Bear_mean`,
@@ -394,7 +401,8 @@ teddy_wide
 Well done if you're still with me! Let's now do the (relatively) easy bit. Now we have the group means in columns, it's relatively straightforward to use `mutate()` to add a column that contains *d*:
 
 ```{r echo = T, eval = F}
-teddy_wide <- teddy_wide %>% mutate(
+teddy_wide <- teddy_wide %>%
+  dplyr::mutate(
   d = (teddy_mean - Box_mean)/Box_sd
 )
 ```
@@ -403,9 +411,13 @@ This code re-creates the `teddy_wide` tibble from itself, but then uses `mutate(
 
 
 ```{r ted_d-setup}
-teddy_wide <-  teddy_sum %>% gather(measure, value, -c(study_n, group)) %>% unite(gp_measure, group, measure) %>% spread(gp_measure, value)
+teddy_wide <-  teddy_sum %>%
+  tidyr::gather(measure, value, -c(study_n, group)) %>%
+  tidyr::unite(gp_measure, group, measure) %>%
+  tidyr::spread(gp_measure, value)
 
-teddy_wide <- teddy_wide %>% rename(
+teddy_wide <- teddy_wide %>%
+  rename(
    teddy_ci_low = `Teddy Bear_ci_low`,
    teddy_ci_upp = `Teddy Bear_ci_upp`,
    teddy_mean = `Teddy Bear_mean`,
@@ -418,7 +430,8 @@ teddy_wide <- teddy_wide %>% rename(
 ```
 
 ```{r ted_d-solution}
-teddy_wide <- teddy_wide %>% mutate(
+teddy_wide <- teddy_wide %>%
+  dplyr::mutate(
   d = (teddy_mean - Box_mean)/Box_sd
 )
 teddy_wide
@@ -471,18 +484,18 @@ It has some other arguments not listed above, but these are the key ones for our
 Like when we computed an effect size we're going to use a pipe (`%>%`) to link:
 
 * `teddy_tib`: our input will be the tibble of raw data
-* `filter(study_n == "Total N = 20")`: we're going to filter that tibble to extract the experiment based on a sample size of 20
-* `data.frame()`: converts the tibble to a data frame. This step is necessary because (at the time of writing) tibbles confuse the `ttetstBF()` function and you'll get an error.By converting the tibble to a data frame before passing it into `ttetstBF()`, we avoid the error. 
+* `dplyr::filter(study_n == "Total N = 20")`: we're going to filter that tibble to extract the experiment based on a sample size of 20
 * `ttestBF()` the function described above will compute the Bayes factor.
 
 ```{r echo = T, eval = F}
 teddy_tib %>%
-  filter(study_n == "Total N = 20") %>%
-  data.frame() %>%
-  ttestBF(formula = self_esteem ~ group, data = .)
+  dplyr::filter(study_n == "Total N = 20") %>%
+  BayesFactor::ttestBF(formula = self_esteem ~ group, data = .)
 ```
 
-This command takes the `teddy_tib` tibble, extracts the study based on 20 participants, converts it to a data frame (because `ttestBF` doesn't like tibbles) then applies the `ttestBF()` function. Within this function we have left the defaults as they are (i.e. a 'medium' prior scale value of 0.707), our formula specifies that we're predicting **self_esteem** from the variable **group** (which defines whether the individual hugs a teddy or a box), and we specify the data within the function with a period (`data = .`). By using a period we're telling the function to use the data coming through from the pipe. Copy this command in the code box below and run the code. Then edit it to get the Bayes factor for the experiment that had 200 participants.
+This command takes the `teddy_tib` tibble, extracts the study based on 20 participants, then applies the `ttestBF()` function. You'll get a warning about data coerced from a atibble to a dataframe because the function works with dataframes so it converts your tibble to a data frame. The warning is nothing to worry about.
+
+Within this function we have left the defaults as they are (i.e. a 'medium' prior scale value of 0.707), our formula specifies that we're predicting **self_esteem** from the variable **group** (which defines whether the individual hugs a teddy or a box), and we specify the data within the function with a period (`data = .`). By using a period we're telling the function to use the data coming through from the pipe. Copy this command in the code box below and run the code. Then edit it to get the Bayes factor for the experiment that had 200 participants.
 
 ```{r try_bf, exercise = TRUE, exercise.lines = 8}
 
@@ -490,9 +503,8 @@ This command takes the `teddy_tib` tibble, extracts the study based on 20 partic
 
 ```{r try_bf-solution}
 teddy_tib %>%
-  filter(study_n == "Total N = 200") %>%
-  data.frame() %>%
-  ttestBF(formula = self_esteem ~ group, data = .)
+  dplyr::filter(study_n == "Total N = 200") %>%
+  BayesFactor::ttestBF(formula = self_esteem ~ group, data = .)
 ```
 
 The resulting Bayes factor is 1.27 which means that the probability of the data given the alternative hypothesis is about the same as the probability of the data given the null. The value here suggests that we should not change our prior beliefs. By using the default prior we assigned a 50% probability to the effect size (*d*) lying between −0.7071 and +0.7071, and this Bayes factor tells us not to change this belief.
@@ -531,7 +543,7 @@ In the code box, produce some code to:
 ```
 
 ```{r task-solution}
-zhang_plot <- ggplot(zhang_female_tib, aes(name, accuracy))
+zhang_plot <- ggplot2::ggplot(zhang_female_tib, aes(name, accuracy))
 zhang_plot +
   stat_summary(fun.data = "mean_cl_normal", size = 1) +
   coord_cartesian(ylim = c(0,100)) + 
@@ -539,19 +551,15 @@ zhang_plot +
   labs(x = "Experimental condition", y = "Accuracy on maths test (%)") +
   theme_bw()
 
-#Either of these two will work to get g:
+#to get g:
 zhang_female_tib %>%
-  cohen.d(formula = accuracy ~ name, data = ., hedges.correction = T)
+  effsize::cohen.d(formula = accuracy ~ name, data = ., hedges.correction = T)
 
-cohen.d(formula = accuracy ~ name, data = zhang_female_tib, hedges.correction = T)
-
-#Either of these two will work to get a Bayes factor:
+#to get a Bayes factor:
 
 zhang_female_tib %>%
-  data.frame %>%
-  ttestBF(formula = accuracy ~ name, data = .)
+  BayesFactor::ttestBF(formula = accuracy ~ name, data = .)
 
-ttestBF(formula = accuracy ~ name, data = data.frame(zhang_female_tib))
 ```
 
 

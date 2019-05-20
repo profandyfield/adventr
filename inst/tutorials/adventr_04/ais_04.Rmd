@@ -186,7 +186,7 @@ In the book, Zach and Milton spot an unusual score (an *outlier*) in Alice's dat
 ```
 
 ```{r ras_hist-solution}
-ras_hist<-ggplot(ras_tib, aes(rating))
+ras_hist <- ggplot2::ggplot(ras_tib, aes(rating))
 ras_hist +
   geom_histogram(binwidth = 1, fill = "#56B4E9", colour = "#56B4E9", alpha = 0.6) +
   labs(x = "Relationship assessment score (7-35)", y = "Frequency") +

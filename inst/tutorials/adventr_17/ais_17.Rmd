@@ -24,7 +24,7 @@ library(WRS2)
 
 
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
 hint_text <- function(text, text_color = "#E69F00"){
@@ -148,18 +148,18 @@ Adapt the above instructions to load the second data file into a tibble called `
 
 ### Categorical variables
 
-When working within the tutorial the data are already prepared for you. However, if you are trying to replicate the tutorial within R or R Studio then you need to explicitly convert categorical predictors to factor. The first data file, which you have loaded into `alice_tib` has two categorical variables (**picture** and **gene*), which will be read in from the csv file as character variables. To convert these variables to factors we can use the `as_factor()` function from the `forcats` package. There are several ways to do this, but the most tidyverse way is to use `mutate()` from `tidyverse`, which is a way of adding variables to a tibble or overwriting existing variables. We could execute:
+When working within the tutorial the data are already prepared for you. However, if you are trying to replicate the tutorial within R or R Studio then you need to explicitly convert categorical predictors to factor. The first data file, which you have loaded into `alice_tib` has two categorical variables (**picture** and **gene*), which will be read in from the csv file as character variables. To convert these variables to factors we can use the `as_factor()` function from the `forcats` package. There are several ways to do this, but the most tidyverse way is to use `mutate()` from `dplyr`, which is a way of adding variables to a tibble or overwriting existing variables. We could execute:
 
 ```{r, echo = TRUE, eval = FALSE}
 library(tidyverse)
 alice_tib <- alice_tib %>% 
-  mutate(
+  dplyr::mutate(
     picture = forcats::as_factor(picture),
     gene = forcats::as_factor(gene)
   )
 ```
 
-This code recreates the `alice_tib` tibble from itself then uses mutate to recreate the variables **picture** and **gene** from themselves by placing each one in turn within the `as_factor()` function. I have explicitly declared that I want to use the `as_factor()` function from the package `forcats` because the package `haven` also has an `as_factor()` function.
+This code recreates the `alice_tib` tibble from itself then uses mutate to recreate the variables **picture** and **gene** from themselves by placing each one in turn within the `as_factor()` function.
 
 We can do the same for the second data file, which you have stored in `mem_cov_tib`. This tibble contains one categoircal variable called **group**. We can convert this variable to a factor by adapting the code above:
 
@@ -167,7 +167,7 @@ We can do the same for the second data file, which you have stored in `mem_cov_t
 library(tidyverse)
 
 mem_cov_tib <- mem_cov_tib %>% 
-  mutate(
+  dplyr::mutate(
     group = forcats::as_factor(group)
   )
 ```
@@ -220,11 +220,11 @@ Using what you've learnt in previous tutorials, create a tibble called `alice_su
 
 ```{r desc-solution}
 alice_summary <- alice_tib %>%
-  group_by(gene, picture) %>%
-  summarize(
+  dplyr::group_by(gene, picture) %>%
+  dplyr::summarize(
     mean = mean(resemblance),
-    ci_low = ci(resemblance)["CI lower"],
-    ci_upp = ci(resemblance)["CI upper"]
+    ci_low = gmodels::ci(resemblance)["CI lower"],
+    ci_upp = gmodels::ci(resemblance)["CI upper"]
 )
 alice_summary              
 ```
@@ -237,19 +237,19 @@ It would be useful to get some means for the main effects of **gene** and **pict
 
 ```{r me-solution}
 gene_main <- alice_tib %>%
-  group_by(gene) %>%
-  summarize(
+  dplyr::group_by(gene) %>%
+  dplyr::summarize(
     mean = mean(resemblance),
-    ci_low = ci(resemblance)["CI lower"],
-    ci_upp = ci(resemblance)["CI upper"]
+    ci_low = gmodels::ci(resemblance)["CI lower"],
+    ci_upp = gmodels::ci(resemblance)["CI upper"]
 )
 
 pic_main <- alice_tib %>%
-  group_by(picture) %>%
-  summarize(
+  dplyr::group_by(picture) %>%
+  dplyr::summarize(
     mean = mean(resemblance),
-    ci_low = ci(resemblance)["CI lower"],
-    ci_upp = ci(resemblance)["CI upper"]
+    ci_low = gmodels::ci(resemblance)["CI lower"],
+    ci_upp = gmodels::ci(resemblance)["CI upper"]
 )
 
 gene_main  
@@ -267,7 +267,7 @@ Let's plot the data. Use the code box below to create an error bar chart with **
 ```
 
 ```{r plot-solution}
-alice_plot<-ggplot(alice_tib, aes(gene, resemblance, colour = picture))
+alice_plot <- ggplot2::ggplot(alice_tib, aes(gene, resemblance, colour = picture))
 alice_plot +
   stat_summary(fun.data = "mean_cl_normal", position = position_dodge(width = 0.5)) +
   scale_colour_manual(values = c("#E69F00", "#56B4E9")) + 
@@ -380,8 +380,8 @@ So, to get Type III sums of squares we do the following:
 contrasts(alice_tib$picture) <- c(1, -1)
 contrasts(alice_tib$gene) <- c(1, -1)
 gen_mod2 <- lm(resemblance ~ gene*picture, data = alice_tib)
-Anova(gen_mod2, type = 3)
-Anova(gen_mod2, type = 3, white.adjust = "hc3")
+car::Anova(gen_mod2, type = 3)
+car::Anova(gen_mod2, type = 3, white.adjust = "hc3")
 ```
 
 
@@ -397,8 +397,8 @@ Use the code box to generate *F*-statistics for this model based on Type III sum
 contrasts(alice_tib$picture) <- c(1, -1)
 contrasts(alice_tib$gene) <- c(1, -1)
 gen_mod2 <- lm(resemblance ~ gene*picture, data = alice_tib)
-Anova(gen_mod2, type = 3)
-Anova(gen_mod2, type = 3, white.adjust = "hc3")
+car::Anova(gen_mod2, type = 3)
+car::Anova(gen_mod2, type = 3, white.adjust = "hc3")
 ```
 
 
@@ -426,12 +426,12 @@ gen_mod <- lm(resemblance ~ gene*picture, data = alice_tib)
 ```
 
 ```{r gen_mod_hc4-solution}
-robust(gen_mod, conf.int = T)
-robust(gen_mod, vcov.type = "HC4", conf.int = T)
+sjstats::robust(gen_mod, conf.int = T)
+sjstats::robust(gen_mod, vcov.type = "HC4", conf.int = T)
 ```
 
 ### Robust *F*s
-We saw in the previous section that if we evaluate effects with an *F*-statistic we can correct for heteroscedasticity by including `white.adjust = "hc3"` in the `Anova()` function.
+We saw in the previous section that if we evaluate effects with an *F*-statistic we can correct for heteroscedasticity by including `white.adjust = "hc3"` in the `car::Anova()` function.
 
 ### Robust estimates
 
@@ -443,7 +443,7 @@ In *advetr_14* we used the `lmRob()` function from the `robust` package (again, 
 ```
 
 ```{r gen_mod_robust-solution}
-gen_rob <- lmRob(resemblance ~ gene*picture, data = alice_tib)
+gen_rob <- robust::lmRob(resemblance ~ gene*picture, data = alice_tib)
 summary(gen_rob)   
 ```
 
@@ -473,10 +473,10 @@ See if you can run the three commands in the code box below based on my descript
 ```
 
 ```{r alice_wrs-solution}
-t2way(resemblance ~ gene*picture, data = alice_tib)
-mcp2atm(resemblance ~ gene*picture, data = alice_tib)
-pbad2way(resemblance ~ gene*picture, data = alice_tib, nboot = 1000)
-mcp2a(resemblance ~ gene*picture, data = alice_tib, nboot = 1000)
+WRS2::t2way(resemblance ~ gene*picture, data = alice_tib)
+WRS2::mcp2atm(resemblance ~ gene*picture, data = alice_tib)
+WRS2::pbad2way(resemblance ~ gene*picture, data = alice_tib, nboot = 1000)
+WRS2::mcp2a(resemblance ~ gene*picture, data = alice_tib, nboot = 1000)
 ```
 
 Because our predictors are both made up of only two categories, there isn't really any need for *post hoc* tests (because the main effects can only reflect the difference between the two groups). Based on `t2way()` we'd conclude that there was a significant main effect of **gene**, *Q* = 451.36, *p* = 0.001, a significant main effect of **picture**, *Q* = 65.50, *p* = 0.001, and a significant interaction between the two, *Q* = 61.47, *p* = 0.001. `pbad2way()` returns only *p*-values for each effect, and these are all 0, which would again suggest all effects in the model are significant.
@@ -497,9 +497,12 @@ We're going to build three models: (1) **gene** as the only predictor; (2) a mod
 For our data (using the default prior) we could execute the following to create our three models:
 
 ```{r echo = T, eval = F}
-gene_bf <- lmBF(formula = resemblance ~ gene, data = data.frame(alice_tib))
-pic_bf <- lmBF(formula = resemblance ~ gene + picture, data = data.frame(alice_tib))
-int_bf <- lmBF(formula = resemblance ~ gene + picture + gene:picture, data = data.frame(alice_tib))
+gene_bf <- alice_tib %>% 
+  BayesFactor::lmBF(formula = resemblance ~ gene, data = .)
+pic_bf <- alice_tib %>% 
+  BayesFactor::lmBF(formula = resemblance ~ gene + picture, data = .)
+int_bf <- alice_tib %>% 
+  BayesFactor::lmBF(formula = resemblance ~ gene + picture + gene:picture, data = .)
 ```
 
 The first line creates model 1 and stores it in the object `gene_bf`, the second line creates model 2 and stores it in the object `pic_bf` and the third line creates model 3 and stores it in the object `int_bf`. having created them we can compare them with the following commands:
@@ -519,9 +522,13 @@ Try these commands in the code box:
 ```
 
 ```{r gene_bf-solution}
-gene_bf <- lmBF(formula = resemblance ~ gene, data = data.frame(alice_tib))
-pic_bf <- lmBF(formula = resemblance ~ gene + picture, data = data.frame(alice_tib))
-int_bf <- lmBF(formula = resemblance ~ gene + picture + gene:picture, data = data.frame(alice_tib))
+gene_bf <- alice_tib %>% 
+  BayesFactor::lmBF(formula = resemblance ~ gene, data = .)
+pic_bf <- alice_tib %>% 
+  BayesFactor::lmBF(formula = resemblance ~ gene + picture, data = .)
+int_bf <- alice_tib %>% 
+  BayesFactor::lmBF(formula = resemblance ~ gene + picture + gene:picture, data = .)
+
 gene_bf
 pic_bf/gene_bf
 int_bf/pic_bf
@@ -596,13 +603,16 @@ contrasts(mem_cov_tib$group) <- cbind(interference_vs_none, erase_vs_replace)
 mem_cov_mod <- lm(recall ~ working_mem + group, data = mem_cov_tib)
 summary(mem_cov_mod)
 
-Anova(mem_cov_mod, type = 3)
-robust(mem_cov_mod)
-mem_cov_rob <- lmRob(recall ~ working_mem + group, data = mem_cov_tib)
+car::Anova(mem_cov_mod, type = 3)
+sjstats::robust(mem_cov_mod)
+mem_cov_rob <- robust::lmRob(recall ~ working_mem + group, data = mem_cov_tib)
 summary(mem_cov_rob)
 
-wm_bf <- lmBF(formula = recall ~ working_mem, data = data.frame(mem_cov_tib))
-grp_bf <- lmBF(formula = recall ~ working_mem + group, data = data.frame(mem_cov_tib))
+wm_bf <- mem_cov_tib %>% 
+  BayesFactor::lmBF(formula = recall ~ working_mem, data = .)
+grp_bf <- mem_cov_tib %>% 
+  BayesFactor::lmBF(formula = recall ~ working_mem + group, data = .)
+
 wm_bf
 grp_bf/wm_bf
 ```

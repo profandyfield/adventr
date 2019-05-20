@@ -17,7 +17,7 @@ library(gmodels)
 library(nlme)
 library(WRS2)
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
 hint_text <- function(text, text_color = "#E69F00"){
@@ -181,13 +181,13 @@ The data are organised in what is known as the *wide format*. In this format, ea
 > 
 > ... Messy data is any other arrangement of the data.
 
-To make our data 'tidy' we can use the `gather()` function from the `tidyverse` suite of packages. This function gathers columns together and puts them into a single column (across multiple rows). It takes the form:
+To make our data 'tidy' we can use the `gather()` function from the `tidyverse` suite of packages (specifically `tidyr`). This function gathers columns together and puts them into a single column (across multiple rows). It takes the form:
 
 `gather(data, key = "name_of_column_containing_variable_information", value = "name_of_column_containing_values")`
 
 Basically, you enter the name of the tibble that you want to restructure. It will stack all of the values from the columns into a single column with the name that you provide in the `value` argument, and it will list the original column names in a variable with the name that you provide in the `key` argument. If you ignore the `key` and `value` arguments the function will use the names **key** and **value**. To get a feel for what happens, try executing:
 
-`gather(calcite_tib)`
+`tidyr::gather(calcite_tib)`
 
 in the code box below.
 
@@ -195,20 +195,16 @@ Our initial tibble had 20 rows (one for each participant) and 3 columns (**id**,
 
 This structure isn't helpful to us because it has gathered *all* of the original columns, and we need it to gather only the **actual** and **different** columns leaving the **id** column alone (because this column tells us to which participant a score belongs). We can tell the function to leave the **id** column alone by using a minus sign (`-id`). We should also define the `key` and `value` names. We might call the *key* variable **face_type**, because it will represent whether the face beamed to the ID chip was the actual face or a different one, and the *value* variable **recognition** because it contains recognition scores (out of 20). Putting all of this together we could execute:
 
-`gather(calcite_tib, key = "face_type", value = "recognition", -id)`
+`tidyr::gather(calcite_tib, key = "face_type", value = "recognition", -id)`
 
-Try this command is the code box. The resulting tibble should have 40 rows (each of 20 participants under each of the two conditions) and three columns (**id** tells us the participant number, **face_type** defines the experimental condition, and **recognition** contains the recognition score for each participant in each experimental condition). These data are tidy. So we can use this restructured tibble we need to save it into an object. Let's call it `calcite_tidy`. We can do this by either placing the original tibble into the `gather()` function:
-
-`calcite_tidy <- gather(calcite_tib, key = "face_type", value = "recognition", -id)`
-
-or by using a pipe:
+Try this command is the code box. The resulting tibble should have 40 rows (each of 20 participants under each of the two conditions) and three columns (**id** tells us the participant number, **face_type** defines the experimental condition, and **recognition** contains the recognition score for each participant in each experimental condition). These data are tidy. So we can use this restructured tibble we need to save it into an object. Let's call it `calcite_tidy`. We can do this using a pipe:
 
 ```
 calcite_tidy <- calcite_tib %>% 
-  gather(key = "face_type", value = "recognition", -id)
+  tidyr::gather(key = "face_type", value = "recognition", -id)
 ```
 
-Execute one of these commands in the code box, and then inspect the resulting tibble.
+Execute this command in the code box, and inspect the resulting tibble.
 
 
 ```{r gather_tib, exercise = TRUE}
@@ -217,7 +213,7 @@ Execute one of these commands in the code box, and then inspect the resulting ti
 
 ```{r gather_tib-solution}
 calcite_tidy <- calcite_tib %>%
-  gather(key = "face_type", value = "recognition", -id)
+  tidyr::gather(key = "face_type", value = "recognition", -id)
 
 calcite_tidy
 ```
@@ -234,11 +230,11 @@ Use what you've learnt in previous tutorials to create a tibble called `calcite_
 
 ```{r desc-solution}
 calcite_summary <- calcite_tidy %>%
-  group_by(face_type) %>%
-  summarize(
+  dplyr::group_by(face_type) %>%
+  dplyr::summarize(
     mean_recognition = mean(recognition),
-    ci_low_recognition = ci(recognition)["CI lower"],
-    ci_upp_recognition = ci(recognition)["CI upper"]
+    ci_low_recognition = gmodels::ci(recognition)["CI lower"],
+    ci_upp_recognition = gmodels::ci(recognition)["CI upper"]
 )
 calcite_summary              
 ```
@@ -254,7 +250,7 @@ Use the code box below to create an error bar chart with **face_type** on the *x
 ```
 
 ```{r scat-solution}
-calcite_plot <- ggplot(calcite_tidy, aes(face_type, recognition))
+calcite_plot <- ggplot2::ggplot(calcite_tidy, aes(face_type, recognition))
 calcite_plot +
   geom_point(colour = "#E69F00", position = position_jitter(width = 0.1, height = 0)) +
   stat_summary(fun.data = "mean_cl_normal", geom = "pointrange") +
@@ -268,7 +264,7 @@ calcite_plot +
 
 ## Fitting the model
 
-It looks like recognition scores are lower in the *different* condition. To fit the model we use the `lme()` function, because we are fitting a linear model with a categorical predictor, but we want to also model the dependency between scores. This function is explained in the tutorial **adventr_mlm**, just to recap it takes the following general form (I've retained only the key options):
+It looks like recognition scores are lower in the *different* condition. To fit the model we use the `lme()` function from the `nlme` package, because we are fitting a linear model with a categorical predictor, but we want to also model the dependency between scores. This function is explained in the tutorial **adventr_mlm**, just to recap it takes the following general form (I've retained only the key options):
 
 `new_object <- lme(outcome ~ predictors, random = formula, data = tibble, method = "REML", na.action = na.fail)`
 
@@ -283,7 +279,7 @@ It looks like recognition scores are lower in the *different* condition. To fit 
 We could, therefore, specify the model as:
 
 ```{r echo = TRUE, eval = FALSE}
-calcite_rs <- lme(recognition ~ face_type, random = ~ face_type|id, data = calcite_tidy, method = "ML")
+calcite_rs <- nlme::lme(recognition ~ face_type, random = ~ face_type|id, data = calcite_tidy, method = "ML")
 summary(calcite_rs)
 intervals(calcite_rs, which = "fixed")
 ```
@@ -298,7 +294,7 @@ Try executing these commands in the code box.
 ```
 
 ```{r lme_1-solution}
-calcite_rs <- lme(recognition ~ face_type, random = ~ face_type|id, data = calcite_tidy, method = "ML")
+calcite_rs <- nlme::lme(recognition ~ face_type, random = ~ face_type|id, data = calcite_tidy, method = "ML")
 summary(calcite_rs)
 intervals(calcite_rs, which = "fixed")
 ```
@@ -378,9 +374,15 @@ The arguments are:
 To specify *x* and *y* we need to extract them from our tibble. (I will describe one approach that is consistent with using *tidy* data, but there are others.) We would start by creating separate objects for the scores in the *actual* and *different* conditions, using `select()` and `filter()`, then insert these into the `yuend()` function:
 
 ```{r echo = TRUE, eval = FALSE}
-actual <- calcite_tidy %>% filter(face_type == "actual") %>% select(recognition)
-different <- calcite_tidy %>% filter(face_type == "different") %>% select(recognition)
-yuend(different, actual, tr = 0.2)
+actual <- calcite_tidy %>%
+  dplyr::filter(face_type == "actual") %>%
+  dplyr::select(recognition)
+
+different <- calcite_tidy %>%
+  dplyr::filter(face_type == "different") %>%
+  dplyr::select(recognition)
+
+WRS2::yuend(different, actual, tr = 0.2)
 ```
 
 The first line takes the `calcite_tidy` tibble and filters it to retain only the scores relating to when the variable **face_type** has a value equal to "actual", it then selects the variable **recognition**, which contains the recognition scores. This pipe basically extracts the 20 recognition scores from the *actual* condition and stores them in a tibble called **actual**. The second command does the same but extracts the 20 recognition scores from the *different* condition and stores them in a tibble called **different**. The third lines applies the `yuend()` to the two tibbles we have just created. (You can exclude `tr = 0.2` because it is the default but I have left it there to make explicit that we are performing a 20% trim.)
@@ -393,14 +395,14 @@ Execute these commands in the code box (if stuck, click ![](./images/solution.pn
 
 ```{r calcite_wrs-solution}
 actual <- calcite_tidy %>%
-  filter(face_type == "actual") %>%
-  select(recognition)
+  dplyr::filter(face_type == "actual") %>%
+  dplyr::select(recognition)
 
 different <- calcite_tidy %>%
-  filter(face_type == "different") %>%
-  select(recognition)
+  dplyr::filter(face_type == "different") %>%
+  dplyr::select(recognition)
 
-yuend(different, actual, tr = 0.2)
+WRS2::yuend(different, actual, tr = 0.2)
 ```
 
 Note that the trimmed mean difference is -2.75 (rather than the raw mean difference of -2.35). This difference is not significant because *p* = 0.087 and the confidence intervals cross zero, indicating that if this is one of the 95% of samples where the confidence interval contains the population value, then the population difference between means could be positive, negative or zero.
@@ -421,7 +423,7 @@ To specify *x* and *y* we can use the **actual** and **different** objects that 
 It's a good idea to save this model into a new object (lets call it `calcite_bf`) because you can do useful things with it (we didn't do this for the `yuend()` functions, but you could). For our data (using the default prior) we could execute:
 
 ```{r echo = T, eval = F}
-calcite_bf <- ttestBF(different$recognition, actual$recognition, paired = TRUE)
+calcite_bf <- BayesFactor::ttestBF(different$recognition, actual$recognition, paired = TRUE)
 calcite_bf
 ```
 
@@ -429,12 +431,12 @@ The first line creates the object `calcite_bf` as described above and the second
 
 ```{r calcite_bf-setup}
 actual <- calcite_tidy %>%
-  filter(face_type == "actual") %>%
-  select(recognition)
+  dplyr::filter(face_type == "actual") %>%
+  dplyr::select(recognition)
 
 different <- calcite_tidy %>%
-  filter(face_type == "different") %>%
-  select(recognition)
+  dplyr::filter(face_type == "different") %>%
+  dplyr::select(recognition)
 ```
 
 ```{r calcite_bf, exercise = TRUE}
@@ -442,7 +444,7 @@ different <- calcite_tidy %>%
 ```
 
 ```{r calcite_bf-solution}
-calcite_bf <- ttestBF(different$recognition, actual$recognition, paired = TRUE)
+calcite_bf <- BayesFactor::ttestBF(different$recognition, actual$recognition, paired = TRUE)
 calcite_bf
 ```
 
@@ -453,7 +455,7 @@ The value matches that in the book (*an adventure in statistics*). The Bayes fac
 We can get estimate of the parameters in the model using the `posterior()` function that we used in **adventr_15** to extract the same information. The process is identical to what we did in that previous tutorial. We place the object we just created (`calcite_bf`) into the function and specify a number of iterations, then use the `summary()` function to view what we have created:
 
 ```{r echo = T, eval = F}
-calcite_bf_est <- posterior(calcite_bf, iterations = 10000)
+calcite_bf_est <- BayesFactor::posterior(calcite_bf, iterations = 10000)
 summary(calcite_bf_est)
 ```
 
@@ -461,14 +463,14 @@ Try executing these two commands to view the estimates:
 
 ```{r calcite_bf_est-setup}
 actual <- calcite_tidy %>%
-  filter(face_type == "actual") %>%
-  select(recognition)
+  dplyr::filter(face_type == "actual") %>%
+  dplyr::select(recognition)
 
 different <- calcite_tidy %>%
-  filter(face_type == "different") %>%
-  select(recognition)
+  dplyr::filter(face_type == "different") %>%
+  dplyr::select(recognition)
 
-calcite_bf <- ttestBF(different$recognition, actual$recognition, paired = TRUE)
+calcite_bf <- BayesFactor::ttestBF(different$recognition, actual$recognition, paired = TRUE)
 ```
 
 ```{r calcite_bf_est, exercise = TRUE}
@@ -476,7 +478,7 @@ calcite_bf <- ttestBF(different$recognition, actual$recognition, paired = TRUE)
 ```
 
 ```{r calcite_bf_est-solution}
-calcite_bf_est <- posterior(calcite_bf, iterations = 10000)
+calcite_bf_est <- BayesFactor::posterior(calcite_bf, iterations = 10000)
 summary(calcite_bf_est)
 ```
 

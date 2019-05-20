@@ -16,7 +16,7 @@ library(robust)
 library(effects)
 
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
 hint_text <- function(text, text_color = "#E69F00"){
@@ -41,9 +41,9 @@ recovery_tib <- recovery_tib %>%
     )
 
 recovery_freq <- recovery_tib %>%
-  group_by(treatment, dose, recovered) %>%
-  summarize(n = n()) %>% 
-  group_by(treatment, dose) %>% 
+  dplyr::group_by(treatment, dose, recovered) %>%
+  dplyr::summarize(n = n()) %>% 
+  dplyr::group_by(treatment, dose) %>% 
   mutate(
     rel_freq = n / sum(n),
     perc = rel_freq*100
@@ -189,10 +189,10 @@ However, the variables **id**, **treatment**, and **recovered** currently have t
 library(forcats); library(tidyverse) #Not nessesary inside this tutorial
 
 recovery_tib <- recovery_tib %>% 
-  mutate(
+  dplyr::mutate(
     id = forcats::as_factor(id),
-    treatment = as_factor(treatment) %>% fct_relevel("No toggle switch"),
-    recovered = as_factor(recovered) %>% fct_relevel("Not recovered")
+    treatment = forcats::as_factor(treatment) %>% forcats::fct_relevel("No toggle switch"),
+    recovered = forcats::as_factor(recovered) %>% forcats::fct_relevel("Not recovered")
     )
 ```
 
@@ -206,10 +206,10 @@ Try the above code in the box and then use the `levels()` function (e.g., `level
 
 ```{r factors-solution}
 recovery_tib <- recovery_tib %>% 
-  mutate(
+  dplyr::mutate(
     id = forcats::as_factor(id),
-    treatment = as_factor(treatment) %>% fct_relevel("No toggle switch"),
-    recovered = as_factor(recovered) %>% fct_relevel("Not recovered")
+    treatment = forcats::as_factor(treatment) %>% forcats::fct_relevel("No toggle switch"),
+    recovered = forcats::as_factor(recovered) %>% forcats::fct_relevel("Not recovered")
     )
 
 levels(recovery_tib$treatment)
@@ -249,10 +249,10 @@ A different approach is to use the `dplyr` functions from `tidyverse` and a pipe
 
 ```{r echo = TRUE, eval = FALSE}
 recovery_freq <- recovery_tib %>%
-  group_by(treatment, dose, recovered) %>%
-  summarize(n = n()) %>% 
-  group_by(treatment, dose) %>% 
-  mutate(
+  dplyr::group_by(treatment, dose, recovered) %>%
+  dplyr::summarize(n = n()) %>% 
+  dplyr::group_by(treatment, dose) %>% 
+  dplyr::mutate(
     rel_freq = n / sum(n),
     perc = rel_freq*100
   )
@@ -280,10 +280,10 @@ As I said, it can be useful to execute parts of the pipe to see how it builds up
 
 ```{r freqs-solution}
 recovery_freq <- recovery_tib %>%
-  group_by(treatment, dose, recovered) %>%
-  summarize(n = n()) %>% 
-  group_by(treatment, dose) %>% 
-  mutate(
+  dplyr::group_by(treatment, dose, recovered) %>%
+  dplyr::summarize(n = n()) %>% 
+  dplyr::group_by(treatment, dose) %>% 
+  dplyr::mutate(
     rel_freq = n / sum(n),
     perc = rel_freq*100
   )
@@ -297,7 +297,7 @@ You should see a tibble with 20 rows representing the different combinations of 
 The first plot we'll do uses the original data and plots the number recovered over the top of the number not recovered. We'll plot the **dose** along the *x*-axis and create different panels for the two treatment conditions. This is the code:
 
 ```{r echo = TRUE, eval = FALSE}
-recovery_plot <- ggplot(recovery_tib, aes(dose, fill = recovered, colour = recovered))
+recovery_plot <- ggplot2::ggplot(recovery_tib, aes(dose, fill = recovered, colour = recovered))
 recovery_plot +
   geom_histogram(binwidth = 1, position = "identity", alpha = 0.6) +
   scale_colour_manual(values = c("#DF4738", "#009E73")) +
@@ -325,7 +325,7 @@ Use the code box to draw this plot. Try deleting lines and observing the effect 
 ```
 
 ```{r plot_1-solution}
-recovery_plot <- ggplot(recovery_tib, aes(dose, fill = recovered, colour = recovered))
+recovery_plot <- ggplot2::ggplot(recovery_tib, aes(dose, fill = recovered, colour = recovered))
 recovery_plot +
   geom_histogram(binwidth = 1, position = "identity", alpha = 0.6) +
   scale_colour_manual(values = c("#DF4738", "#009E73")) +
@@ -341,7 +341,7 @@ An alternative plot that I used in the lecture was one that plotted the percenta
 We plot data from this tibble:
 
 ```{r echo = TRUE, eval = FALSE}
-percent_plot <- ggplot(recover_percent, aes(dose, perc, colour = treatment))
+percent_plot <- ggplot2::ggplot(recover_percent, aes(dose, perc, colour = treatment))
 percent_plot +
   geom_line(size = 1) +
   geom_point(size = 3, alpha = 0.7) +
@@ -375,9 +375,9 @@ Use the code box to draw this plot. Try deleting lines and observing the effect 
 
 ```{r plot_2-solution}
 recover_percent <- recovery_freq %>%
-  filter(recovered == "Recovered")
+  dplyr::filter(recovered == "Recovered")
 
-percent_plot <- ggplot(recover_percent, aes(dose, perc, colour = treatment))
+percent_plot <- ggplot2::ggplot(recover_percent, aes(dose, perc, colour = treatment))
 percent_plot +
   geom_line(size = 1) +
   geom_point(size = 3, alpha = 0.7) +
@@ -437,15 +437,15 @@ The question is, what values do we enter into the function? Notice that the obje
 ```{r echo = TRUE, eval = FALSE}
 model_dev <- recovery_mod %>%
   anova() %>%
-  as_tibble() %>%
-  mutate(
+  tibble::as_tibble() %>%
+  dplyr::mutate(
   chi_p = pchisq(Deviance, Df, lower.tail = FALSE)
 )
 
 model_dev
 ```
 
-First we feed the `recovery_mod` object into the `anova()` function to get the table of deviances, which we then feed into the `as_tibble()` function to convert the table to a tibble. We then use `mutate()` to add a column to this tibble. I call this column `chi_p` and the values in it are created by entered the value from the **Deviance** variable (already in the tibble) as the chi-square value, the corresponding value from the **Df** variable (also already in the tibble) as the df value, and asking for the probability from the upper tail by setting `lower.tail = FALSE`. The result will be the same table that the `anova()` function returned but with an additional column containing the *p*-values. I store the resulting tibble in an object called `model_dev`. Try the code above in the code box.
+First we feed the `recovery_mod` object into the `anova()` function to get the table of deviances, which we then feed into the `as_tibble()` function (from the `tibble` package within `tidyverse`) to convert the table to a tibble. We then use `mutate()` from `dplyr` to add a column to this tibble. I call this column `chi_p` and the values in it are created by entered the value from the **Deviance** variable (already in the tibble) as the chi-square value, the corresponding value from the **Df** variable (also already in the tibble) as the df value, and asking for the probability from the upper tail by setting `lower.tail = FALSE`. The result will be the same table that the `anova()` function returned but with an additional column containing the *p*-values. I store the resulting tibble in an object called `model_dev`. Try the code above in the code box.
 
 ```{r dev_p, exercise = TRUE, exercise.setup = "prepare-data"}
      
@@ -455,8 +455,8 @@ First we feed the `recovery_mod` object into the `anova()` function to get the t
 ```{r dev_p-solution}
 model_dev <- recovery_mod %>%
   anova() %>%
-  as_tibble() %>%
-  mutate(
+  tibble::as_tibble() %>%
+  dplyr::mutate(
   chi_p = pchisq(Deviance, Df, lower.tail = FALSE)
 )
 
@@ -596,14 +596,16 @@ We can plot the interaction effect using the `allEffects()` function from the pa
 
 ```{r plot_int, exercise = TRUE, exercise.setup = "prepare-data"}
 library(effects)
-allEffects(recovery_mod) %>%
+recovery_mod %>% 
+  effects::allEffects() %>%
   plot()           
 ```
 
 ```{r plot_int-solution}
 library(effects)
-allEffects(recovery_mod) %>%
-  plot()
+recovery_mod %>% 
+  effects::allEffects() %>%
+  plot() 
 ```
 
 
@@ -611,7 +613,7 @@ allEffects(recovery_mod) %>%
 
 It is also possible to create a robust model using the `glmRob()` function from the `robust` package. This takes the same form as the `glm()` function but returns robust estimates of parameters and associated standard errors and *p*-values. To create a robust variant of the model we would execute:
 
-`recovery_rob <- glmRob(recovered ~ treatment*dose, data = recovery_tib, family = binomial())`
+`recovery_rob <- robust::glmRob(recovered ~ treatment*dose, data = recovery_tib, family = binomial())`
 
 which creates an object `recovery_rob` that contains robust model parameters. We can summarise it with `summary()`. Try this in the code box below and compare the resulting model to the one you created earlier. Basically, the parameter estimates (*b*s) don't change much and the conclusions of the model stay largely the same. Having generated a robust model you would, of course, compute odds ratios (but not confidence intervals). Try doing this too by adapting the code you used earlier.
 
@@ -621,7 +623,7 @@ which creates an object `recovery_rob` that contains robust model parameters. We
 ```
 
 ```{r robust_mod-solution}
-recovery_rob<- glmRob(recovered ~ treatment*dose, data = recovery_tib, family = binomial())
+recovery_rob<- robust::glmRob(recovered ~ treatment*dose, data = recovery_tib, family = binomial())
 summary(recovery_rob)
 
 coef(recovery_rob) %>%

@@ -26,8 +26,8 @@ jig_tib <- adventr::jig_dat
 
 strength_sum <-
   jig_tib %>%
-  group_by(employee, sex) %>%
-  summarize(
+  dplyr::group_by(employee, sex) %>%
+  dplyr::summarize(
     mean_strength = mean(strength),
     med_strength = median(strength),
     var_strength = var(strength),
@@ -37,8 +37,8 @@ strength_sum <-
 
 strength_sum <-
   jig_tib %>%
-  group_by(employee, sex) %>%
-  summarize(
+  dplyr::group_by(employee, sex) %>%
+  dplyr::summarize(
     mean_strength = mean(strength),
     med_strength = median(strength),
     var_strength = var(strength),
@@ -170,18 +170,22 @@ You should see a tibble with 7 variables:
 
 ### Creating summaries by group
 
-In several graphs in Nutcot's report the data are summarized by group (for example JIG:SAW employees vs. non-employees). We can summarize data by applying the `group_by()` and `summarize()` functions from the tidyverse package to our tibble. For example, lets saw we wanted to get the mean visual acuity separately for the JIG:SAW employees and non-employees and store these values in a tibble called `vis_mean`. We could achieve this using the following pipe command:
+In several graphs in Nutcot's report the data are summarized by group (for example JIG:SAW employees vs. non-employees). We can summarize data by applying the `group_by()` and `summarize()` functions from the tidyverse package (specifically the `dplyr` package) to our tibble. For example, lets saw we wanted to get the mean visual acuity separately for the JIG:SAW employees and non-employees and store these values in a tibble called `vis_mean`. We could achieve this using the following pipe command:
 
 
 ```{r echo = T, eval = F}
-vis_mean <- jig_tib %>% group_by(employee) %>% summarize(mean = mean(vision))
+vis_mean <- jig_tib %>%
+  dplyr::group_by(employee) %>%
+  dplyr::summarize(
+    mean = mean(vision)
+    )
 ```
 
 Let's break this command down:
 
 * `vis_mean <- jig_tib %>%` translates as create an object called `vis_mean` and the starting point is to copy the tibble called `jig_tib`. The pipe operator (`%>%`) indicates that more processing will be done on the `jig_tib` tibble before `vis_mean` is created.
-* `group_by(employee) %>%` tells **R** to group by the variable **employeee** and because this command comes after the pipe operator we know that the thing that we're going to 'group by' employee is the object before the pipe operator (i.e. `jig_tib`). If `group_by` is used outside of a pipe command then you need to specify a data frame or tibble within it otherwise it won't know what object to group. the pipe operator again tells **R** that there is more processing to come.
-* `summarize(mean = mean(vision))` creates a new variable called `mean_vis` within the tibble and then uses the function `mean()`, which we learnt about in a previous tutorial, to place values into that variable.
+* `dplyr::group_by(employee) %>%` tells **R** to group by the variable **employeee** and because this command comes after the pipe operator we know that the thing that we're going to 'group by' employee is the object before the pipe operator (i.e. `jig_tib`). If `group_by()` is used outside of a pipe command then you need to specify a data frame or tibble within it otherwise it won't know what object to group. the pipe operator again tells **R** that there is more processing to come.
+* `dplyr::summarize(mean = mean(vision))` creates a new variable called `mean_vis` within the tibble and then uses the function `mean()`, which we learnt about in a previous tutorial, to place values into that variable.
 
 The easiest way to get a feel for what's happening is to execute the code and see what happens. The code is already types into the code box to show you a good way to format this kind of piped command. Note that the top line sets up the object to be created, then the commands to control *how* the object is created are indented on the lines below. You start a new line after each pipe operator (so that it's easy to see the components of the pipe), and within the `summarize()` command we indent any commands. It may not be obvious why we do this, but it will when we move onto more complex examples.
 
@@ -190,8 +194,8 @@ The final line `vis_mean` is there simply to display the newly created object. R
 ```{r gb_vis, exercise = TRUE}
 vis_mean <-
   jig_tib %>%
-  group_by(employee) %>%
-  summarize(
+  dplyr::group_by(employee) %>%
+  dplyr::summarize(
     mean_vis = mean(vision)
     )
 vis_mean
@@ -208,8 +212,8 @@ Use the code box (and the example above) to create a tibble called `strength_mea
 ```{r gb_stnth-solution}
 strength_mean <-
   jig_tib %>%
-  group_by(employee, sex) %>%
-  summarize(
+  dplyr::group_by(employee, sex) %>%
+  dplyr::summarize(
     mean_strength = mean(strength)
     )
 strength_mean
@@ -222,8 +226,8 @@ We're not restricted to the mean, we can use all of the functions that we learnt
 ```{r echo = T, eval = F}
 speed_sum <-
   jig_tib %>%
-  group_by(employee, sex) %>%
-  summarize(
+  dplyr::group_by(employee, sex) %>%
+  dplyr::summarize(
     mean_speed = mean(footspeed),
     med_speed = median(footspeed),
     var_speed = var(footspeed),
@@ -232,7 +236,7 @@ speed_sum <-
     )
 ```    
 
-Note that I have listed several commands within the summarize function. Each one is separated by a comma (the `IQR()` function is not followed by a comma because it is the last command). Each line within the `summarize()` function creates a variable based on a function such as `mean()`. For example, `mean_speed = mean(footspeed)` creates a new variable called **mean_speed** which contains the mean value of the variable **footspeed**.
+Note that I have listed several commands within the `summarize()` function. Each one is separated by a comma (the `IQR()` function is not followed by a comma because it is the last command). Each line within the `summarize()` function creates a variable based on a function such as `mean()`. For example, `mean_speed = mean(footspeed)` creates a new variable called **mean_speed** which contains the mean value of the variable **footspeed**.
 
 This example should make it clearer why it is useful to format the command using indented lines: it is really simple to see what variables are being created. Note that because we have no missing values I have not needed to specify the `na.rm = ` option in any of the functions within `summarize()` but I have specified `type = 8` for the IQR to override the default value of 7. Copy this code into the box below and run it. Include the name of the tibble as a final line to inspect the resulting tibble.
 
@@ -243,8 +247,8 @@ This example should make it clearer why it is useful to format the command using
 ```{r spd_sum-solution}
 speed_sum <-
   jig_tib %>%
-  group_by(employee, sex) %>%
-  summarize(
+  dplyr::group_by(employee, sex) %>%
+  dplyr::summarize(
     mean_speed = mean(footspeed),
     med_speed = median(footspeed),
     var_speed = var(footspeed),
@@ -263,8 +267,8 @@ You should see a tibble with 4 rows representing the different combinations of J
 ```{r stnth_sum-solution}
 strength_sum <-
   jig_tib %>%
-  group_by(employee, sex) %>%
-  summarize(
+  dplyr::group_by(employee, sex) %>%
+  dplyr::summarize(
     mean_strength = mean(strength),
     med_strength = median(strength),
     var_strength = var(strength),
@@ -281,7 +285,7 @@ strength_sum
 Figure 5.6 in *An adventure in statistics* shows a boxplot of **footspeed** split by **employee**. This is easy to create in `ggplot` using the `geom_boxplot()` function. We could set up the plot with this command:
 
 ```{r echo = T, eval = F}
-speed_box <- ggplot(jig_tib, aes(employee, footspeed))
+speed_box <- ggplot2::ggplot(jig_tib, aes(employee, footspeed))
 speed_box +
   geom_boxplot() +
   labs(x = "Employee status", y = "Footspeed (mph)") +
@@ -290,7 +294,7 @@ speed_box +
 
 Let's break down this command (refer back to the tutorial on `ggplot2` if you need to):
 
-* `speed_box <- ggplot(jig_tib, aes(employee, footspeed))` creates an object called `speed_box` that contains the plot. The `ggplot()` function is then used to specify that the plot uses the `jig_tib` tibble and plots the variable **employee** on the *x*-axis and the variable **footspeed** on the *y*-axis.
+* `speed_box <- ggplot2::ggplot(jig_tib, aes(employee, footspeed))` creates an object called `speed_box` that contains the plot. The `ggplot()` function is then used to specify that the plot uses the `jig_tib` tibble and plots the variable **employee** on the *x*-axis and the variable **footspeed** on the *y*-axis.
 * `speed_box + geom_boxplot() +` takes the object `speed_box` and adds a boxplot geom to it.
 * `labs(x = "Employee status", y = "Footspeed (mph)") +` applies descriptive labels to the *x* and *y* axes.
 * `theme_bw()` applies a black and white theme to the plot
@@ -302,7 +306,7 @@ Copy this code into the box and run it to see the boxplot.
 ```
 
 ```{r spd_box-solution}
-speed_box <- ggplot(jig_tib, aes(employee, footspeed, fill = sex))
+speed_box <- ggplot2::ggplot(jig_tib, aes(employee, footspeed, fill = sex))
 speed_box +
   geom_boxplot() +
   labs(x = "Employee status", y = "Footspeed (mph)") +
@@ -311,7 +315,7 @@ speed_box +
 
 Job done. If we wanted to split the data by a second grouping variable (for example **sex**) we can do this by specifying that `ggplot` varies the `fill` of the boxes or the `colour` of the lines around the boxes by this second variable. To do this we add this specification to the `aes()` function in the original command to set up the graph. For example, we'd change the first line to be:
 
-`speed_box <- ggplot(jig_tib, aes(employee, footspeed, fill = sex))`
+`speed_box <- ggplot2::ggplot(jig_tib, aes(employee, footspeed, fill = sex))`
 
 Note that all I have done is to add `fill = sex` to the initial aesthetic. The rest of the command can stay the same. Adapt the code above to include `fill = sex` and run it again. Note that the graph now splits the data by **employee** along the *x*-axis and within that splits it by **sex** using different colours to fill the boxes. Now change the word 'fill' to 'colour' and run the code again. You should see that now the data and the box outlines and whiskers are coloured differently for men and women.
 
@@ -338,7 +342,7 @@ In which you change *"colour_1"* etc. to be the name of a colour of a hex code. 
 Our completed code would be:
 
 ```{r echo = T, eval = F}
-speed_box <- ggplot(jig_tib, aes(employee, footspeed, fill = sex))
+speed_box <- ggplot2::ggplot(jig_tib, aes(employee, footspeed, fill = sex))
 speed_box +
   geom_boxplot() +
   labs(x = "Employee status", y = "Footspeed (mph)", fill = "Biological sex") +
@@ -353,7 +357,7 @@ Copy this code into the box below and run it to see how the fill of the boxes ha
 ```
 
 ```{r spd_box2-solution}
-speed_box <- ggplot(jig_tib, aes(employee, footspeed, colour = sex))
+speed_box <- ggplot2::ggplot(jig_tib, aes(employee, footspeed, colour = sex))
 speed_box +
   geom_boxplot() +
   labs(x = "Employee status", y = "Footspeed (mph)", fill = "Biological sex") +
@@ -366,7 +370,7 @@ speed_box +
 Plotting means is slightly more tricky. If you want to plot from the raw data (rather than a tibble containing the summary information) then your best bet is to use the `stat_summary()` function and then specify the geom to use within it. Let's begin by plotting the mean **strength** split by **employee**. We can do this with the following command:
 
 ```{r echo = T, eval = F}
-strength_plot <- ggplot(jig_tib, aes(employee, strength))
+strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength))
 strength_plot +
   stat_summary(fun.y = "mean", geom = "point", size = 4)
 ```
@@ -378,7 +382,7 @@ All we're doing here is setting up the plot as normal and then adding `stat_summ
 ```
 
 ```{r stgth_box-solution}
-strength_plot <- ggplot(jig_tib, aes(employee, strength))
+strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength))
 strength_plot +
   stat_summary(fun.y = "mean", geom = "point", size = 4) +
   labs(x = "Employee status", y = "Maximal push force (n)") +
@@ -410,7 +414,7 @@ There are other options, but I have listed the four main ones, which are:
 The code box below displays the code that you used above to generate the previous plot. Add `facet_wrap(~sex)` to the command and execute the code to see what happens.
 
 ```{r stgth_facet, exercise = TRUE, exercise.lines = 8}
-strength_plot <- ggplot(jig_tib, aes(employee, strength))
+strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength))
 strength_plot +
   stat_summary(fun.y = "mean", geom = "point", size = 4) +
   labs(x = "Employee status", y = "Maximal push force (n)") +
@@ -434,14 +438,14 @@ strength_plot +
 
 Another approach is to plot **sex** not in different panels, but in different colours or fills. Doing so is a bit more involved. Lets start by varying males and females by colour. To set this up, we can start by adding `colour = sex` to the aesthetic where we set up the plot:
 
-`strength_plot <- ggplot(jig_tib, aes(employee, strength, colour = sex))`
+`strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength, colour = sex))`
 
 Compare this with the first line of code in the box below (which replicates the plot split solely by **employee**). Add `colour = sex` into the first line and run the code. What happens?
 
 You should find that the male and female means and CIs appear in different colours, but they appear at the same horizontal location (that is, the male points are directly above the female ones). For these data that doesn't particularly matter because the error bars don't overlap. However, if they did overlap it would be difficult to interpret the plot.
 
 ```{r stgth_col1, exercise = TRUE, exercise.lines = 8}
-strength_plot <- ggplot(jig_tib, aes(employee, strength))
+strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength))
 strength_plot +
   stat_summary(fun.y = "mean", geom = "point", size = 4) +
   labs(x = "Employee status", y = "Maximal push force (n)") +
@@ -471,7 +475,7 @@ Add this function to the command in the box below (place it *before* the `stat-s
 
 
 ```{r stgth_raw, exercise = TRUE, exercise.lines = 9}
-strength_plot <- ggplot(jig_tib, aes(employee, strength, colour = sex))
+strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength, colour = sex))
 strength_plot +
   stat_summary(fun.y = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9)) +
   labs(x = "Employee status", y = "Maximal push force (n)", colour = "Biological sex") +
@@ -481,7 +485,7 @@ strength_plot +
 ```
 
 ```{r stgth_raw-solution}
-strength_plot <- ggplot(jig_tib, aes(employee, strength, colour = sex))
+strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength, colour = sex))
 strength_plot +
   geom_point(position = position_dodge(width = 0.9), alpha = 0.3) +
   stat_summary(fun.y = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9)) +
@@ -517,7 +521,7 @@ to be
 Run the code and you should see that the raw data points are crosses.
 
 ```{r stgth_shape, exercise = TRUE, exercise.lines = 9}
-strength_plot <- ggplot(jig_tib, aes(employee, strength, colour = sex))
+strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength, colour = sex))
 strength_plot +
   geom_point(position = position_dodge(width = 0.9), alpha = 0.3) +
   stat_summary(fun.y = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9)) +
@@ -534,7 +538,7 @@ strength_plot +
 Zach also showed Dr Tuff a scatterplot of **footspeed** against **strength**. At the simplest level we could set this up as:
 
 ```{r echo = T, eval = F}
-scat <- ggplot(jig_tib, aes(footspeed, strength))
+scat <- ggplot2::ggplot(jig_tib, aes(footspeed, strength))
 scat +
   geom_point()
 ```
@@ -563,7 +567,7 @@ Add this function to the code box (underneath `geom_point()`) and run the code t
 ```
 
 ```{r scat-solution}
-scat <- ggplot(jig_tib, aes(footspeed, strength))
+scat <- ggplot2::ggplot(jig_tib, aes(footspeed, strength))
 scat +
   geom_point(colour = "#56B4E9", size = 2, alpha = 0.6) +
   geom_smooth(method = "lm", colour = "#E69F00", fill = "#E69F00") +

@@ -1,7 +1,7 @@
 Package: adventr
 Type: Package
-Title: Interactive Tutorials to Accompany An Adventure in Statistics (Field, 2016)
-Version: 0.1.1
+Title: Interactive tutorials to accompany An Adventure in Statistics (Field, 2016)
+Version: 0.1.4
 Author: person("Andy", "Field", email = "andyf@sussex.ac.uk", role = c("aut", "cre"))
 Maintainer: Andy Field <andyf@sussex.ac.uk>
 Description: This package contains a series of tutorials written using the learnr
@@ -21,6 +21,7 @@ Imports:
   Hmisc,
   lm.beta,
   robust,
+  sandwich,
   sjstats,
   tidyverse,
   WRS2

@@ -16,7 +16,7 @@ library(tidyverse)
 library(gmodels)
 library(nlme)
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
 hint_text <- function(text, text_color = "#E69F00"){
@@ -26,28 +26,30 @@ hint_text <- function(text, text_color = "#E69F00"){
 
 #Read dat files needed for the tutorial
 
-rehab_growth_dat <- adventr::rehab_growth_dat
+rehab_growth_tib <- adventr::rehab_growth_dat
 
 #setup objects for code blocks
 
 ```
 
 ```{r echo = FALSE, prepare-data}
-rehab_growth_dat$id <- factor(rehab_growth_dat$id)
-rehab_growth_dat$intervention <- factor(rehab_growth_dat$intervention)
-rehab_growth_dat$time <- factor(rehab_growth_dat$time)
-rehab_growth_dat$intervention <- fct_relevel(rehab_growth_dat$intervention, "Wait list")
-rehab_growth_dat$time <- fct_relevel(rehab_growth_dat$time, "t12", after = Inf)
+
+rehab_growth_tib <- rehab_growth_tib %>% 
+  mutate(
+    id = forcats::as_factor(id),
+    intervention = forcats::as_factor(intervention) %>% fct_relevel("Wait list"),
+    time = forcats::as_factor(time) %>% fct_relevel("t12", after = Inf)
+  )
 ```
 
 # An Adventure in R: Growth models
 
 ## Overview
 
-This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] by me, [Andy Field](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
 
 * Who is the tutorial aimed at?
-    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+    - Anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/)  may find them useful.
 * What is covered?
     - This tutorial gives a very basic introduction to growth models. It goes beyond what is covered in the book, but would be a useful tutorial to follow-up the tutorials on repeated measures designs from Chapters 15 and 16 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
     - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
@@ -128,18 +130,18 @@ This tutorial has the data files pre-loaded so you shouldn't need to do anything
 You can load the file in several ways:
 
 * Assuming that you save this file into the working directory, you can load it by executing:
-    - `rehab_growth_dat <- read_csv("ais_rehab_growth_model.csv")`
+    - `rehab_growth_tib <- read_csv("ais_rehab_growth_model.csv")`
     - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
 * To load the file using a standard dialogue box to navigate your file system, execute:
-    - `rehab_growth_dat <- read_csv(file.choose())`
+    - `rehab_growth_tib <- read_csv(file.choose())`
 * You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
-    - `rehab_growth_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_growth_model.csv")`
+    - `rehab_growth_tib <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_growth_model.csv")`
     - This method relies on an internet connection (and my server having not exploded!)
 
 
 ## The model
 
-At the end of the book it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset relates to her second attempt. She obtained data from 141 code 1318 workers measured at four time points (baseline and 1, 6, and 12 month follow-up). Workers were randomly assigned to two arms of the trial (wait list vs. C-gene therapy) and the outcome was how much they resembled their pre-zombie state (as a percentage). Alice predicted that resemblance scores would increase over time in the gene therapy group relative to those on the wait list (because this would indicate that those workers' appearances would more closely resemble their pre-zombification state). The data are in the tibble `rehab_growth_dat` which has 564 rows (141 participants measured at each of 4 time points) and 5 variables:
+At the end of the book it is revealed that Alice used her C-gene therapy to restore the code 1318 workers to a human state. This dataset relates to her second attempt. She obtained data from 141 code 1318 workers measured at four time points (baseline and 1, 6, and 12 month follow-up). Workers were randomly assigned to two arms of the trial (wait list vs. C-gene therapy) and the outcome was how much they resembled their pre-zombie state (as a percentage). Alice predicted that resemblance scores would increase over time in the gene therapy group relative to those on the wait list (because this would indicate that those workers' appearances would more closely resemble their pre-zombification state). The data are in the tibble `rehab_growth_tib` which has 564 rows (141 participants measured at each of 4 time points) and 5 variables:
 
 * **id**: Participant ID
 * **intervention**: character vector that codes which arm of the trial the participant was randomized to (wait list or gene therapy)}
@@ -178,60 +180,46 @@ $$
 ## Exploring the data
 ### Preparing the data
 
-The data are already in *tidy* format, so we don't need to restructure them. Use the code box to inspect the `rehab_growth_dat` tibble.
+The data are already in *tidy* format, so we don't need to restructure them. Use the code box to inspect the `rehab_growth_tib` tibble.
 
-```{r inspect_dat, exercise = TRUE}
+```{r inspect_tib, exercise = TRUE}
      
 ```
 
-```{r inspect_dat-solution}
-rehab_growth_dat   
+```{r inspect_tib-solution}
+rehab_growth_tib   
 ```
 
-However, the variables **id**, **intervention**, and **time** currently have the data type of character. This is fine for a lot of what we want to do (because **R** is fairly intelligent about how it treats character variables). However, for some things (like assigning contrasts) we need these variables to be defined as factors. We can do this by using the `factor()` function, which we have met before. For example, we could execute:
+However, the variables **id**, **intervention**, and **time** currently have the data type of character. This is fine for a lot of what we want to do (because **R** is fairly intelligent about how it treats character variables). However, for some things (like assigning contrasts) we need these variables to be defined as factors. We can do this by using the `mutate()` and `as_factor()` functions, which we have met before. For example, we could execute:
 
 ```{r echo = TRUE, eval = FALSE}
-rehab_growth_dat$id <- factor(rehab_growth_dat$id)
-rehab_growth_dat$intervention <- factor(rehab_growth_dat$intervention)
-rehab_growth_dat$time <- factor(rehab_growth_dat$time)
+rehab_growth_tib <- rehab_growth_tib %>% 
+  dplyr::mutate(
+    id = forcats::as_factor(id),
+    intervention = forcats::as_factor(intervention),
+    time = forcats::as_factor(time)
+  )
 ```
 
-Try this in the code box and then use the `levels()` function (e.g., `levels(rehab_growth_dat$time)`) on the three variables to see how **R** has assigned 'levels' of the factors.
+Try this in the code box and then use the `levels()` function (e.g., `levels(rehab_growth_tib$time)`) on the three variables to see how **R** has assigned 'levels' of the factors.
 
 ```{r factors, exercise = TRUE, exercise.lines = 6}
            
 ```
 
 ```{r factors-solution}
-rehab_growth_dat$id <- factor(rehab_growth_dat$id)
-rehab_growth_dat$intervention <- factor(rehab_growth_dat$intervention)
-rehab_growth_dat$time <- factor(rehab_growth_dat$time)
-levels(rehab_growth_dat$id)
-levels(rehab_growth_dat$intervention)
-levels(rehab_growth_dat$time)
+rehab_growth_tib <- rehab_growth_tib %>% 
+  dplyr::mutate(
+    id = forcats::as_factor(id),
+    intervention = forcats::as_factor(intervention),
+    time = forcats::as_factor(time)
+  )
+levels(rehab_growth_tib$id)
+levels(rehab_growth_tib$intervention)
+levels(rehab_growth_tib$time)
 ```
 
-Note that levels have been assigned alphabetically. So, for **intervention** the first level is *Gene therapy* and the second is *Wait list*. This is a problem because the levels of **time** have been ordered as *t0*, *t1*, *t12* and *t6*, which are out of sequence (we'd want *t12* to be after *t6*), and for **intervention** it will make the interpretation of the model parameter (*b*) more straightforward if the base/first category is the wait list not the gene therapy group. We could use `fct_relevel()` from the `forcats` package to change the order (see **adventr_mlm**). For example, we could execute:
-
-```{r echo = TRUE, eval = FALSE}
-rehab_growth_dat$intervention <- fct_relevel(rehab_growth_dat$intervention, "Wait list")
-rehab_growth_dat$time <- fct_relevel(rehab_growth_dat$time, "t12", after = Inf)
-```
-
-In both case we re-create each factor from itself. In the case of **intervention**, by specifying only *Wait list* we invoke the default behaviour of moving this level to the first level (which simply swaps the order or the two levels). In the case of **time** we use `after = Inf` to move *t12* to the end of the list. Use the code box to execute these commands, but also use `levels` to inspect the order of levels of the two variables as we did before.
-
-```{r factor_2, exercise = TRUE}
-     
-```
-
-```{r factor_2-solution}
-rehab_growth_dat$intervention <- fct_relevel(rehab_growth_dat$intervention, "Wait list")
-rehab_growth_dat$time <- fct_relevel(rehab_growth_dat$time, "t12", after = Inf)
-levels(rehab_growth_dat$intervention)
-levels(rehab_growth_dat$time)
-```
-
-You should see that *Wait list* is now the first level of **intervention** and that the levels of time are now in the correct order of *t0*, *t1*, *t6*, and *t12*.
+Note that levels have been assigned as they occur in the data So, for **intervention** the first level is *Wait list* and the second is *Gene therapy*. Similarly, the levels of **time** have been ordered as *t0*, *t1*, *t6* and *t12*. These orders are what we want because we need the times in the correct order and for **intervention** it makes the interpretation of the model parameter (*b*) straightforward if the base/first category is the wait list not the gene therapy group. If the levels were ordered differently we could use `fct_relevel()` from the `forcats` package to change the order (see **adventr_02**).
 
 ### Descriptive statistics
 
@@ -244,10 +232,12 @@ Using what you've learnt in previous tutorials, create a tibble called `growth_s
 ```
 
 ```{r desc-solution}
-growth_summary <-  rehab_growth_dat %>% group_by(intervention, time) %>% summarize(
-  mean = mean(resemblance),
-  ci_low = ci(resemblance)["CI lower"],
-  ci_upp = ci(resemblance)["CI upper"]
+growth_summary <-  rehab_growth_tib %>%
+  dplyr::group_by(intervention, time) %>%
+  dplyr::summarize(
+    mean = mean(resemblance),
+    ci_low = gmodels::ci(resemblance)["CI lower"],
+    ci_upp = gmodels::ci(resemblance)["CI upper"]
 )
 growth_summary              
 ```
@@ -268,7 +258,7 @@ Use the code box below to create a plot with **time_num** on the *x*-axis and **
 ```
 
 ```{r lin_plot-solution}
-growth_plot <- ggplot(rehab_growth_dat, aes(time_num, resemblance, colour = intervention, fill = intervention))
+growth_plot <- ggplot2::ggplot(rehab_growth_tib, aes(time_num, resemblance, colour = intervention, fill = intervention))
 growth_plot +
   geom_point(size = 1, position = position_jitter(width = 0.1, height = 0.1), alpha = 0.6) + 
   geom_smooth(method = "lm", alpha = 0.3) +
@@ -291,7 +281,7 @@ Now let's imagine we're treating time as a categorical variable (yuk!). Use the 
 ```
 
 ```{r err_bar-solution}
-growth_mean_plot <- ggplot(rehab_growth_dat, aes(time, resemblance, colour = intervention))
+growth_mean_plot <- ggplot2::ggplot(rehab_growth_tib, aes(time, resemblance, colour = intervention))
 growth_mean_plot +
   stat_summary(fun.data = "mean_cl_normal", size = 1, position = position_dodge(width = 0.5), alpha = 0.6) +
   scale_y_continuous(breaks = seq(20, 60, 5)) +
@@ -317,7 +307,7 @@ When we're dealing with change over time, it also means that we're treating time
 
 ### Modelling time in **RStudio**
 
-To fit the model we use the `lme()` function, because we want to model the dependency between scores over time. This function is explained in the tutorial **adventr_mlm**, just to recap it takes the following general form (I've retained only the key options):
+To fit the model we use the `lme()` function from `nlme`, because we want to model the dependency between scores over time. This function is explained in the tutorial **adventr_mlm**, just to recap it takes the following general form (I've retained only the key options):
 
 `new_object <- lme(outcome ~ predictors, random = formula, data = tibble, method = "REML", na.action = na.fail)`
 
@@ -325,14 +315,14 @@ To fit the model we use the `lme()` function, because we want to model the depen
 * `outcome`: the variable that contains the scores for the outcome measure (in this case **resemblance**).
 * `predictor`: the variable that contains information about the time at which resemblance scores were measured (in this case **time_num**).
 * `random`: defines the random parts of the model. This takes a formula in the style `~ predictor|context`. In this case our context is participants, which is represented by the variable **id**. If we want only to let intercepts vary by participant we could use `~ 1|id`, but we also want to let the effect of **time_num** vary by participant so we'd use `~ time_num|id`.
-* `tibble`: the name of the tibble containing the data (in this case `rehab_growth_dat`).
+* `tibble`: the name of the tibble containing the data (in this case `rehab_growth_tib`).
 * `method`: defines which estimation method is used. By default restricted maximum likelihood is used (REML), but if you want to compare models you should override the default and use maximum likelihood (`method = "ML"`).
 * `na.action`: If you have complete data (as we have here) exclude this option, but if you have missing values (i.e., ‘NA’s in the data frame) then by default the model will fail, so include `na.action = na.exclude` to exclude cases with missing values.
 
 We might want to test formally whether the effect of time varies by individuals (i.e., a random slope of time), in which case we can specify a random intercept model, then add the random slope, and compare the two. We can do this as:
 
 ```{r echo = TRUE, eval = FALSE}
-rehab_ri <- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_dat, method = "ML")
+rehab_ri <- nlme::lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_tib, method = "ML")
 rehab_rs <- update(rehab_ri, random = ~ time_num|id)
 anova(rehab_ri,rehab_rs)
 ```
@@ -344,7 +334,7 @@ The first line creates an object called `rehab_ri` which predicts resemblance sc
 ```
 
 ```{r lme_1-solution}
-rehab_ri <- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_dat, method = "ML")
+rehab_ri <- nlme::lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_tib, method = "ML")
 rehab_rs <- update(rehab_ri, random = ~ time_num|id)
 anova(rehab_ri,rehab_rs)
 ```
@@ -361,8 +351,8 @@ anova(rehab_ri,rehab_rs, rehab_quad)
 The first line creates an object called `rehab_quad` using the `update()` function to update the random slope model (`rehab_rs`) to include the quadratic trend of time. We did this by changing the formula so that it included the previous outcome but **not** any of the previous predictors (that's what the `.~` does, and note that there is no dot after the tilde, which means that we're excluding all predictors from the model we're updating). We add the linear and quadratic trends using the `poly()` function (`poly(time_num, 2)`). I named this model `rehab_quad` with the `_quad` to remind me it contains the quadratic trend of time. The second line uses the `anova()` function to compare the three models we have created. Try executing these commands in the code box.
 
 ```{r lme_2-setup}
-rehab_ri <- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_dat, method = "ML")
-rehab_rs <- lme(resemblance ~ time_num, random = ~  time_num|id, data = rehab_growth_dat, method = "ML")
+rehab_ri <- nlme::lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_tib, method = "ML")
+rehab_rs <- nlme::lme(resemblance ~ time_num, random = ~  time_num|id, data = rehab_growth_tib, method = "ML")
 ```
 
 ```{r lme_2, exercise = TRUE}
@@ -393,9 +383,9 @@ anova(rehab_ri,rehab_rs, rehab_quad, rehab_mod)
 The first line creates an object called `rehab_mod` using the `update()` function to update the quadratic trend model (`rehab_quad`) to include the effects of **intervention** and its interactions with time. We did this by changing the formula so that it included all previous outcomes and predictors (that's what the `.~.` does) but adding in the new effects (`+ intervention + poly(time_num, 2):intervention`). I named this model `rehab_mod`. The second line uses the `anova()` function to compare the three models we have created. Try executing these commands in the code box.
 
 ```{r lme_3-setup}
-rehab_ri <- lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_dat, method = "ML")
-rehab_rs <- lme(resemblance ~ time_num, random = ~  time_num|id, data = rehab_growth_dat, method = "ML")
-rehab_quad <- lme(resemblance ~ poly(time_num, 2), random = ~  time_num|id, data = rehab_growth_dat, method = "ML")
+rehab_ri <- nlme::lme(resemblance ~ time_num, random = ~ 1|id, data = rehab_growth_tib, method = "ML")
+rehab_rs <- nlme::lme(resemblance ~ time_num, random = ~  time_num|id, data = rehab_growth_tib, method = "ML")
+rehab_quad <- nlme::lme(resemblance ~ poly(time_num, 2), random = ~  time_num|id, data = rehab_growth_tib, method = "ML")
 ```
 
 ```{r lme_3, exercise = TRUE}
@@ -418,7 +408,7 @@ intervals(rehab_mod, which = "fixed")
 Try these commands in the code box.
 
 ```{r sum_rehab-setup}
-rehab_mod <- lme(resemblance ~ poly(time_num, 2) + intervention + poly(time_num, 2):intervention, random = ~  time_num|id, data = rehab_growth_dat, method = "ML")
+rehab_mod <- nlme::lme(resemblance ~ poly(time_num, 2) + intervention + poly(time_num, 2):intervention, random = ~  time_num|id, data = rehab_growth_tib, method = "ML")
 ```
 
 ```{r sum_rehab, exercise = TRUE}
@@ -449,7 +439,7 @@ This section is entirely unnecessary other than as a learning exercise to demons
 Anyway, in case, you come across a mixed design and you're unconvinced by using a multilevel model (or you have a small sample) I'll show you how to analyse the current example using RM-ANOVA. We'd execute (trust me):
 
 ```{r rm_anova, exercise = TRUE, exercise.setup = "prepare-data"}
-rehab_aov <- aov(resemblance ~ time*intervention + Error(id), data = rehab_growth_dat)
+rehab_aov <- aov(resemblance ~ time*intervention + Error(id), data = rehab_growth_tib)
 summary(rehab_aov)
 ```
 
@@ -458,21 +448,21 @@ Note that we use the `aov()` function (which is essentially the `lm()` function 
 To fit the same model using a multilevel approach let's start with a random slopes model. To mimic what the ANOVA does (i.e. treat time as a categorical variable) we'll use **time** rather than **time_num** (which we used in our growth models). We'd define this model as in the code box:
 
 ```{r lme_anova, exercise = TRUE, exercise.setup = "prepare-data"}
-rehab_lme <- lme(resemblance ~ time*intervention, random = ~ intervention|id, data = rehab_growth_dat)
+rehab_lme <- nlme::lme(resemblance ~ time*intervention, random = ~ intervention|id, data = rehab_growth_tib)
 anova(rehab_lme)
 ```
 
 Execute the code in the box and see that the results of the *F*-statistics and their significance values are not too dissimilar to the RM-ANOVA model, but not exactly the same. The growth model allows the effect of **intervention** to vary across participants, whereas RM-ANOVA does not. So, let's restrict the model so that it retains a random intercept (overall recall can vary across participants) but not a random slope (the effect of **intervention** is constant across participants). We achieve this restriction by changing `random = ~ intervention|id` to `random = ~ 1|id` (I've also added the suffix `_ri` for *r*andom *i*ntercept):
 
 ```{r ri_anova, exercise = TRUE, exercise.setup = "prepare-data"}
-rehab_lme_ri <- lme(resemblance ~ time*intervention, random = ~ 1|id, data = rehab_growth_dat)
+rehab_lme_ri <- nlme::lme(resemblance ~ time*intervention, random = ~ 1|id, data = rehab_growth_tib)
 anova(rehab_lme_ri)
 ```
 
 Execute the code and see that the results are basically the same as the RM-ANOVA now (probably because there wasn't a major deviation from the assumption of compound symmetry). The second restriction is to assume that covariances across conditions are equal. We can add this restriction by including the statement `correlation = corCompSymm(form = ~ intervention|id)` in the model above. This argument sets the covariance structure to have compound symmetry across the **intervention** variable (which is nested within participants). I'll change the suffix to this model to `_cs` (for *c*ompound *s*ymmetry):
 
 ```{r cs_anova, exercise = TRUE, exercise.setup = "prepare-data"}
-rehab_lme_cs<- lme(resemblance ~ time*intervention, random = ~ 1|id, data = rehab_growth_dat, correlation = corCompSymm(form = ~ intervention|id))
+rehab_lme_cs<- nlme::lme(resemblance ~ time*intervention, random = ~ 1|id, data = rehab_growth_tib, correlation = corCompSymm(form = ~ intervention|id))
 anova(rehab_lme_cs)
 ```
 

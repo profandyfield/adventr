@@ -20,16 +20,18 @@ library(sjstats)
 
 
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
 #Read dat files needed for the tutorial
 
-garlic_dat <- adventr::garlic_dat;
-taser_dat <- adventr::taser_dat
+garlic_tib <- adventr::garlic_dat;
+taser_tib <- adventr::taser_dat
 
-#setup objects for code blocks
-
+hint_text <- function(text, text_color = "#E69F00"){
+  hint <- paste("<font color='", text_color, "'>", text, "</font>", sep = "")
+  return(hint)
+}
 
 ```
 
@@ -37,10 +39,10 @@ taser_dat <- adventr::taser_dat
 
 ## Overview
 
-This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] by me, [Andy Field](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
 
 * Who is the tutorial aimed at?
-    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+    - Anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/)  may find them useful.
 * What is covered?
     - This tutorial looks at how to fit a linear model with one and more predictor variables. We look at robust variants of the model, and computing a Bayes factor. It would be a useful tutorial to run alongside teaching based on Chapter 14 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
     - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
@@ -127,19 +129,19 @@ This tutorial has the data files pre-loaded so you shouldn't need to do anything
 You can load the files in several way (using the first file as an example):
 
 * Assuming that you save this file into the working directory, you can load it by executing:
-    - `garlic_dat <- read_csv("ais_14_zombie_garlic.csv")`
+    - `garlic_tib <- read_csv("ais_14_zombie_garlic.csv")`
     - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
 * To load the file using a standard dialogue box to navigate your file system, execute:
-    - `garlic_dat <- read_csv(file.choose())`
+    - `garlic_tib <- read_csv(file.choose())`
 * You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
-    - `garlic_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_14_zombie_garlic.csv")`
+    - `garlic_tib <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_14_zombie_garlic.csv")`
     - This method relies on an internet connection (and my server having not exploded!)
 
 
 ## Zombies! A model with one predictor
 ### The model
 
-Zach breaks into the JIG:SAW complex again in a desperate final bid to find Alice and have her explain why she disappeared. Knowing that the complex is guarded by zombie security he scours the internet to find ways to repel zombies. He finds data claiming that garlic will repel zombies. Milton is skeptical and decides to get him to fit a model to the data he's gathered. Zach's data are in the tibble `garlic_dat`, which has three variables:
+Zach breaks into the JIG:SAW complex again in a desperate final bid to find Alice and have her explain why she disappeared. Knowing that the complex is guarded by zombie security he scours the internet to find ways to repel zombies. He finds data claiming that garlic will repel zombies. Milton is skeptical and decides to get him to fit a model to the data he's gathered. Zach's data are in the tibble `garlic_tib`, which has three variables:
 
 * **id**: victim ID
 * **latency**: The time taken for a zombie to approach the victim in seconds
@@ -164,7 +166,7 @@ Let's plot the data. Use the code box below to create a scatterplot with **laten
 ```
 
 ```{r scat-solution}
-scat <- ggplot(garlic_dat, aes(garlic, latency))
+scat <- ggplot2::ggplot(garlic_tib, aes(garlic, latency))
 scat +
   geom_point(colour = "#56B4E9", size = 3) +
   geom_smooth(method = "lm", colour = "#E69F00", fill = "#E69F00") +
@@ -183,14 +185,14 @@ It should be clear that a positive relationship exists: the more bulbs of garlic
 Let's look at these arguments in turn:
 
 * `outcome ~ predictor(s)`: the way we specify the model is basically to write out the model equation but ignoring the *b* values and using a tilde (~) instead of =. For example, if we want the model to predict **latency** from the variable **garlic** we write the model as `latency ~ garlic`. If, say, we had a second predictor, the time since zombification occurred (**age**), then we could fit this model by specifying `latency ~ garlic + age`. So, the model specification maps onto the equation describing the model we're fitting.
-* `data`: you use this argument to specify the tibble containing the data (e.g., `data = garlic_dat`). If you're using `lm()` within a pipe where you've previously input a tibble then remember you use `data = .`
-* `subset`: this argument allows you to specify a condition by which you subset data (a bit like you might use in the `filter()` function). For example, if you want to include only zombies younger than 10 years you could set `subset = age < 10`. Of course, you can also achieve the same thing using a pipe (`garlic_dat %>% filter(age < 10) %>% lm(latency ~ garlic, data = .)`)
+* `data`: you use this argument to specify the tibble containing the data (e.g., `data = garlic_tib`). If you're using `lm()` within a pipe where you've previously input a tibble then remember you use `data = .`
+* `subset`: this argument allows you to specify a condition by which you subset data (a bit like you might use in the `filter()` function). For example, if you want to include only zombies younger than 10 years you could set `subset = age < 10`. Of course, you can also achieve the same thing using a pipe (`garlic_tib %>% dplyr::filter(age < 10) %>% lm(latency ~ garlic, data = .)`)
 * `na.action`: this option determines how to treat missing values. By default it is set to `na.fail` which means that the model fails (it is not fit). If you have missing values then set this option to `na.omit` which removes cases, or `na.exclude` which excluded cases from the model (but does not remove them). The distinction may not be clear, so here's an example. Imagine you have a tibble with 100 cases, but 10 have missing values on either the predictor or outcome. You want to save the residuals (or predicted values) from the model into the original tibble. If you use `na.omit` this won't work because it will delete the 10 cases and fit the model to the remaining 90. Therefore, you'll have 100 cases in the tibble but only 90 residuals from the model. If you use `na.exclude` it will work because the cases are excluded but not deleted. The model is fit to 90 cases but any outputs from the model are padded with 'NA' for cases with missing values. So you'll have 100 cases in the original tibble and 100 residuals (including 10 NAs) and the two can be combined into a single tibble.
 
-We could fit our model by executing: `lm(latency ~ garlic, data = garlic_dat)` but if you do the function will return only the *b*-values. For a more informative output we enclose the function within the `summary()` function. Best practice is to create an object that contains the model, and then summarize this object. This approach has the advantage that you can extract information from the model by referring to the object that you created. For example, if you want plots relating to the model, you can execute `plot(model_name)` in which `model_name` is the name you gave to the model (more on plots later ...). For example, we could use this code:
+We could fit our model by executing: `lm(latency ~ garlic, data = garlic_tib)` but if you do the function will return only the *b*-values. For a more informative output we enclose the function within the `summary()` function. Best practice is to create an object that contains the model, and then summarize this object. This approach has the advantage that you can extract information from the model by referring to the object that you created. For example, if you want plots relating to the model, you can execute `plot(model_name)` in which `model_name` is the name you gave to the model (more on plots later ...). For example, we could use this code:
 
 ```{r echo = T, eval = F}
-garlic_mod <- lm(latency ~ garlic, data = garlic_dat)
+garlic_mod <- lm(latency ~ garlic, data = garlic_tib)
 summary(garlic_mod)
 ```
 
@@ -202,7 +204,7 @@ The first line creates an object called `garlic_mod` that contains our linear mo
 ```
 
 ```{r lm1-solution}
-garlic_mod <- lm(latency ~ garlic, data = garlic_dat)
+garlic_mod <- lm(latency ~ garlic, data = garlic_tib)
 summary(garlic_mod)
 ```
 
@@ -277,7 +279,7 @@ $$
 ## More Zombies! A model with two predictors
 ### The model
 
-Zach's garlic plan doesn't go so well: as they enter the JIG:SAW complex they are instantly confronted by a zombie horde. Escaping by the skin of their teeth they hide out in one of the buildings, where they meet a strange, deformed creature who calls himself Clint. Knowing that Alice is likely to be found in one of the research buildings they need to hatch a plan to get across the concourse before being killed by the congregating zombies. After a little research they decide that repetitive transcranial magnetic stimulation (rTMS) and a blast from a taser are likely candidates for good weaponry against zombies. Having obtained some data, Milton fits a model to predict the duration of zombie immobility (**immobility**) from the frequency at which the rTMS is delivered in Hz (**r_tms**) and the strength of the taser in kV (**taser**). The data are in `taser_dat`. The model we're fitting is described by the following equation:
+Zach's garlic plan doesn't go so well: as they enter the JIG:SAW complex they are instantly confronted by a zombie horde. Escaping by the skin of their teeth they hide out in one of the buildings, where they meet a strange, deformed creature who calls himself Clint. Knowing that Alice is likely to be found in one of the research buildings they need to hatch a plan to get across the concourse before being killed by the congregating zombies. After a little research they decide that repetitive transcranial magnetic stimulation (rTMS) and a blast from a taser are likely candidates for good weaponry against zombies. Having obtained some data, Milton fits a model to predict the duration of zombie immobility (**immobility**) from the frequency at which the rTMS is delivered in Hz (**r_tms**) and the strength of the taser in kV (**taser**). The data are in `taser_tib`. The model we're fitting is described by the following equation:
 
 $$
 \begin{aligned}
@@ -291,12 +293,12 @@ $$
 We can use the `ggpairs()` function from the `GGally` package to plot a matrix of scatterplots between our variables. This package extends the functionality of `ggplot2`. To plot the matrix of scatterplots we'll use the following pipe:
 
 ```{r echo = T, eval = F}
-taser_dat %>%
-  select(-id) %>%
-  ggpairs()
+taser_tib %>%
+  dplyr::select(-id) %>%
+  GGally::ggpairs()
 ```
 
-This pipe take the `taser_dat` tibble and then uses the `select()` function to drop the variable *id* (placing a minus sign before the variable name removes it from the tibble). Finally we apply `ggpairs()` with all the options set to their defaults. Try this in the code box below, you should get a matrix showing scatterplots between all three variables in the lower portion, and values of the correlation coefficient for each pair of variables in the top half.
+This pipe take the `taser_tib` tibble and then uses the `select()` function to drop the variable *id* (placing a minus sign before the variable name removes it from the tibble). Finally we apply `ggpairs()` with all the options set to their defaults. Try this in the code box below, you should get a matrix showing scatterplots between all three variables in the lower portion, and values of the correlation coefficient for each pair of variables in the top half.
 
 ```{r ggpair_eg, exercise = TRUE}
      
@@ -304,9 +306,9 @@ This pipe take the `taser_dat` tibble and then uses the `select()` function to d
 ```
 
 ```{r ggpair_eg-solution}
-taser_dat %>%
-  select(-id) %>%
-  ggpairs()
+taser_tib %>%
+  dplyr::select(-id) %>%
+  GGally::ggpairs()
 ```
 
 rTMS has a negative relationship with immobility and taser a positive one. There aren't any obvious outliers on these plots.
@@ -321,7 +323,7 @@ We can fit the model using the same commands as we used for the garlic model. Re
 ```
 
 ```{r taser_mod-solution}
-taser_mod <- lm(immobility ~ r_tms + taser, data = taser_dat)
+taser_mod <- lm(immobility ~ r_tms + taser, data = taser_tib)
 summary(taser_mod)
 ```
 
@@ -351,17 +353,20 @@ $$
 
 ### Standardized *b*s
 
-It's sometimes useful to standardize the model parameters. We can add these to the model using the `lm.beta()` function from the package of the same name. All we need to do is to put the object (`taser_mod`) that we created with the `lm()` function into `lm.beta()` and it will add the standardized coefficients. We can use these two lines of code:
+It's sometimes useful to standardize the model parameters. We can add these to the model using the `lm.beta()` function from the package of the same name. All we need to do is to put the object (`taser_mod`) that we created with the `lm()` function into `lm.beta()` and it will add the standardized coefficients. We can use this code:
 
 ```{r echo = T, eval = F}
-taser_mod <- lm.beta(taser_mod)
-summary(taser_mod)
+taser_modz <- taser_mod %>%
+  lm.beta::lm.beta()
+summary(taser_modz)
 ```
 
-The first line re-creates the object `taser_mod` by placing it into the `lm.beta()` function. (You don't have to give the object the same name, I just think it makes sense because all we're doing is adding standardized *b*s to the output.) The second line prints a summary of this new model. It will be the same as we have seen before except that a column of standardized *b*s has been added. Try running these two lines of code in the box.
+The pipe creates the object `taser_modz` by placing it into the `lm.beta()` function. The second line prints a summary of this new model. It will be the same as we have seen before except that a column of standardized *b*s has been added. Try running these two lines of code in the box.
+
+`r hint_text("Tip: If you add standardized betas then create a new object because you don't want the standardized values when you compute confidence intervals (next section).")`
 
 ```{r ztaser_mod-setup}
-taser_mod <- lm(immobility ~ r_tms + taser, data = taser_dat)
+taser_mod <- lm(immobility ~ r_tms + taser, data = taser_tib)
 ```
 
 ```{r ztaser_mod, exercise = TRUE}
@@ -370,8 +375,9 @@ taser_mod <- lm(immobility ~ r_tms + taser, data = taser_dat)
 ```
 
 ```{r ztaser_mod-solution}
-taser_mod <- lm.beta(taser_mod)
-summary(taser_mod)
+taser_modz <- taser_mod %>% 
+  lm.beta::lm.beta()
+summary(taser_modz)
 ```
 
 ```{r quiz_zb}
@@ -391,6 +397,8 @@ The standardized beta for taser tells us that as taser voltage increases by one 
 ### Confidence intervals
 
 To get confidence intervals for the *b*-values we place the model into the `confint()` function and execute (in our case we could execute `confint(taser_mod)`). Try this in the code box.
+
+`r hint_text("Tip: It is important that you do NOT pass an object from lm.beta() into confint(). If you do, confint() will attempt to calculate confidence intervals for the standardized betas but based on the standard errors for the *unstandardized* betas. In short, the output will be gibberish.")`
 
 ```{r taser_mod_ci, exercise = TRUE, exercise.setup = "ztaser_mod-setup"}
      
@@ -441,7 +449,7 @@ Execute this command in the code box:
 Our model doesn't look like it is biased by heteroscedasticity or influential cases.However, if we had found cause for concern, there are numerous ways to produce robust parameter estimates and confidence intervals. There is a good case to be made for always applying a robust method and checking that the results are consistent with the non-robust model [@RN10588]. There are numerous options (more than I've listed in this section). The first is to use the `lmRob()` function from the `robust` package, which returns *b*-values estimated using robust methods. The function is used in the same way as `lm()` so you can copy your earlier code and replace `lm` with `lmRob`. For example:
 
 ```{r echo = T, eval = F}
-taser_rob <- lmRob(immobility ~ r_tms + taser, data = taser_dat)
+taser_rob <- robust::lmRob(immobility ~ r_tms + taser, data = taser_tib)
 summary(taser_rob)
 ```
 
@@ -453,7 +461,7 @@ Try this code in the code box:
 ```
 
 ```{r taser_mod_robust-solution}
-taser_rob <- lmRob(immobility ~ r_tms + taser, data = taser_dat)
+taser_rob <- robust::lmRob(immobility ~ r_tms + taser, data = taser_tib)
 summary(taser_rob)   
 ```
 
@@ -462,14 +470,14 @@ summary(taser_rob)
 
 A second option is to apply one of the methods for producing standard errors (and hence confidence intervals) that are robust to heteroscedasticity. This is particularly useful if the main problem is heteroscedasticity. The `robust()` function from the `sjstats` package will compute these for any model you've created with `lm`. It has the general form:
 
-`robust(lm_mod, vcov = c("HC3", "const", "HC", "HC0", "HC1", "HC2", "HC4", "HC4m", "HC5"), conf.int = FALSE)`
+`robust(lm_mod, vcov.type = c("HC3", "const", "HC", "HC0", "HC1", "HC2", "HC4", "HC4m", "HC5"), conf.int = FALSE)`
 
-The `lm_mod` is the name of any model created with `lm()`, you use `vcov` to determine which method to use (it defaults to "HC3") and, if you want confidence intervals change the default of `conf.int = FALSE` to be `conf.int = TRUE`
+The `lm_mod` is the name of any model created with `lm()`, you use `vcov.type` to determine which method to use (it defaults to "HC3") and, if you want confidence intervals change the default of `conf.int = FALSE` to be `conf.int = TRUE`
 
-The methods (HC0 to HC5) to estimate standard errors (and, therefore, confidence intervals) are described clearly in [@RN5348]. In short, HC3 have been shown to outperform HC0 to HC2 [@RN11398] but HC4 and HC5 outperform HC3 in some circumstances [@RN11402]. Basically, either use the default of HC3 (by not explicitly specifying `vcov`) or use HC4. Assuming we have already created the model `taser_mod` like we did above, we could get a robust variant of it by executing:
+The methods (HC0 to HC5) to estimate standard errors (and, therefore, confidence intervals) are described clearly in [@RN5348]. In short, HC3 have been shown to outperform HC0 to HC2 [@RN11398] but HC4 and HC5 outperform HC3 in some circumstances [@RN11402]. Basically, either use the default of HC3 (by not explicitly specifying `vcov.type`) or use HC4. Assuming we have already created the model `taser_mod` like we did above, we could get a robust variant of it by executing:
 
 `robust(taser_mod, conf.int = T)` to use the default "HC3" method
-`robust(taser_mod, vcov = "HC4", conf.int = T)` to use "HC4"
+`robust(taser_mod, vcov.type = "HC4", conf.int = T)` to use "HC4"
 
 Run this code in the box:
 
@@ -479,7 +487,7 @@ Run this code in the box:
 ```
 
 ```{r taser_mod_hc4-solution}
-robust(taser_mod, vcov = "HC4", conf.int = T)
+sjstats::robust(taser_mod, vcov.type = "HC4", conf.int = T)
 ```
 
 
@@ -504,16 +512,16 @@ Executing this command creates a function called `boot_lm()`. The first bit of t
 Having created this function (remember to execute the code), we can use the function to obtain the bootstrap samples like this:
 
 ```{r echo = T, eval = F}
-boot_result <- boot(boot_lm, formula = immobility ~ r_tms + taser, data = taser_dat, R = 2000)
+boot_result <- boot::boot(boot_lm, formula = immobility ~ r_tms + taser, data = taser_tib, R = 2000)
 ```
 
-Executing this command creates an object called `boot_result` that contains the bootstrap samples. We use the `boot()` function to get these. Within this function we tell it to use the function `boot_lm()` that we just created, and because that function requires a formula and data, we specify the model as we did for the original model (`formula = immobility ~ r_tms + taser`), and name the data (`data = taser_dat`). As such, everything in the `boot()` function is something that we specified as being necessary input for the `boot_lm()` function when we defined it. `R = 2000` sets the number of bootstrap samples to 2000, which means we will throw these instructions into the `boot_lm()` function 2000 different times and save the results in `boot_result` each time.
+Executing this command creates an object called `boot_result` that contains the bootstrap samples. We use the `boot()` function to get these. Within this function we tell it to use the function `boot_lm()` that we just created, and because that function requires a formula and data, we specify the model as we did for the original model (`formula = immobility ~ r_tms + taser`), and name the data (`data = taser_tib`). As such, everything in the `boot()` function is something that we specified as being necessary input for the `boot_lm()` function when we defined it. `R = 2000` sets the number of bootstrap samples to 2000, which means we will throw these instructions into the `boot_lm()` function 2000 different times and save the results in `boot_result` each time.
 
 Finally, we use `boot.ci()` to extract confidence intervals from the bootstrap results that we have saved in `boot_result`. We want bootstrap confidence intervals for the *b*-value for the intercept, **r_tms** and **taser**. Because **R** doesn't know the names of the statistics in `boot_result`, we have to use their location in the `boot_result` object to extract them. The intercept will be the first thing in `boot_result`, and we can access it using `index = 1`, after which predictors will occur in the order we specified them in the formula in `boot_result`. For this example we'd get BCa bootstrap the confidence intervals by executing:
 
-`boot.ci(boot_result, type = "bca", index = 1)` for the intercept
-`boot.ci(boot_result, type = "bca", index = 2)` for **r_TMS**
-`boot.ci(boot_result, type = "bca", index = 3)` for **taser**
+`boot::boot.ci(boot_result, type = "bca", index = 1)` for the intercept
+`boot::boot.ci(boot_result, type = "bca", index = 2)` for **r_TMS**
+`boot::boot.ci(boot_result, type = "bca", index = 3)` for **taser**
 
 Use the code box below to obtain bootstrapped confidence intervals.
 
@@ -529,10 +537,10 @@ boot_lm <- function(formula, data, index){
   coef(fit)
 }
 
-boot_result <- boot(boot_lm, formula = immobility ~ r_tms + taser, data = taser_dat, R = 2000)
-boot.ci(boot_result, type = "bca", index = 1)
-boot.ci(boot_result, type = "bca", index = 2)
-boot.ci(boot_result, type = "bca", index = 3)
+boot_result <- boot::boot(boot_lm, formula = immobility ~ r_tms + taser, data = taser_tib, R = 2000)
+boot::boot.ci(boot_result, type = "bca", index = 1)
+boot::boot.ci(boot_result, type = "bca", index = 2)
+boot::boot.ci(boot_result, type = "bca", index = 3)
 ```
 
 ## Bayesian zombies
@@ -544,21 +552,25 @@ In the book, Milton explains to Zach that one approach is to add or remove predi
 
 `bf_mod <- regressionBF(formula, rscaleCont = "medium", data = data.frame(tibble))`
 
-This creates an object called `bf_mod` based on the same type of formula that we put into the `lm()` function to specify the model (so this should be familiar). To set a prior include `rscaleCont = `. By default (i.e. if you exclude the option altogether) the prior is set at "medium" ($^\sqrt{2}/_4$), but you can specify `rscaleCont = "wide"` ($^1/_2$) or `rscaleCont = "ultrawide"` ($^\sqrt{2}/_2$). Finally, the data are specified. If you are using a tibble (rather than a data frame) then notice that I've placed the tibble's name into the function `data.frame()`, which converts it to a data frame. I've had to do this because (at the time of writing) the `BayesFactor` package doesn't accept tibbles as data. For our data (using the default prior) we could execute:
+This creates an object called `bf_mod` based on the same type of formula that we put into the `lm()` function to specify the model (so this should be familiar). To set a prior include `rscaleCont = `. By default (i.e. if you exclude the option altogether) the prior is set at "medium" ($^\sqrt{2}/_4$), but you can specify `rscaleCont = "wide"` ($^1/_2$) or `rscaleCont = "ultrawide"` ($^\sqrt{2}/_2$). Finally, the data are specified. If you are using a pipe, specify the data with a dot. For our data (using the default prior) we could execute:
 
 ```{r echo = T, eval = F}
-taser_bf <- regressionBF(immobility ~ r_tms + taser, data = data.frame(taser_dat))
+taser_bf <- taser_tib %>%
+  BayesFactor::regressionBF(immobility ~ r_tms + taser, data = .)
+
 taser_bf
 ```
 
-The first line creates the object `taser_bf` as described above and the second line prints it for us to see. Try this in the code box:
+The first block of code creates the object `taser_bf` as described above and the second line prints it for us to see. Try this in the code box:
 
 ```{r taser_bf, exercise = TRUE}
   
 ```
 
 ```{r taser_bf-solution}
-taser_bf <- regressionBF(immobility ~ r_tms + taser, data = data.frame(taser_dat))
+taser_bf <- taser_tib %>%
+  BayesFactor::regressionBF(immobility ~ r_tms + taser, data = .)
+
 taser_bf
 ```
 
@@ -569,27 +581,35 @@ The largest Bayes factor is for when rTMS and taser are both included as predict
 The other thing we can do is to estimate the parameters in the model using Bayesian methods. To do this we use the `lmBF` function, which has the same format as the function that we just used to get the Bayes factors. The difference is that it fits *only* the model we specify in the formula (whereas `regressionBF()` compares models with all combinations of predictors to the intercept-only model). For example, `taser_bf` contains 3 models (**r_tms** vs intercept, **taser** vs intercept, and **r_tms** + **taser** vs intercept). If we execute:
 
 ```{r echo = T, eval = F}
-full_bf <- lmBF(immobility ~ r_tms + taser, data = data.frame(taser_dat))
+full_bf <- taser_tib %>%
+  BayesFactor::lmBF(immobility ~ r_tms + taser, data = .)
 ```
 
 it will return only the last of these models (**r_tms** + **taser** vs intercept). Estimating this model in isolation allows us to extract information from the posterior distribution. In particular we can extract the *b*-values derived from Bayesian estimation and their credible intervals. To do this we'd place the `full_bf` object that we just created into the `posterior()` function and set a value for the number of iterations (I've set 10000, which is plenty). I've stored the results in an object called `full_bf_est` the 'est' is short for 'estimates'. To view this object I've used the `summary()` function (which we've used before):
 
 ```{r echo = T, eval = F}
-full_bf_est <- posterior(full_bf, iterations = 10000)
-summary(full_bf_est)
+full_bf_est <- full_bf %>%
+  BayesFactor::posterior(iterations = 10000)
+
+full_bf_est %>%
+  summary()
 ```
 
 Try executing these three commands to view the estimates:
-
 
 ```{r taser_bf_est, exercise = TRUE}
   
 ```
 
 ```{r taser_bf_est-solution}
-full_bf <- lmBF(immobility ~ r_tms + taser, data = data.frame(taser_dat))
-full_bf_est <- posterior(full_bf, iterations = 10000)
-summary(full_bf_est)
+full_bf <- taser_tib %>%
+  BayesFactor::lmBF(immobility ~ r_tms + taser, data = .)
+
+full_bf_est <- full_bf %>%
+  BayesFactor::posterior(iterations = 10000)
+
+full_bf_est %>%
+  summary()
 ```
 
 The values to focus on are the means for **r_tms** and **taser**. Because these estimates are based on a sampling process you will get different results each time you run it (and different results to me). Therefore, Figure 1 shows the specific results I got while writing this tutorial. By looking at from where I'm extracting values you can (hopefully) interpret your own values. When I ran it, the Bayesian estimate of *b* for **r_tms** was -0.2377 with a 95% credibility interval ranging from -0.3310 to -0.1433 , and for taser it was is 0.3248 with a 95% credible interval from 0.1015 to 0.5494. Unlike confidence intervals we can interpret these credible intervals in terms of probability. For taser, for example, there is a 95% probability that the population value of *b* lies between 0.1015 and 0.5494.

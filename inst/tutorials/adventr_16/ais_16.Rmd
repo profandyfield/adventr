@@ -22,7 +22,7 @@ library(WRS2)
 
 
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
 hint_text <- function(text, text_color = "#E69F00"){
@@ -31,7 +31,7 @@ hint_text <- function(text, text_color = "#E69F00"){
 }
 
 #Read dat files needed for the tutorial
-memory_dat <- adventr::memory_dat
+memory_tib <- adventr::memory_dat
 
 #setup objects for code blocks
 
@@ -42,10 +42,10 @@ memory_dat <- adventr::memory_dat
 
 ## Overview
 
-This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] by me, [Andy Field](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
 
 * Who is the tutorial aimed at?
-    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+    - Anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/)  may find them useful.
 * What is covered?
     - This tutorial looks at how to fit a linear model with a predictor variable that represents more than two independent categories. We look at robust variants of the model, and computing a Bayes factor. It would be a useful tutorial to run alongside teaching based on Chapter 16 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
     - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
@@ -131,19 +131,32 @@ This tutorial has the data files pre-loaded so you shouldn't need to do anything
 You can load the file in several ways:
 
 * Assuming that you save this file into the working directory, you can load it by executing:
-    - `memory_dat <- read_csv("ais_16_memory_erasing.csv")`
+    - `memory_tib <- read_csv("ais_16_memory_erasing.csv")`
     - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
 * To load the file using a standard dialogue box to navigate your file system, execute:
-    - `memory_dat <- read_csv(file.choose())`
+    - `memory_tib <- read_csv(file.choose())`
 * You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
-    - `memory_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_16_memory_erasing.csv")`
+    - `memory_tib <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_16_memory_erasing.csv")`
     - This method relies on an internet connection (and my server having not exploded!)
 
+### Categorical variables
+
+When working within the tutorial the data are already prepared for you. However, if you are trying to replicate the tutorial within R or R Studio then you need to explicitly convert categorical predictors to factors. The data for this tutorial contains a variable **group**, which will be read in from the csv file as a character variable. To convert this variable to a factor we can use the `as_factor()` function from the `forcats` package. There are several ways to do this, but the most tidyverse way is to use `mutate()` from `dplyr` (part of `tidyverse`), which is a way of adding variables to a tibble or overwriting existing variables. We could execute:
+
+```{r, echo = TRUE, eval = FALSE}
+library(tidyverse)
+memory_tib <- memory_tib %>% 
+  dplyr::mutate(
+    group = forcats::as_factor(group)
+  )
+```
+
+This code recreates the `memory_tib` tibble from itself then uses mutate to recreate the variable **group** from itself by placing it within the `as_factor()` function which we met in an earlier tutorial.
 
 ## Exploring the data
 ### The model
 
-During Zach's visit to the JIG:SAW complex he visits several research buildings. In the second, he discovers experiments being conducted related to memory. In one experiment thirty-six participants with ID chips were tested. All participants met a stranger who had a 5-minute scripted conversation with them containing 10 critical pieces of information. A week later, the participants were asked to recall the encounter for 5 minutes, and then after a 10-minute break wrote everything that they could remember about the original encounter. During the 5-minute initial recall, one of three things happened: the control group (*N* = 12) received no intervention; the erase group (*N* = 12) had a pulse of electricity sent to their brain via their ID chip; and the replace group (*N* = 12) had conflicting verbal descriptions sent to their ID chip. The outcome was how many of the 10 critical pieces of information the participants wrote down after the recall phase. The prediction was that recall will be worse (i.e. lower scores) for participants who had an electrical pulse, or conflicting information sent to their ID chips during recall than those, in the control group, who experienced no interference. The data are in the tibble `memory_dat`, which has seven variables:
+During Zach's visit to the JIG:SAW complex he visits several research buildings. In the second, he discovers experiments being conducted related to memory. In one experiment thirty-six participants with ID chips were tested. All participants met a stranger who had a 5-minute scripted conversation with them containing 10 critical pieces of information. A week later, the participants were asked to recall the encounter for 5 minutes, and then after a 10-minute break wrote everything that they could remember about the original encounter. During the 5-minute initial recall, one of three things happened: the control group (*N* = 12) received no intervention; the erase group (*N* = 12) had a pulse of electricity sent to their brain via their ID chip; and the replace group (*N* = 12) had conflicting verbal descriptions sent to their ID chip. The outcome was how many of the 10 critical pieces of information the participants wrote down after the recall phase. The prediction was that recall will be worse (i.e. lower scores) for participants who had an electrical pulse, or conflicting information sent to their ID chips during recall than those, in the control group, who experienced no interference. The data are in the tibble `memory_tib`, which has seven variables:
 
 * **id**: Participant ID
 * **group**: To which of the no intervention, memory erase or memory replace conditions the participant was assigned
@@ -160,7 +173,7 @@ The most important variables are the first three - the others will be used to il
 ```
 
 ```{r dat_view-solution}
-memory_dat   
+memory_tib   
 ```
 
 The model we're fitting is described by the following equation:
@@ -186,10 +199,12 @@ Using what you've learnt in previous tutorials, create a tibble called `mem_summ
 ```
 
 ```{r desc-solution}
-mem_summary <-  memory_dat %>% group_by(group) %>% summarize(
-  mean = mean(recall),
-  ci_low = ci(recall)["CI lower"],
-  ci_upp = ci(recall)["CI upper"]
+mem_summary <-  memory_tib %>%
+  dplyr::group_by(group) %>%
+  dplyr::summarize(
+    mean = mean(recall),
+    ci_low = gmodels::ci(recall)["CI lower"],
+    ci_upp = gmodels::ci(recall)["CI upper"]
 )
 mem_summary              
 ```
@@ -205,7 +220,7 @@ Let's plot the data. Use the code box below to create an error bar chart with **
 ```
 
 ```{r scat-solution}
-mem_plot <- ggplot(memory_dat, aes(group, recall))
+mem_plot <- ggplot2::ggplot(memory_tib, aes(group, recall))
 mem_plot +
   geom_point(colour = "#E69F00", position = position_jitter(width = 0.1, height = 0)) +
   stat_summary(fun.data = "mean_cl_normal", geom = "pointrange", colour = "grey35") +
@@ -238,7 +253,7 @@ Using these hints, see whether you can fit the model in the code box below. (Ano
 ```
 
 ```{r lm1-solution}
-mem_mod <- lm(recall ~ group, data = memory_dat)
+mem_mod <- lm(recall ~ group, data = memory_tib)
 mem_mod <- lm.beta(mem_mod)
 summary(mem_mod)
 confint(mem_mod)
@@ -289,7 +304,7 @@ The plots look a bit odd when you have a categorical predictor variable. The Q-Q
 
 ### Just to illustrate what's going on
 
-The tibble `memory_dat` contains two variables called **erase_dummy** and **replace_dummy** that contain the dummy codes that **R** has used. These variables are not used in the model, but are included to illustrate what **R** does when fitting a categorical predictor. It effectively creates variables like **erase_dummy** and **replace_dummy** that compare each group to the reference category (by default, the category with the first letter that is closest to the beginning of the alphabet). Try creating a model, called `dum_mod`, that predicts **recall** from **erase_dummy** and **replace_dummy**, and display a summary of the model. You should find that it is identical to the model that we just fitted using **group**. This example illustrates, then, how **R** takes a categorical variable and redefines it as a series of dummy coding variables.
+The tibble `memory_tib` contains two variables called **erase_dummy** and **replace_dummy** that contain the dummy codes that **R** has used. These variables are not used in the model, but are included to illustrate what **R** does when fitting a categorical predictor. It effectively creates variables like **erase_dummy** and **replace_dummy** that compare each group to the reference category (by default, the category with the first letter that is closest to the beginning of the alphabet). Try creating a model, called `dum_mod`, that predicts **recall** from **erase_dummy** and **replace_dummy**, and display a summary of the model. You should find that it is identical to the model that we just fitted using **group**. This example illustrates, then, how **R** takes a categorical variable and redefines it as a series of dummy coding variables.
 
 ```{r lm1_dum, exercise = TRUE}
      
@@ -297,7 +312,7 @@ The tibble `memory_dat` contains two variables called **erase_dummy** and **repl
 ```
 
 ```{r lm1_dum-solution}
-dum_mod <- lm(recall ~ erase_dummy + replace_dummy, data = memory_dat)
+dum_mod <- lm(recall ~ erase_dummy + replace_dummy, data = memory_tib)
 summary(dum_mod)
 ```
 
@@ -329,12 +344,12 @@ rep_vs_erase <- c(0, 1, 0)
 We want to use these variables to set contrasts for the variable **group**. We can do this by executing:
 
 ```{r, echo = T, eval = F}
-contrasts(memory_dat$group) <- cbind(rep_vs_control, rep_vs_erase)
+contrasts(memory_tib$group) <- cbind(rep_vs_control, rep_vs_erase)
 ```
 
 Let's break this down:
 
-* `contrasts(memory_dat$group)` instructs **R** to set contrasts for the variable **group** in the tibble called `memory_dat`.
+* `contrasts(memory_tib$group)` instructs **R** to set contrasts for the variable **group** in the tibble called `memory_tib`.
 *  `cbind(rep_vs_control, rep_vs_erase)` sets the contrast to be the two dummy variables we created bound together in columns (that's what `cbind()` does). To get a flavour of what `cbind` is doing try executing only the right hand side of the command in the code box. You should see two columns that look like columns 2 and 3 of Table 2.
 
 `r hint_text("Tip: the contrast function only works on variables that are factors. The variable group in this tutorial has already been converted into a factor, but when you import data files remember to set variables that define groups as factors. There are various different ways to do this including the as_factor() function form the forcats package.")`
@@ -342,7 +357,7 @@ Let's break this down:
 I don't personally do this for the reason already explained, but if you don't care about setting variable names for the dummy variables, you can set the contrasts in a single command that puts the codes directly into the `cbind()` function:
 
 ```{r, echo = T, eval = F}
-contrasts(memory_dat$group) <- cbind(c(1, 0, 0), c(0, 1, 0))
+contrasts(memory_tib$group) <- cbind(c(1, 0, 0), c(0, 1, 0))
 ```
 
 In the code box below set a contrast for the **group** variable that compares each group to the replace group as just described. Then re-fit the model predicting **recall** from **group**. Call the model `mem_mod_2` and don't worry about requestioning standardized betas, confidence intervals or plots.
@@ -355,8 +370,8 @@ In the code box below set a contrast for the **group** variable that compares ea
 ```{r lm2-solution}
 rep_vs_control <- c(1, 0, 0)
 rep_vs_erase <- c(0, 1, 0)
-contrasts(memory_dat$group) <- cbind(rep_vs_control, rep_vs_erase)
-mem_mod_2 <- lm(recall ~ group, data = memory_dat)
+contrasts(memory_tib$group) <- cbind(rep_vs_control, rep_vs_erase)
+mem_mod_2 <- lm(recall ~ group, data = memory_tib)
 summary(mem_mod_2)
 ```
 
@@ -390,8 +405,8 @@ We can implement these contrasts in the same way as just described. All that we'
 ```{r lm3-solution}
 interference_vs_none <- c(-2, 1, 1)
 erase_vs_replace <- c(0, -1, 1)
-contrasts(memory_dat$group) <- cbind(interference_vs_none, erase_vs_replace)
-con_mod <- lm(recall ~ group, data = memory_dat)
+contrasts(memory_tib$group) <- cbind(interference_vs_none, erase_vs_replace)
+con_mod <- lm(recall ~ group, data = memory_tib)
 summary(con_mod)
 ```
 
@@ -401,9 +416,9 @@ You should find that the *b* for the first contrast is proportional to the diffe
 
 As well as defining our own contrasts, we can use pre-defined ones. For example, if we predicted a trend in our group means (i.e., our groups have a meaningful order such as increasing does of a drug) we might want to do a trend analysis, also known as *polynomial* contrasts. These contrasts test for linear, quadratic, cubic (and higher) trends. When the predictor variable is categorical, these contrasts test for a patterns in the means across groups that follow a linear, quadratic (etc.) pattern. We can set this trend using `contr.poly()` and specifying the number of groups (in this case 3). For example, we would set a polynomial contrast for the variable **group** by executing:
 
-`contrasts(memory_dat$group) <- contr.poly(3)`
+`contrasts(memory_tib$group) <- contr.poly(3)`
 
-`r hint_text("Tip: R will order the groups alphabetically (in this case control, erase, replace). For the current data this is a sensible order because we expect recall to get progressively worse across those groups. However, if the alphabetical order of groups does not represent the order that you want, you can use the fct_relevel() function in the forcats package to re-order the levels of your grouping variable into the order you want.")`
+`r hint_text("Tip: Our factor levels are ordered as: control, erase, replace. This order is sensible because we expect recall to get progressively worse across those groups. However, if the levels of your grouping variable do not represent the order that you want, you can use the fct_relevel() function in the forcats package to re-order the levels more sensibly.")`
 
 Set the variable **group** to have polynomial contrast (as above) then create and summarize a model called `mem_mod_poly` that fits a linear model predicting **recall** from **group**.
 
@@ -413,8 +428,8 @@ Set the variable **group** to have polynomial contrast (as above) then create an
 ```
 
 ```{r lm_poly-solution}
-contrasts(memory_dat$group) <- contr.poly(3)
-mem_mod_poly <- lm(recall ~ group, data = memory_dat)
+contrasts(memory_tib$group) <- contr.poly(3)
+mem_mod_poly <- lm(recall ~ group, data = memory_tib)
 summary(mem_mod_poly)
 ```
 
@@ -427,15 +442,15 @@ As in previous tutorials, we can use one of the methods (HC0 to HC5) for produci
 
 `r hint_text("Tip: if you're doing this outside of the tutorial you need the sjstats package installed and you need to execute library(sjstats).")`
 
-Remember that we place the model we created with `lm()` (in this case `mem_mod`) into the function `robust()`. For example, we could execute:
+Remember that we place the model we created with `lm()` (in this case `mem_mod`) into the function `robust()` from the `sjstats` package. For example, we could execute:
 
 * `robust(mem_mod, conf.int = T)` to use the default "HC3" method and request 95% confidence intervals
-* `robust(mem_mod, vcov = "HC4", conf.int = T)` to use "HC4" and request 95% confidence intervals
+* `robust(mem_mod, vcov.type = "HC4", conf.int = T)` to use "HC4" and request 95% confidence intervals
 
 The HC3 and HC4 refer to different methods to correct the standard errors (refer back to the tutorial *adventr_14*). Try these commands in the code box and compare the results.
 
 ```{r mem_mod_hc4-setup}
-mem_mod <- lm(recall ~ group, data = memory_dat)
+mem_mod <- lm(recall ~ group, data = memory_tib)
 ```
 
 ```{r mem_mod_hc4, exercise = TRUE}
@@ -444,8 +459,8 @@ mem_mod <- lm(recall ~ group, data = memory_dat)
 ```
 
 ```{r mem_mod_hc4-solution}
-robust(mem_mod, conf.int = T)
-robust(mem_mod, vcov = "HC4", conf.int = T)
+sjstats::robust(mem_mod, conf.int = T)
+sjstats::robust(mem_mod, vcov.type = "HC4", conf.int = T)
 ```
 
 ### Robust estimates
@@ -458,7 +473,7 @@ In *adventr_14* we used the `lmRob()` function from the `robust` package (again,
 ```
 
 ```{r mem_mod_robust-solution}
-mem_rob <- lmRob(recall ~ group, data = memory_dat)
+mem_rob <- robust::lmRob(recall ~ group, data = memory_tib)
 summary(mem_rob)   
 ```
 
@@ -481,10 +496,10 @@ boot_lm <- function(formula, data, index){
 }
 
 #The following runs the bootstrap and extracts the CIs
-boot_result <- boot(boot_lm, formula = recall ~ group, data = memory_dat, R = 2000)
-boot.ci(boot_result, type = "bca", index = 1) #for the intercept
-boot.ci(boot_result, type = "bca", index = 2) #for the first dummy variable for group (this code will run the default unless you also include a line to add contrasts to the variable, group.)
-boot.ci(boot_result, type = "bca", index = 3) #for the second dummy variable for group (this code will run the default unless you also include a line to add contrasts to the variable, group.)
+boot_result <- boot::boot(boot_lm, formula = recall ~ group, data = memory_tib, R = 2000)
+boot::boot.ci(boot_result, type = "bca", index = 1) #for the intercept
+boot::boot.ci(boot_result, type = "bca", index = 2) #for the first dummy variable for group (this code will run the default unless you also include a line to add contrasts to the variable, group.)
+boot::boot.ci(boot_result, type = "bca", index = 3) #for the second dummy variable for group (this code will run the default unless you also include a line to add contrasts to the variable, group.)
 ```
 
 
@@ -500,7 +515,7 @@ The `WRS2` package [@RN10205] wraps up a few of the many functions described by 
 These functions have similar arguments:
 
 * `formula`: the functions use a formula like that for `lm()`, so in this case we could use `recall ~ group`.
-* `data = tibble`: replace tibble with the name of the tibble or data frame in which the data are stored (in this case `data = memory_dat`)
+* `data = tibble`: replace tibble with the name of the tibble or data frame in which the data are stored (in this case `data = memory_tib`)
 * `tr = 0.2`: determines the level of trim. The default is a 20% trim, which has been shown to perform well, but you could change this to 0.1 (10% trim) or any value up to 0.5 (although if you want to compare medians you should a function called `med1way()`). You can omit this argument if you're happy with a 20% trim.
 * `nboot = 599`: specifies the number of bootstrap samples. There is a case for increasing the defaults to 1000.
 
@@ -511,10 +526,10 @@ See if you can run the three commands in the code box below based on my descript
 ```
 
 ```{r mask_wrs-solution}
-t1way(recall ~ group, data = memory_dat)
-lincon(recall ~ group, data = memory_dat)
-t1waybt(recall ~ group, data = memory_dat, nboot = 1000)
-mcppb20(recall ~ group, data = memory_dat, nboot = 1000)
+WRS2::t1way(recall ~ group, data = memory_tib)
+WRS2::lincon(recall ~ group, data = memory_tib)
+WRS2::t1waybt(recall ~ group, data = memory_tib, nboot = 1000)
+WRS2::mcppb20(recall ~ group, data = memory_tib, nboot = 1000)
 ```
 
 Based on `t1way` we'd conclude that the group means were significantly different, $F_t(2, 13.9) = 4.13, p = 0.039$, with recall scores similar in the control and erase conditions, $\hat{\psi} = 1 [-1.92, 3.92], p = 0.372$, and in the erase and replace groups, $\hat{\psi} = 2.5 [-0.69, 5.669], p = 0.053$, but were significantly lower in the replace group than both the control group, $\hat{\psi} = 3.5 [0.24, 6.76], p = 0.012$.
@@ -530,14 +545,15 @@ Like in previous tutorials (*adventr_11*, *adventr_14*, *adventr_15*) we can use
 
 The function uses default priors that can be specified as a number or as "medium" (the default), "wide", and "ultrawide". These labels correspond to *r* scale values of 1/2, $^\sqrt{2}/_2$, and 1. These priors are explained in *adventr_11* and also read @RN9309.
 
-So we would use the same formula that we have used throughout, and specify our tibble as `memory_dat`. It's a good idea to save this model into a new object (lets call it `mem_bf`) because you can do useful things with it (we didn't do this for the `t1way()` functions, but you could).
+So we would use the same formula that we have used throughout, and specify our tibble as `memory_tib`. It's a good idea to save this model into a new object (lets call it `mem_bf`) because you can do useful things with it (we didn't do this for the `t1way()` functions, but you could).
 
 `r hint_text("Tip: if you are using a tibble (rather than a data frame) then place the tibble's name into the function data.frame(), to convert it to a data frame. This step is necessary because (at the time of writing) the BayesFactor package doesn't accept tibbles.")`
 
 For our data (using the default prior) we could execute:
 
 ```{r echo = T, eval = F}
-mem_bf <- anovaBF(formula = recall ~ group, data = data.frame(memory_dat))
+mem_bf <- memory_tib %>% 
+  BayesFactor::anovaBF(formula = recall ~ group, data = .)
 mem_bf
 ```
 
@@ -548,7 +564,8 @@ The first line creates the object `mem_bf` as described above and the second lin
 ```
 
 ```{r mem_bf-solution}
-mem_bf <- anovaBF(formula = recall ~ group, data = data.frame(memory_dat))
+mem_bf <- memory_tib %>% 
+  BayesFactor::anovaBF(formula = recall ~ group, data = .)
 mem_bf
 ```
 

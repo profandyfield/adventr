@@ -21,17 +21,17 @@ hint_text <- function(text, text_color = "#E69F00"){
   return(hint)
 }
 
-ha_dat <- adventr::ha_dat
+ha_tib <- adventr::ha_dat
 ```
 
 # An Adventure in R: Data Basics
 
 ## Overview
 
-This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] by me, [Andy Field](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
 
 * Who is the tutorial aimed at?
-    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+    - Anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/)  may find them useful.
 * What is covered?
     - This tutorial looks at the basic concepts in **R**, such as installing packages, setting the working directory, getting help, getting data into **R**, creating variables, creating data frames and tibbles, reading in data files, manipulating variables within a tibble/data frame. It would be a useful tutorial to run alongside teaching based on Chapters 1 to 3 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
     - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
@@ -102,12 +102,13 @@ This tutorial uses the following packages:
 
 This package is automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in **RStudio**) then you need to make sure that the package has been installed and loaded (see the section on *Installing and loading packages*).
 
-## Getting started in **RStudio**
+## Some **RStudio** basics
 
 ### The tidyverse
 
-Superficially, the [tidyverse](http://www.tidyverse.org/) is a set of packages for **R** created by Hadley Wickham and his team at **RStudio** that are collated in a single package called `tidyverse` [@RN11407]. However, it is much more than that. The packages within `tidyverse` (e.g., *ggplot2*, *dplyr*, *readr*, *tidyr*, and *tibble*) are built upon a common philosophy. This philosophy extend not just to how the packages and their functions work, but beyond that to a general philosophy of data science as outlined in Hadley's books [@RN11403; @RN11404], both of which are free on-line (see resources section). Throughout these tutorials we follow this `tidyverse` philosophy where possible. What this means in practical terms is this: in **R** there are always several ways to do the same thing, where one of those ways is the `tidyverse` way, that's the method we'll use.
+![](./images/tidyverse_25.png)
 
+Superficially, the [tidyverse](http://www.tidyverse.org/) is a set of packages for **R** created by Hadley Wickham and his team at **RStudio** that are collated in a single package called `tidyverse` [@RN11407]. However, it is much more than that. The packages within `tidyverse` (e.g., *ggplot2*, *dplyr*, *readr*, *tidyr*, and *tibble*) are built upon a common philosophy. This philosophy extend not just to how the packages and their functions work, but beyond that to a general philosophy of data science as outlined in Hadley's books [@RN11403; @RN11404], both of which are free on-line (see resources section). Throughout these tutorials we follow this `tidyverse` philosophy where possible. What this means in practical terms is this: in **R** there are always several ways to do the same thing, where one of those ways is the `tidyverse` way, that's the method we'll use.
 
 
 ### Keyboard shortcuts
@@ -146,41 +147,14 @@ in which *package_name* is replaced by the name of the package that you’d like
 
 `library(tidyverse)`
 
-`r hint_text("Tip: Near the top of my scripts I have a section marked *# load packages* fiollowed by a list of commands that load all of the packages I use in the script. (I also list them alphabetically because I'm anally retentive.) This makes it easy for me to see which packages the script relies on") `
+`r hint_text("Tip: Near the top of my scripts I have a section marked *# load packages* followed by a list of commands that load all of the packages I use in the script. (I also list them alphabetically because I'm anally retentive.) This makes it easy for me to see which packages the script relies on") `
 
 In these tutorials the packages you need are pre-installed and pre-loaded so you don't need to worry about it. However, when working in **RStudio** on your own assignments/data you will need to install and load the packages that you use.
 
 
-### Setting the working directory
+### The working directory
 
-The *working directory* is the default directory on your hard drive/USB stick/whatever where **RStudio** will look for files and save files. You can instruct it to use different directories to the working directory but your life will be easier if, for a given project, you create a directory where you plan to store data and relevant scripts, graphs or whatever and set this to be your working directory. That way, you don't have to keep directing **RStudio** to different locations for different activities. You have two choices when setting the working directory:
-
-* **Use the menu**: You can use the *Session > Set Working Directory > Choose Directory ...* menu (or press **ctrl** + **shift** + **H**) to choose a directory to be your working directory. This is probably the easiest option if you're working on university computers or from USB sticks.
-* **Use a command**: you can at the start of your script use the `setwd()` function to set the working directory. If you are frequently working from the same computer, or from different computers where you have the same file structure, this will save time in the long run because as you move between scripts you can simply execute a line of code to change the working directory to the appropriate place.
-
-If you decide to use the `setwd()` command here are a few useful functions:
-
-* `Sys.getenv("HOME")` returns your home directory (so, for me, on my Mac at home it returns */Users/andyfield*, but on my work Mac it returns */Users/andyf*). Note that *HOME* is in capitals. This command is really helpful for avoiding worrying about knowing the precise location of your system's home directory.
-* `file.path()` is useful for creating strings the identify directory locations. To refer to a directory in **R** you need to write out the directory location in full. This requires knowledge of how file systems are notated on your computer, which most of us don't want to worry about. `file.path()` works out what system you're using (Windows, MacOS, Linux) and does the work for you. All you need to do is name the directories that lead to the one that you want.
-
-Let's look at an example of these functions being used together. Imagine that I have a folder called *R_Tutorials* in a folder called *Data*, which is located within my main *Documents* folder. In other words, I want to reference *Documents > Data > R_Tutorials*. The *Documents* folder is typically within the home directory (unless you've moved it). To create the text describing this folder location, we execute:
-
-`file.path(Sys.getenv("HOME"), "Documents", "Data", "R_Tutorials")`
-
-which (for me) returns:
-
-*"/Users/andyfield/Documents/Data/R_Tutorials"*
-
-The `file.path()` function has linked together all of the phrases that I put into it with a separator that is appropriate to my system. In this example, it first gets the result of `Sys.getenv("HOME")` and connects it to the text "Documents". Having worked out that I'm using MacOS it uses */* to connect them. Similarly it tags "Data" and "R_tutorials" onto the end using */*. Note that within the function directory names are in straight quotes and separated by commas. Pay attention to lower and upper case letters when you input the names of the directories.
-
-We can set the working directory to this location by putting the file.path command above into the `setwd` function and executing it:
-
-`setwd(file.path(Sys.getenv("HOME"), "Documents", "Data", "R_Tutorials"))`
-
-By placing a line of code like this at the start of your script file, you can set the working directory to the appropriate location for the script by executing that single command (rather than faffing about with menus).
-
-If you need to know what the current working directory is, execute `getwd()`.
-
+When you try to do anything (e.g., open a file) from R it will go to the directory in which R is stored on your computer. This behaviour is fine if you happen to store all of your data and output in that folder, but no-one does. One solution to this problem is to establish a *working directory* at the beginning of your R session. This is a default folder for R to use when it loads or saves files. A much better solution is to use RStudio projects, which we'll explore in due course.
 
 ### Getting help
 
@@ -192,15 +166,90 @@ One requirement of uploading a package to the CRAN is that it must have help fil
 
 Similarly, to get the help file for the function `mean()`, which is used to calculate means, you would execute `?mean`. Try this in box above and press ![](./images/run_code.png) to execute the command. Now try to access the help file for the function `lm()` which is used to fit linear models (and which we'll use a lot over the coming weeks). A final note on help files: they are written by statisticians and so can be somewhat impenetrable, but internet searches are often a good source of accessible help.
 
+## My recommended RStudio workflow
+
+This section suggests a workflow that you use whenever you work on a project.
+
+###	Project files
+
+If you’d like to forget about working directories and make your work more portable then I recommend using RStudio project files. When a project file is opened it sets the working directory to be the one containing the project file. Therefore, if you work with a project file you can forget about setting working directories, the project will work on any machine you care to use, and you can share your project folder with others too and it’ll work for them.
+
+Create a project file by selecting the *File > New Project* menu in RStudio to open the dialog boxes below:
+
+![Creating an RStudio project](./images/dsr2_fig_01_20_new_project.png)
+
+You can choose to use an existing directory as your project directory, or create a new one.
+
+It’s worth considering what your project directory might look like. A lot of what you end up doing with your project folders will be personal preference. I have the project folder that RStudio makes when I create the project and within it the associated project file (also created by RStudio). I tend to store the data files for a project in a folder called *data*, often have a folder for images (unimaginatively called *images*), and I usually put all of my R files such as scripts or markdown files in a folder called *r_docs*:
+
+![Directory structure for a small project](./images/dsr2_fig_01_21_directory_structure.png)
+
+You can create these folders in the usual way for the operating system you use or from within RStudio:
+
+![Creating folders within RStudio](./images/dsr2_fig_01_22_create_folders.png)
+
+Once you have created a project file you can create script files, markdown files or notebook files from within RStudio.
+
+###	Using relative paths
+
+One of the great things about RStudio project files is that you can use relative file paths rather than absolute file paths. An absolute file path is one that specifies in full the location of a file or folder. For example, to open my_funky_data.csv using an absolute path I’d execute something like:
+
+`funky_tib <- read_csv("C:/Users/andyfield/Documents/my_new_project/data/my_funky_data.csv")`
+
+The file path is the exact location of `my_funky_data.csv` on my hard drive. We can see from the path that the file we’re after (`my_funky_data.csv`) is stored in a folder called ‘data’, which is within the main project folder (‘my_new_project’), which itself is stored within my ‘Documents’ folder, which is stored under my username, in the folder ‘Users’ on my main drive (C:).  
+
+Absolute paths are a pain because they are machine dependent (or more generally environment dependent). The absolute path above won’t work for me on a different computer unless I have that computer set up identically. It also won’t work for collaborators unless their user name is also andyfield and the structure of folders on their hard drive exactly matches mine. They also take a really long time to type. Absolute paths suck.
+Relative paths, on the other hand, allow you to specify files relative to a fixed point. Within an RStudio project the fixed point is the project folder. Therefore, to load the same data file using a relative path we need only specify:
+
+`funky_tib <- read_csv("../data/my_funky_data.csv")`
+
+Compare this with the absolute path and note that I’ve replaced
+
+`C:/Users/andyfield/Documents/my_new_project/` with `../data/`. The two dots take us up a level from the r_docs folder (where the notebook file that contains the command is saved). In other words, it takes us into the main project folder. From there, /data/ takes us into the folder called data. If my_markdown.Rmd were stored in the project folder (rather than being in a subfolder) we would need only a single dot:
+
+`funky_tib <- read_csv("./data/my_funky_data.csv")`
+
+###	The `here()` package
+
+If you find relative paths confusing consider using the `here` package, which you can install by executing:
+`install.packages('here')`
+
+and load using:
+`library(here)`
+
+The here package has a function called `here()` that uses a set of sensible rules to work out what the working directory is. If you use an RStudio project (like I’ve told you to) `here()` can easily locate the working directory because it’s the project directory. Let’s assume that the location of your project is `C:/Users/andyfield/Documents/my_new_project/`, executing the function will return that location:
+
+```
+> here::here()
+[1]"C:/Users/andyfield/Documents/my_new_project"
+```
+If you type the location of a file within the project folder into the function, it appends this text to the location of the project directory, to give you the absolute path. For example, if we want to access the file called ‘my_funky_data.csv’ which is within a folder called ‘data’ within our project folder, we could get the filepath to this file by executing:
+
+```
+> here::here("data/my_funky_data.csv")
+[1] C:/Users/andyfield/Documents/my_new_project/data/my_funky_data.csv"
+```
+
+The here() function generates the filepath for the project directory each time it is called, so if you move your project folder to another machine or a different location on the same machine your code will still work. For example, previously we looked at loading some data using a relative path:
+
+`funky_tib <- read_csv("../data/my_funky_data.csv")`
+
+We can avoid the relative path by using:
+
+`funky_tib <- read_csv(here::here("data/my_funky_data.csv"))`
+
+To sum up, we use `here()` to create a filepath to the file we want to read into R, and use `read_csv()` to open that file.
 
 ## Objects and functions
 ### Overview
 
 Commands in R are generally made up of two parts: **objects** and **functions**, which are separated by the assignment operator `<-`. Think of the assignment operator as meaning ‘is created from’. As such, the general form of a command is:
 
-`Object <- function`
+`Object <- instructions`
 
-Which means ‘object is created from function’. An object is anything created in **R**. It could be a variable, a collection of variables, a statistical model etc. Objects can be single values (such as the mean of a set of scores) or collections of information; for example, when you run an analysis, you create an object that contains the output of that analysis, which means that this object contains many different values and variables. Functions are the things that you do in *R* to create your objects.
+Which means ‘object is created from some instructions’. These instructions typically involve the use of functions. A function is a bit of code that someone has written (and that you can write yourself) that typically have at least one argument and an output. Functions have a name followed by parenthesis, for example, `ggplot()`, `mean()` and `plot()`. When you load a package into R you are loading a collection of functions that someone has written that do things using R.
+
+An object is anything created in **R**. It could be a variable, a collection of variables, a statistical model etc. Objects can be single values (such as the mean of a set of scores) or collections of information; for example, when you run an analysis, you create an object that contains the output of that analysis, which means that this object contains many different values and variables. Functions are the things that you do in *R* to create your objects.
 
 `r hint_text("Tip: Simultaneously press the **alt** + **−** keys to insert the assignment operator (<-)") `
 
@@ -231,6 +280,32 @@ Hopefully you saw a list of the four names: **R** shows you the contents of the 
 my_friends <- c("Zoe", "Mark", "Ben") 
 my_friends
 ```
+
+
+### Disambiguating functions
+
+You can refer to a function directly, to use a general example:
+
+`function()`
+
+or you can include a reference to the package (see the next section), again using a general form:
+
+`package::function()`
+
+For example, you can use the `ggplot()` function from the `ggplot2` package within a command by typing either of these:
+
+`ggplot()`
+`ggplot2::ggplot()`
+
+Many people do not include the package name when they write code because it involves more typing, but there are two good reasons to. First, you will occasionally stumble across two functions in two different packages that have the same name. For example, there is a `recode()` function in both the `Hmisc` and `car` packages. If you have both packages loaded and you try to use `recode()`, R won’t know which one to use or will guess (perhaps incorrectly). This quite often results in an error. If you always specifying the package as well as the function then R (and everyone else) will always know which function you're using. For example, if we want to use the recode function in the car package we would use:
+
+`car::recode()`
+
+but to use the one in Hmisc we would use:
+
+`Hmisc::recode()`
+
+Second, it can often be difficult to remember which functions come from which packages but writing the apckage names really helps you to remember which packages you need to load to use functions that you commonly use.
 
 ### Style
 
@@ -312,7 +387,9 @@ age
 
 Suppose we wanted to enter the biological sex of the band members. We could enter this information as text ("Male", "Male", "Male", "Female"), however, it is common to code this information within a *factor* or *coding variable*. A factor uses numbers to represent different categories of entities. These categories could be levels of a treatment variable in an experiment, different groups of people, different geographic locations, different organisations, etc.
 
-To create a factor representing the biological sex of the band members we first create a variable containing the numerical codes, we then convert this variable to a factor using the built-in `factor()` function. Imagine we want to use 0 = male and 1 = female. Create a variable called `sex` that contains the appropriate number to represent the sex of Zach, Nick, Joel, and Jessika (in that order) and then view it.
+There are several ways to create factors in R. The first is to enter numeric values and then convert these values to a factor using the `factor()` function, the second is to enter the text and convert it to a factor using the `as_factor()` function from the `forcats` package (which is part of `tidyverse`). We’ll use each in turn to create a factor representing the biological sex of the band members.
+
+To use the base R method, we first create a variable containing the numerical codes, we then convert this variable to a factor using the built-in `factor()` function. Imagine we want to use 0 = male and 1 = female. Create a variable called `sex` that contains the appropriate number to represent the sex of Zach, Nick, Joel, and Jessika (in that order) and then view it.
 
 ```{r enig_sex, exercise = TRUE}
 
@@ -329,8 +406,11 @@ Having done this we convert the variable to a factor using the built-in `factor(
 
 `factor(variable_name, levels = c(x,y, … z), labels = c("label_1", "label_2", … label_n"))`
 
-This looks a bit scary, but let’s break it down: `factor(variable_name)` is all you really need to create the factor — in our case `factor(sex)` would do the trick. However, it's useful to tell R which values we have used to denote different groups and we do this with `levels = c(1, 2, 3, 4, …)`. We can use the `c()` function to list the values we have used (`c(0, 1)`) or if we have used a regular series such as 0, 1, 2, 3, 4 we can use the shorthand `x:y` in which the colon  means ‘all the values between’, so this would mean 'all of the values between *x* and *y*'. For example, `1:4` is the same as `c(1, 2, 3, 4)` and `0:6` is the same as `c(0, 1, 2, 3, 4, 5, 6)`. In our case, we used 0 and 1 to denote the two categories, so we could specify this as `levels = 0:1` or `levels = c(0, 1)`.
-The final part of the function assigns labels to these levels using `labels = c("label_1", "label_2", … label_n")`. Again, we use `c()` to collect together the labels that we wish to assign. The labels must be ordered consistent with the numeric levels, and you must provide a label for every level. In our case, 0 corresponds to male and 1 to female, so we would want to specify labels as `labels = c("Male", "Female")`.
+This looks a bit scary, but let’s break it down:
+
+* `factor(variable_name)` is all you really need to create the factor — in our case `factor(sex)` would do the trick.
+* `levels = c(1, 2, 3, 4, …)`: we need to tell R which values we want to use to denote different groups and we do this with the levels = argument. We can use the `c()` function to list the values we have used (`c(0, 1)`) or if we have used a regular series such as 0, 1, 2, 3, 4 we can use the shorthand `x:y` in which the colon  means ‘all the values between’, so this would mean 'all of the values between *x* and *y*'. For example, `1:4` is the same as `c(1, 2, 3, 4)` and `0:6` is the same as `c(0, 1, 2, 3, 4, 5, 6)`. In our case, we used 0 and 1 to denote the two categories, so we could specify this as `levels = 0:1` or `levels = c(0, 1)`.
+* `labels = c("label_1", "label_2", … label_n")`: The final step is to assign labels to these levels using labels = c(“label”, …). Again, we use `c()` to collect together the labels that we wish to assign. The labels must be ordered consistent with the numeric levels, and you must provide a label for every level. In our case, 0 corresponds to male and 1 to female, so we would want to specify labels as `labels = c("Male", "Female")`.
 
 Putting all of this together we can convert `sex` to a factor using:
 
@@ -346,15 +426,105 @@ sex
 ```{r enig_sex_fac-solution}
 sex <- c(0, 0, 0, 1)
 sex
-sex <- factor(enig_sex, levels = 0:1, labels = c("Male", "Female"))
+sex <- factor(sex, levels = 0:1, labels = c("Male", "Female"))
 sex
 ```
 
 Hopefully you'll see that the numbers have now turned into the levels that you specified.
 
-### `rep()` and the pipe operator `%>%` 
+Method two is to create a character variable and then use the `as_factor()` function to convert it. For example, we could execute:
 
-The `rep()` function takes the general form:
+```
+sex <- c("Male", "Male", "Male", "Female")
+sex <- forcats::as_factor(sex)
+```
+
+The first command creates a character variable called `sex` containing the words male and female, the second command recreates the object `sex` by converting the original variable to a factor. Notice that with this method we don’t specify the levels of labels of the factor. This is done automatically, ordering the levels by the order they appear in the data (in this casel level 1 will be Male and level 2 Female). You can see this if you inspect the variable by executing its name. Try out this code:
+
+```{r enig_sex_forcats, exercise = TRUE, exercise.lines = 5}
+sex <- c("Male", "Male", "Male", "Female")
+sex <- forcats::as_factor(sex)
+sex
+```
+
+```{r enig_sex_forcats-solution}
+sex <- c("Male", "Male", "Male", "Female")
+sex <- forcats::as_factor(sex)
+sex
+```
+
+If we don’t like the order of factor levels we can use the `fct_relevel()` function (also from the `forcats` package) to change the order. For example, to reverse the order of the levels of `sex` we would execute:
+
+`sex <- forcats::fct_relevel(sex, "Female", "Male")`
+
+The code box below repeats the code from the previous box, try executing it and then adding the code to relevel the factor so that Females are the first level.
+
+```{r enig_sex_relevel, exercise = TRUE, exercise.lines = 5}
+sex <- c("Male", "Male", "Male", "Female")
+sex <- forcats::as_factor(sex)
+sex
+```
+
+```{r enig_sex_relevel-solution}
+sex <- c("Male", "Male", "Male", "Female")
+sex <- forcats::as_factor(sex)
+sex <- forcats::fct_relevel(sex, "Female", "Male")
+sex
+```
+
+### The pipe operator `%>%`
+
+The pipe operator `%>%` from the `mgrttr` package can be used to link functions together. This is very useful for creating clear, readible code. `mgrttr` is part of the `tidyverse` package so that needs to be loaded for it to work.
+
+In the previous example we created a factor in two or three steps: we created a numeric or character variable, converted it to a factor, and (if needed) changed the order of the levels. Rather than writing these steops in separate commands, we can link the operations using the pipe (`%>%`). Everything on the left of the pipe is carried forward to the right of the pipe. Execute the code below and see the result:
+
+```{r pipe, exercise = TRUE}
+sex <- c("Male", "Male", "Male", "Female") %>% forcats::as_factor()
+sex
+```
+
+We first create an object called `sex` which is made up of the values *Male* and *Female*, then the pipe `%>%` carries this object forward into the `as_factor()` command. Note that within the `as_factor` command we don't need to specify the variable `sex` (like we did previously) because it is carried forward through the pipe and into `as_factor()` (which is otherwise specified as before). As such, we have created the factor using a single command that connects two functions using a pipe.
+
+We could continue the pipe into a third function to relevel the factor:
+
+```
+sex <- c("Male", "Male", "Male", "Female") %>%
+  forcats::as_factor() %>%
+  forcats::fct_relevel("Female", "Male")
+```
+
+This command creates `sex` by specifying the sex of each member as a word, then piping these words into `as_factor()` to convert them to a factor, which is then piped into the `fct_relevel()` function to change the order of the levels.
+
+Try out this code in the code box below.
+
+```{r enig_sex_relevel2, exercise = TRUE, exercise.lines = 5}
+
+```
+
+```{r enig_sex_relevel2-solution}
+sex <- c("Male", "Male", "Male", "Female") %>%
+  forcats::as_factor() %>%
+  forcats::fct_relevel("Female", "Male")
+sex
+```
+
+Zach, Nick, Joel, and Jessika play guitar, drums, guitar and bass respectively. In the code box use a pipe to create a factor called `instru` that codes the instrument played by each band member.
+
+```{r pipe_inst, exercise = TRUE}
+
+```
+
+```{r pipe_inst-hint}
+# If you code guitar as 0, drums as 1 and bass as 2 then this code will do the job (the second line views the contents of the object we created in the first line):
+
+instru <- c("Guitar", "Drums", "Guitar", "Bass") %>% 
+  forcats::as_factor()
+instru
+```
+
+### The `rep()`function
+
+The `rep()` function can be useful when creating factors, it takes the general form:
 
 `rep(number to repeat, how many repetitions)`
 
@@ -371,26 +541,6 @@ sex <- c(rep(0, 3), 1)
 sex
 ```
 
-The pipe operator `%>%` can also be used to link functions together. It is part of the `tidyverse` package so that needs to be loaded for it to work. Rather than creating a numeric variable and then converting it to a factor in two lines of code, we can link the operations using the pipe. Everything on the left of the pipe is carried forward to the right of the pipe. Execute the code below and see the result:
-
-```{r pipe, exercise = TRUE}
-sex <- c(0, 0, 0, 1) %>% factor(levels = 0:1, labels = c("Male", "Female"))
-sex
-```
-
-We first create an object called `sex` which is made up of the values '0, 0, 0, 1', then the pipe `%>%` carries this forward into the `factor()` command. Note that within the factor command we don't need to specify the variable `sex` because it is carried forward through the pipe and into `factor()` (which is otherwise specified as before). As such, we have created the factor using two piped operations. Zach, Nick, Joel, and Jessika play guitar, drums, guitar and bass respectively. In the code box create a factor called `instru` that codes the instrument played by each band member using the pipe.
-
-```{r pipe_inst, exercise = TRUE}
-
-```
-
-```{r pipe_inst-hint}
-# If you code guitar as 0, drums as 1 and bass as 2 then this code will do the job (the second line views the contents of the object we created in the first line):
-
-instru <- c(0, 1, 0, 2) %>% factor(levels = 0:2, labels = c("Guitar", "Drums", "Bass"))
-instru
-
-```
 
 ### Creating logical variables
 
@@ -446,24 +596,24 @@ enigma_dat
 
 With data frames with large numbers of rows, inspecting them can be difficult - especially if they contain more information than **R** can display in the Console. In these cases consider using the `View()` function (note that the V is capital). For example, `View(enigma_dat)` will open up the data frame in a spreadsheet-like window within **RStudio**.
 
-Tibbles *are* data frames that have been slightly tweaked. They are part of the `tidyverse` package (so, if you want to create one that needs to be loaded). Most users won't particularly notice the difference between a data frame and tibble. However, because I am trying to follow the `tidyverse` ethos I will, in general, use tibbles. To create a tibble instead of a data frame make sure the `tidyverse` package is loaded and use the `tibble()` function instead of the `data.frame()` function. In the code box below, create a tibble called `enigma_dat` that contains all of the variables we've created (`name`, `age`, `sex`, `instru`, and `is_female`), and inspect it.
+Tibbles *are* data frames that have been slightly tweaked. They are part of the `tidyverse` package (so, if you want to create one that needs to be loaded). Most users won't particularly notice the difference between a data frame and tibble. However, because I am trying to follow the `tidyverse` ethos I will, in general, use tibbles. To create a tibble instead of a data frame make sure the `tidyverse` package is loaded and use the `tibble()` function instead of the `data.frame()` function. In the code box below, create a tibble called `enigma_tib` (notice I have used the suffix '_tib' to indicate that the object is a tibble) that contains all of the variables we've created (`name`, `age`, `sex`, `instru`, and `is_female`), and inspect it.
 
 ```{r tibble, exercise = TRUE, exercise.setup = "prepare-vars"}
 
 ```
 
 ```{r tibble-solution}
-enigma_dat <- tibble(name, age, sex, instru, is_female)
-enigma_dat
+enigma_tib <- tibble(name, age, sex, instru, is_female)
+enigma_tib
 ```
 
 You should hopefully see that, superficially, the tibble is no different to the data frame.
 
 ## Reading and writing data files
 
-### Files in the working directory
+### Files in the working directory/project folder
 
-Most likely you will find it easier to input data into a spreadsheet software (e.g., *Microsoft Excel*, *OpenOffice Calc*, *Numbers*, *NeoOffice*, *Google Sheets* etc.). I don't recommend using *SPSS Statistics* for data entry (it is quite slow compared to, say, *Excel*). Although you can read data directly from an *Excel* or *SPSS* file it is generally more straightforward to export data from these packages into the comma-separated values, CSV, format. There are native functions for reading csv files (e.g., `read.csv()`) but the `tidyverse` function are:
+Most likely you will find it easier to input data into a spreadsheet software (e.g., *Microsoft Excel*, *OpenOffice Calc*, *Numbers*, *NeoOffice*, *Google Sheets* etc.). I don't recommend using *SPSS Statistics* for data entry (it is quite slow compared to, say, *Excel*). Although you can read data directly from an *Excel* or *SPSS* file it is generally more straightforward to export data from these packages into the comma-separated values, CSV, format. There are native functions for reading csv files (e.g., `read.csv()`) but the `tidyverse` way is to use the functions from the `readr` package that loads with `tidyverse`:
 
 * `read_delim()` and `write_delim()`: read and write (respectively) a text file specifying how values are delimited with the argument `delim = ""`. For example, you could read a csv file using `read_delim(file_name, delim = ",")`.
 * `read_csv()` and `write_csv()`: special cases of the above that assume comma separated values.
@@ -471,81 +621,67 @@ Most likely you will find it easier to input data into a spreadsheet software (e
 * `read_sav()` and `write_sav()`: read and write SPSS Statistics files. (You need to execute `library(haven)` to use these functions.)
 * `read_excel()`: read Microsoft Excel files (both .xls and .xlsx format). (You need to execute `library(readxl)` to use this function.)
 
-At a simple level you insert the file name into the function. For example, download the csv file [ais_ch03_ha.csv](./data/ais_ch03_ha.csv), which contains the data that Prof Pincus uses to help Zach explore what attributes women look for in men in Chapter 3 of the book. These data are a subset of data from a study by @RN9017. Assuming that you save this file into the working directory, you could load it using:
+At a simple level you insert the file name into the function. For example, download the csv file [ais_ch03_ha.csv](./data/ais_ch03_ha.csv), which contains the data that Prof Pincus uses to help Zach explore what attributes women look for in men in Chapter 3 of the book. These data are a subset of data from a study by @RN9017. Assuming that you save this file into the working directory or your project folder, you could load it using:
 
-`ha_dat <- read_csv("ais_ch03_ha.csv")`
+`ha_tib <- readr::read_csv("ais_ch03_ha.csv")`
 
-This command creates a tibble called `ha_dat` from the file. It assumes that the first row of the file contains variable names (which it does). If this is not the case then override the defaults by including `header = FALSE`:
+This command creates a tibble called `ha_tib` from the file. It assumes that the first row of the file contains variable names (which it does). If this is not the case then override the defaults by including `header = FALSE`:
 
-`ha_dat <- read_csv("ais_ch03_ha.csv", header = FALSE)`
+`ha_tib <- readr::read_csv("ais_ch03_ha.csv", header = FALSE)`
 
 ### Files not in the working directory
 
-If the file is not in your working directory then you need to tell **RStudio** where it is. We saw how to do this earlier on using `file.path()`. Imagine we'd saved **ais_ch03_ha.csv** into a folder called *Data* in our *Documents* folder. We could import this file as follows:
+If the file is not in your working directory then you need to tell **RStudio** where it is. Assuming you've followed my advice and used an RStudio project, then the least confusing way to open it is to use the `here()` function:
 
-`path_2_file <- file.path(Sys.getenv("HOME"), "Documents", "Data",  "ais_ch03_ha.csv")`
-`ha_dat <- read_csv(path_2_file)`
-
-The first line creates a text string called `path_2_file` containing the full path to the file we want. The second line inserts this text string into the `read_csv` function. We can combine these into a single command too:
-
-`ha_dat <- read_csv(file.path(Sys.getenv("HOME"), "Documents", "Data", "ais_ch03_ha.csv"))`
-
-### file.choose()
-
-Alternatively you can use `file.choose()` which opens a standard dialogue box to navigate your file system. For example, executing
-
-`ha_dat <- read_csv(file.choose())`
-
-creates a tibble called `ha_dat` from whatever file you choose through the resulting dialogue box.
-
+`ha_tib <- here::here("/data/ais_ch03_ha.csv") %>% readr::read_csv()`
 
 ## Using variables
 
 ### Referencing variables
 
-Let's assume you have loaded the csv file from the previous section into a tibble called `ha_dat`. Using what you already know, inspect the tibble using the code box.
+Let's assume you have loaded the csv file from the previous section into a tibble called `ha_tib`. Using what you already know, inspect the tibble using the code box.
 
 ```{r ha_1, exercise = TRUE}
 
 ```
 
 ```{r ha_1-solution}
-ha_dat
+ha_tib
 ```
 
-You can list names of variables within a tibble (or data frame) using the `names()` function. Just insert the name of the tibble into the function without quotes (e.g., `names(name_of_tibble)`). Use the code box to list the names of the variables in `ha_dat`.
+You can list names of variables within a tibble (or data frame) using the `names()` function. Just insert the name of the tibble into the function without quotes (e.g., `names(name_of_tibble)`). Use the code box to list the names of the variables in `ha_tib`.
 
 ```{r ha_2, exercise = TRUE}
 
 ```
 
 ```{r ha_2-solution}
-names(ha_dat)
+names(ha_tib)
 ```
 
 If you want to reference a variable from a tibble (or data frame) you use the general form:
 
 `name_of_tibble$name_of_variable`
 
-For example, to access the variable called *humour* within the tibble *ha_dat* we would use:
+For example, to access the variable called *humour* within the tibble *ha_tib* we would use:
 
-`ha_dat$humour`
+`ha_tib$humour`
 
-The `$` can be thought of as 'in', so you could read the command as 'the variable called humour in the tibble called ha_dat'. Try executing this command in the code box and see what happens.
+The `$` can be thought of as 'in', so you could read the command as 'the variable called humour in the tibble called ha_tib'. Try executing this command in the code box and see what happens.
 
 ```{r ha_3, exercise = TRUE}
 
 ```
 
 ```{r ha_3-solution}
-ha_dat$humour
+ha_tib$humour
 ```
 
 You should see a list of numbers: these are the scores that make up the variable *humour*
 
 ### Creating variables from variables
 
-We can add variables (columns) to a tibble using the `mutate()` function from the `tidyverse` package. Often when doing this we want to use operators to manipulate variables: for example we might want to use `+` to create a new variable by adding two existing variables together. Table 1 shows a list of commonly-used operators.
+We can add variables (columns) to a tibble using the `mutate()` function from the `dplyr` package (which is part of `tidyverse`). Often when doing this we want to use operators to manipulate variables: for example we might want to use `+` to create a new variable by adding two existing variables together. Table 1 shows a list of commonly-used operators.
 
 ```{r operators, results = 'asis'}
 
@@ -558,37 +694,40 @@ knitr::kable(data.frame(Operator, What_it_does), caption = "Table 1: Summary of 
 
 Using the pipe we could create a new variable that contains the average scores across the variables **humour** and **kind** by executing:
 
-`ha_dat <- ha_dat %>% mutate(mean_hum_kind = (humour + kind)/2)`
+```
+ha_tib <- ha_dat %>%
+  dplyr::mutate(mean_hum_kind = (humour + kind)/2)
+```
 
 let's break this command down:
 
-* `ha_dat <-` tells **R** to re-create the tibble *ha_dat* from whatever comes next
-* `ha_dat %>%` starts to recreate the tibble from the original *ha_dat* tibble. The pipe operator tells R that there's some processing on that tibble to follow
-* `mutate(mean_hum_kind = (humour + kind)/2)` uses the `mutate()` function to add a variable called **mean_hum_kind** which contains the scores of **humour** and **kind** added together and divided by two. (Inside mutate is one of the rare occasions you will use a single = sign in **R**).
+* `ha_tib <-` tells **R** to re-create the tibble *ha_tib* from whatever comes next
+* `ha_tib %>%` starts to recreate the tibble from the original *ha_tib* tibble. The pipe operator tells R that there's some processing on that tibble to follow
+* `dplyr::mutate(mean_hum_kind = (humour + kind)/2)` uses the `mutate()` function to add a variable called **mean_hum_kind** which contains the scores of **humour** and **kind** added together and divided by two. (Inside mutate is one of the rare occasions you will use a single = sign in **R**).
 
-In the code box, add a variable called **humour_sq** to the `ha_dat` tibble that is the variable **humour** squared. Then view the tibble.
+In the code box, add a variable called **humour_sq** to the `ha_tib` tibble that is the variable **humour** squared. Then view the tibble.
 
 ```{r ha_4, exercise = TRUE}
 
 ```
 
 ```{r ha_4-solution}
-ha_dat <- ha_dat %>% mutate(humour_sq = humour^2)
-ha_dat
+ha_tib <- ha_tib %>% dplyr::mutate(humour_sq = humour^2)
+ha_tib
 ```
 
 
 ### Filtering tibbles
 
-The participants in this study were aged between 15 and 18. Imagine we are interested only in the responses of people aged 16 or over. We can extract these data using the `filter()` function from the `tidyverse` package. Using the pipe we could create a new tibble that contains only the 16 to 18 year olds as follows:
+The participants in this study were aged between 15 and 18. Imagine we are interested only in the responses of people aged 16 or over. We can extract these data using the `filter()` function from the `dplyr` package in `tidyverse`. Using the pipe we could create a new tibble that contains only the 16 to 18 year olds as follows:
 
-`ha_1618_dat <- ha_dat %>% filter(age >= 16)`
+`ha_1618_tib <- ha_tib %>% dplyr::filter(age >= 16)`
 
 let's break this command down:
 
-* `ha_1618_dat <-` sets the name for the new tibble and the assignment operator indicates to create it from what follows
-* `ha_dat %>%` starts by taking the *ha_dat* tibble but the pipe operator means that some conditions are to follow
-* `filter(age >= 16)` used the filter function and sets a condition to select cases if the variable **age** is greater than or equal (*>=*) to 16.
+* `ha_1618_tib <-` sets the name for the new tibble and the assignment operator indicates to create it from what follows
+* `ha_tib %>%` starts by taking the *ha_tib* tibble but the pipe operator means that some conditions are to follow
+* `dplyr::filter(age >= 16)` used the filter function and sets a condition to select cases if the variable **age** is greater than or equal (*>=*) to 16.
 
 Try this in the code box, and inspect the tibble afterwards (by executing its name).
 
@@ -597,13 +736,13 @@ Try this in the code box, and inspect the tibble afterwards (by executing its na
 ```
 
 ```{r age16-solution}
-ha_1618_dat <- ha_dat %>% filter(age >= 16)
-ha_1618_dat
+ha_1618_tib <- ha_tib %>% dplyr::filter(age >= 16)
+ha_1618_tib
 ```
 
 We could achieve the same thing in other ways. For example:
 
-`ha_1618_dat <- ha_dat %>% filter(age != 15)`
+`ha_1618_tib <- ha_tib %>% dplyr::filter(age != 15)`
 
 Does the same thing but sets the filter to be that the variable **age** is not equal (`!=`) to 15, which will have the effect of excluding the 15 year olds. Try this in the code box and inspect the tibble.
 
@@ -612,35 +751,35 @@ Does the same thing but sets the filter to be that the variable **age** is not e
 ```
 
 ```{r age162-solution}
-ha_1618_dat <- ha_dat %>% filter(age != 15)
-ha_1618_dat
+ha_1618_tib <- ha_tib %>% dplyr::filter(age != 15)
+ha_1618_tib
 ```
 
 
 If we wanted *only* the 15-year olds, we could do this by executing:
 
-`ha_15_dat <- ha_dat %>% filter(age == 15)`
+`ha_15_tib <- ha_tib %>% dplyr::filter(age == 15)`
 
-to create a tibble called *ha_15_dat* that contains cases in *ha_dat* where the variable **age** is equal to (`==`) 15. Try this in the code box and inspect the resulting tibble.
+to create a tibble called *ha_15_tib* that contains cases in *ha_tib* where the variable **age** is equal to (`==`) 15. Try this in the code box and inspect the resulting tibble.
 
 ```{r age15, exercise = TRUE}
 
 ```
 
 ```{r age15-solution}
-ha_15_dat <- ha_dat %>% filter(age == 15)
-ha_15_dat
+ha_15_tib <- ha_tib %>% dplyr::filter(age == 15)
+ha_15_tib
 ```
 
-In the code box, create a tibble called `kind_max_dat` that contains only the participants within the `ha_dat` tibble who rated kindness (the variable **kind**) with the maximum score of 10. Inspect the tibble by executing its name.
+In the code box, create a tibble called `kind_max_tib` that contains only the participants within the `ha_tib` tibble who rated kindness (the variable **kind**) with the maximum score of 10. Inspect the tibble by executing its name.
 
 ```{r ha_5, exercise = TRUE}
 
 ```
 
 ```{r ha_5-solution}
-kind_max_dat <- ha_dat %>% filter(kind == 10)
-kind_max_dat
+kind_max_tib <- ha_tib %>% dplyr::filter(kind == 10)
+kind_max_tib
 ```
 
 ## Other resources

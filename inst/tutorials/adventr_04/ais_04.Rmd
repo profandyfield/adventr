@@ -22,11 +22,11 @@ hint_text <- function(text, text_color = "#E69F00"){
 
 #Read dat files needed for the tutorial
 
-ras_dat <- adventr::ras_dat
+ras_tib <- adventr::ras_dat
 
 #setup objects for code blocks
 
-ras_no_outlier <- ras_dat %>% filter(rating > 11)
+ras_no_outlier <- ras_tib %>% filter(rating > 11)
   
 ```
 
@@ -34,10 +34,10 @@ ras_no_outlier <- ras_dat %>% filter(rating > 11)
 
 ## Overview
 
-This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] by me, [Andy Field](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
 
 * Who is the tutorial aimed at?
-    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+    - Anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/)  may find them useful.
 * What is covered?
     - This tutorial looks at how to summarize data both with descriptive statistics such as the mean, median, variance, standard and deviation. We learn a bit more about manipulating tibbles too. It would be a useful tutorial to run alongside teaching based on Chapter 4 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
     - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
@@ -116,25 +116,25 @@ This tutorial has the data files pre-loaded so you shouldn't need to do anything
 You can load the file in several ways:
 
 * Assuming that you save this file into the working directory, you can load it by executing:
-    - `ras_dat <- read_csv("ais_c04_ras.csv")`
+    - `ras_tib <- read_csv("ais_c04_ras.csv")`
     - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
 * To load the file using a standard dialogue box to navigate your file system, execute:
-    - `ras_dat <- read_csv(file.choose())`
+    - `ras_tib <- read_csv(file.choose())`
 * You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
-    - `ras_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_c04_ras.csv")`
+    - `ras_tib <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_c04_ras.csv")`
     - This method relies on an internet connection (and my server having not exploded!)
 
 
 ## The mean and median
 
-In chapter 4 of the book Milton and Zach retreat to Occam's cafe where Milton helps Zach to explore some of the data that he stole from Alice's file when he broke into her counsellor's office. Still working on the hypothesis that Alice left him because she was dissatisfied with their relationship, Zach and Milton look at Alice's responses on the *relationship assessment scale* (RAS), which is a 7-item scale measuring relationship satisfaction. Each item has a 5-point response scale yielding a total score that ranges from 7 (completely dissatisfied) to 35 (completely satisfied). Alice completed this measure each of the 10 weeks if her counselling. The data are in a tibble called `ras_dat`, use the code box to view this tibble.
+In chapter 4 of the book Milton and Zach retreat to Occam's cafe where Milton helps Zach to explore some of the data that he stole from Alice's file when he broke into her counsellor's office. Still working on the hypothesis that Alice left him because she was dissatisfied with their relationship, Zach and Milton look at Alice's responses on the *relationship assessment scale* (RAS), which is a 7-item scale measuring relationship satisfaction. Each item has a 5-point response scale yielding a total score that ranges from 7 (completely dissatisfied) to 35 (completely satisfied). Alice completed this measure each of the 10 weeks if her counselling. The data are in a tibble called `ras_tib`, use the code box to view this tibble.
 
-```{r ras_dat_view, exercise = TRUE}
+```{r ras_tib_view, exercise = TRUE}
 
 ```
 
-```{r ras_dat_view-solution}
-ras_dat
+```{r ras_tib_view-solution}
+ras_tib
 ```
 
 You should see a tibble with two variables: **week** indicates in which week of counselling (from 1 to 10) Alice completed the RAS and **rating** shows her total score on the RAS. In the book Milton shows Zach how to compute the mean, median, variance, standard deviation and inter-quartile range of these scores. We can do the same in **R** using these commands: `mean()`, `median`, `var()`, `sd()`, and `IQR()`. 
@@ -154,13 +154,13 @@ The function for the median has a similar format except that there isn't an opti
 
 If you are happy with the default settings you don't need to specify those options explicitly. For example, to find the mean of Alice's RAS scores you can execute:
 
-`mean(ras_dat$rating)`
+`mean(ras_tib$rating)`
 
 However, if you wanted to remove missing values you would need to execute to override the default setting not to remove missing values:
 
-`mean(ras_dat$rating, na.rm = T)`
+`mean(ras_tib$rating, na.rm = T)`
 
-Remember from the last tutorial that because the ratings are in the variable **rating**, and that variable is in the tibble *ras_dat* we access them with `ras_dat$rating`, which translates as 'the variable rating within the tibble ras_dat'. The `na.rm = T` tells **R** to remove missing values before computing the mean.
+Remember from the last tutorial that because the ratings are in the variable **rating**, and that variable is in the tibble *ras_tib* we access them with `ras_tib$rating`, which translates as 'the variable rating within the tibble ras_tib'. The `na.rm = T` tells **R** to remove missing values before computing the mean.
 
 In the code box execute commands to get the mean and median of Alice's RAS ratings.
 
@@ -172,8 +172,8 @@ In the code box execute commands to get the mean and median of Alice's RAS ratin
 ```
 
 ```{r ras_mean-solution}
-mean(ras_dat$rating)
-median(ras_dat$rating)
+mean(ras_tib$rating)
+median(ras_tib$rating)
 ```
 
 ## Outliers
@@ -186,7 +186,7 @@ In the book, Zach and Milton spot an unusual score (an *outlier*) in Alice's dat
 ```
 
 ```{r ras_hist-solution}
-ras_hist<-ggplot(ras_dat, aes(rating))
+ras_hist <- ggplot2::ggplot(ras_tib, aes(rating))
 ras_hist +
   geom_histogram(binwidth = 1, fill = "#56B4E9", colour = "#56B4E9", alpha = 0.6) +
   labs(x = "Relationship assessment score (7-35)", y = "Frequency") +
@@ -203,11 +203,11 @@ The outlier is the score of 11 (Alice's score in the final week of counselling -
 
 ```{r rmv_outlier-solution}
 #This is one way:
-ras_no_outlier <- ras_dat %>% filter(rating > 11)
+ras_no_outlier <- ras_tib %>% filter(rating > 11)
 
 #This would do the same thing:
 
-ras_no_outlier <- ras_dat %>% filter(rating != 11)
+ras_no_outlier <- ras_tib %>% filter(rating != 11)
 ```
 
 Recalculate the mean and median rating without the outlier of 11 included (i.e., use the tibble that you have just created).
@@ -250,9 +250,9 @@ Now try computing these statistics for the original data (i.e. with the outlier 
 ```
 
 ```{r ras_fit2-solution}
-var(ras_dat$rating)
-sd(ras_dat$rating)
-IQR(ras_dat$rating, type = 8)
+var(ras_tib$rating)
+sd(ras_tib$rating)
+IQR(ras_tib$rating, type = 8)
 ```
 
 Note that with the outlier included the variance increases from 1.5 to a whopping 37.43, which illustrates the dramatic impact that outliers have on the variance. In contrast, the IQR is relatively unaffected (it increases from 2 to 2.08) because it is the boundaries of the middle 50% of scores and so largely ignores the top and bottom 25% of scores (where the outliers dwell).

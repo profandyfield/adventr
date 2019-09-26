@@ -24,7 +24,7 @@ library(WRS2)
 
 
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
 hint_text <- function(text, text_color = "#E69F00"){
@@ -34,8 +34,8 @@ hint_text <- function(text, text_color = "#E69F00"){
 
 #Read dat files needed for the tutorial
 
-mem_cov_dat <- adventr::mem_cov_dat;
-alice_dat <- adventr::alice_dat
+mem_cov_tib <- adventr::mem_cov_dat;
+alice_tib <- adventr::alice_dat
 
 #setup objects for code blocks
 
@@ -46,10 +46,10 @@ alice_dat <- adventr::alice_dat
 
 ## Overview
 
-This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] by me, [Andy Field](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
 
 * Who is the tutorial aimed at?
-    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+    - Anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/)  may find them useful.
 * What is covered?
     - This tutorial looks at how to fit a linear model for a factorial design including interactions (moderation). We look at robust variants of the model, and computing a Bayes factor. It would be a useful tutorial to run alongside teaching based on Chapter 17 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/). The tutorial also adds in an example not from the book (but based on it) that demonstrates the use of continuous predictors to adjust means (ANCOVA)
     - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
@@ -136,13 +136,41 @@ This tutorial has the data files pre-loaded so you shouldn't need to do anything
 You can load the files in several ways (using the first file as an example):
 
 * Assuming that you save this file into the working directory, you can load it by executing:
-    - `alice_dat <- read_csv("ais_17_alice_data.csv")`
+    - `alice_tib <- read_csv("ais_17_alice_data.csv")`
     - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
 * To load the file using a standard dialogue box to navigate your file system, execute:
-    - `alice_dat <- read_csv(file.choose())`
+    - `alice_tib <- read_csv(file.choose())`
 * You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
-    - `alice_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_17_alice_data.csv")`
+    - `alice_tib <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_17_alice_data.csv")`
     - This method relies on an internet connection (and my server having not exploded!)
+
+Adapt the above instructions to load the second data file into a tibble called `mem_cov_tib`.
+
+### Categorical variables
+
+When working within the tutorial the data are already prepared for you. However, if you are trying to replicate the tutorial within R or R Studio then you need to explicitly convert categorical predictors to factor. The first data file, which you have loaded into `alice_tib` has two categorical variables (**picture** and **gene*), which will be read in from the csv file as character variables. To convert these variables to factors we can use the `as_factor()` function from the `forcats` package. There are several ways to do this, but the most tidyverse way is to use `mutate()` from `dplyr`, which is a way of adding variables to a tibble or overwriting existing variables. We could execute:
+
+```{r, echo = TRUE, eval = FALSE}
+library(tidyverse)
+alice_tib <- alice_tib %>% 
+  dplyr::mutate(
+    picture = forcats::as_factor(picture),
+    gene = forcats::as_factor(gene)
+  )
+```
+
+This code recreates the `alice_tib` tibble from itself then uses mutate to recreate the variables **picture** and **gene** from themselves by placing each one in turn within the `as_factor()` function.
+
+We can do the same for the second data file, which you have stored in `mem_cov_tib`. This tibble contains one categoircal variable called **group**. We can convert this variable to a factor by adapting the code above:
+
+```{r, echo = TRUE, eval = FALSE}
+library(tidyverse)
+
+mem_cov_tib <- mem_cov_tib %>% 
+  dplyr::mutate(
+    group = forcats::as_factor(group)
+  )
+```
 
 
 ## Exploring the data
@@ -152,7 +180,7 @@ At the start of the story when Alice first disappears Zach finds a memory stone 
 
 The experiment on Alice's memory stone relates to work she has been doing to see whether a genetic toggle switch can be used in conjunction with the chameleon gene to help people with injuries to regenerate their wounds.  Participants who had facial burns were recruited. One-week pre-test, a gene C–10XFMG (the so-called chameleon gene) was introduced into all participants. Two days prior to test, a genetic toggle switch was introduced into half of the participants. Half of the participants were asked to look at a photograph of themselves from before their injury and to imagine the cells in their faces changing to become like the photo. The remainder acted as a control and were asked to look at a picture of a same-sex stranger and to try to change their face to become the person in the picture. All participants looked at the picture for 6 sessions of 20 minutes each. At the end of the sessions their faces were scanned into a computer and compared to the face in the photograph. Facial recognition software produced a precise resemblance measure as a percentage (100% = the participants face is exactly like the face in the photograph, 0% the person in the photo bears no resemblance at all to the participant).
 
-The data are in the tibble `alice_dat`, which has four variables:
+The data are in the tibble `alice_tib`, which has four variables:
 
 * **id**: Participant ID
 * **picture**: A factor describing whether a participant tried to resemble a picture of themselves (Self), or a matched stranger (Other)
@@ -166,7 +194,7 @@ Use the code box to inspect the tibble.
 ```
 
 ```{r dat_view-solution}
-alice_dat   
+alice_tib   
 ```
 
 The model we're fitting is described by the following equation:
@@ -191,10 +219,12 @@ Using what you've learnt in previous tutorials, create a tibble called `alice_su
 ```
 
 ```{r desc-solution}
-alice_summary <- alice_dat %>% group_by(gene, picture) %>% summarize(
-  mean = mean(resemblance),
-  ci_low = ci(resemblance)["CI lower"],
-  ci_upp = ci(resemblance)["CI upper"]
+alice_summary <- alice_tib %>%
+  dplyr::group_by(gene, picture) %>%
+  dplyr::summarize(
+    mean = mean(resemblance),
+    ci_low = gmodels::ci(resemblance)["CI lower"],
+    ci_upp = gmodels::ci(resemblance)["CI upper"]
 )
 alice_summary              
 ```
@@ -206,16 +236,20 @@ It would be useful to get some means for the main effects of **gene** and **pict
 ```
 
 ```{r me-solution}
-gene_main <- alice_dat %>% group_by(gene) %>% summarize(
-  mean = mean(resemblance),
-  ci_low = ci(resemblance)["CI lower"],
-  ci_upp = ci(resemblance)["CI upper"]
+gene_main <- alice_tib %>%
+  dplyr::group_by(gene) %>%
+  dplyr::summarize(
+    mean = mean(resemblance),
+    ci_low = gmodels::ci(resemblance)["CI lower"],
+    ci_upp = gmodels::ci(resemblance)["CI upper"]
 )
 
-pic_main <- alice_dat %>% group_by(picture) %>% summarize(
-  mean = mean(resemblance),
-  ci_low = ci(resemblance)["CI lower"],
-  ci_upp = ci(resemblance)["CI upper"]
+pic_main <- alice_tib %>%
+  dplyr::group_by(picture) %>%
+  dplyr::summarize(
+    mean = mean(resemblance),
+    ci_low = gmodels::ci(resemblance)["CI lower"],
+    ci_upp = gmodels::ci(resemblance)["CI upper"]
 )
 
 gene_main  
@@ -233,7 +267,7 @@ Let's plot the data. Use the code box below to create an error bar chart with **
 ```
 
 ```{r plot-solution}
-alice_plot<-ggplot(alice_dat, aes(gene, resemblance, colour = picture))
+alice_plot <- ggplot2::ggplot(alice_tib, aes(gene, resemblance, colour = picture))
 alice_plot +
   stat_summary(fun.data = "mean_cl_normal", position = position_dodge(width = 0.5)) +
   scale_colour_manual(values = c("#E69F00", "#56B4E9")) + 
@@ -274,7 +308,7 @@ Fit the model in the code box below.
 ```
 
 ```{r lm1-solution}
-gen_mod <- lm(resemblance ~ gene*picture, data = alice_dat)
+gen_mod <- lm(resemblance ~ gene*picture, data = alice_tib)
 summary(gen_mod)
 confint(gen_mod)
 plot(gen_mod)
@@ -343,11 +377,11 @@ So, to get Type III sums of squares we do the following:
 * We can display robust versions of *F* by including the argument `white.adjust = "hc3"`. The options here are similar to what we've seen with other functions (i.e. "hc0", "hc1", "hc2", "hc3", "hc4") and as we have seen "hc3" or "hc4" are good choices. Including this argument will adjust for heteroscedasticity in the data.
 
 ```{r echo = T, eval = F}
-contrasts(alice_dat$picture) <- c(1, -1)
-contrasts(alice_dat$gene) <- c(1, -1)
-gen_mod2 <- lm(resemblance ~ gene*picture, data = alice_dat)
-Anova(gen_mod2, type = 3)
-Anova(gen_mod2, type = 3, white.adjust = "hc3")
+contrasts(alice_tib$picture) <- c(1, -1)
+contrasts(alice_tib$gene) <- c(1, -1)
+gen_mod2 <- lm(resemblance ~ gene*picture, data = alice_tib)
+car::Anova(gen_mod2, type = 3)
+car::Anova(gen_mod2, type = 3, white.adjust = "hc3")
 ```
 
 
@@ -360,11 +394,11 @@ Use the code box to generate *F*-statistics for this model based on Type III sum
 ```
 
 ```{r fstats-solution}
-contrasts(alice_dat$picture) <- c(1, -1)
-contrasts(alice_dat$gene) <- c(1, -1)
-gen_mod2 <- lm(resemblance ~ gene*picture, data = alice_dat)
-Anova(gen_mod2, type = 3)
-Anova(gen_mod2, type = 3, white.adjust = "hc3")
+contrasts(alice_tib$picture) <- c(1, -1)
+contrasts(alice_tib$gene) <- c(1, -1)
+gen_mod2 <- lm(resemblance ~ gene*picture, data = alice_tib)
+car::Anova(gen_mod2, type = 3)
+car::Anova(gen_mod2, type = 3, white.adjust = "hc3")
 ```
 
 
@@ -378,12 +412,12 @@ As in previous tutorials, we can use one of the methods (HC0 to HC5) for produci
 Remember that we place the model we created with `lm()` (in this case `gen_mod`) into the function `robust()`. For example, we could execute:
 
 * `robust(gen_mod, conf.int = T)` to use the default "HC3" method and request 95% confidence intervals
-* `robust(gen_mod, vcov = "HC4", conf.int = T)` to use "HC4" and request 95% confidence intervals
+* `robust(gen_mod, vcov.type = "HC4", conf.int = T)` to use "HC4" and request 95% confidence intervals
 
 The HC3 and HC4 refer to different methods to correct the standard errors (refer back to the tutorial *adventr_14*). Try these commands in the code box and compare the results.
 
 ```{r gen_mod_hc4-setup}
-gen_mod <- lm(resemblance ~ gene*picture, data = alice_dat)
+gen_mod <- lm(resemblance ~ gene*picture, data = alice_tib)
 ```
 
 ```{r gen_mod_hc4, exercise = TRUE}
@@ -392,12 +426,12 @@ gen_mod <- lm(resemblance ~ gene*picture, data = alice_dat)
 ```
 
 ```{r gen_mod_hc4-solution}
-robust(gen_mod, conf.int = T)
-robust(gen_mod, vcov = "HC4", conf.int = T)
+sjstats::robust(gen_mod, conf.int = T)
+sjstats::robust(gen_mod, vcov.type = "HC4", conf.int = T)
 ```
 
 ### Robust *F*s
-We saw in the previous section that if we evaluate effects with an *F*-statistic we can correct for heteroscedasticity by including `white.adjust = "hc3"` in the `Anova()` function.
+We saw in the previous section that if we evaluate effects with an *F*-statistic we can correct for heteroscedasticity by including `white.adjust = "hc3"` in the `car::Anova()` function.
 
 ### Robust estimates
 
@@ -409,7 +443,7 @@ In *advetr_14* we used the `lmRob()` function from the `robust` package (again, 
 ```
 
 ```{r gen_mod_robust-solution}
-gen_rob <- lmRob(resemblance ~ gene*picture, data = alice_dat)
+gen_rob <- robust::lmRob(resemblance ~ gene*picture, data = alice_tib)
 summary(gen_rob)   
 ```
 
@@ -427,7 +461,7 @@ The `WRS2` package [@RN10205] wraps up a few of the many functions described by 
 These functions have similar arguments:
 
 * `formula`: the functions use a formula like that for `lm()`, so in this case we could use `resemblance ~ gene*picture`.
-* `data = tibble`: replace tibble with the name of the tibble or data frame in which the data are stored (in this case `data = alice_dat`)
+* `data = tibble`: replace tibble with the name of the tibble or data frame in which the data are stored (in this case `data = alice_tib`)
 * `tr = 0.2`: we've used this argument many times before. It determines the level of trim. The default is a 20% trim, so you can omit this argument if you're happy with that default.
 * `est = "mom"`: the default is to use the modified one-step (MOM) estimator of location based on Huber's Psi, but you can change this to "onestep" to use the unmodified one-step M-estimator, or "median" to use the median. The default is fine though, and if you're happy with it you can omit this argument.
 * `nboot = 599`: specifies the number of bootstrap samples. There is a case for increasing the defaults to 1000.
@@ -439,10 +473,10 @@ See if you can run the three commands in the code box below based on my descript
 ```
 
 ```{r alice_wrs-solution}
-t2way(resemblance ~ gene*picture, data = alice_dat)
-mcp2atm(resemblance ~ gene*picture, data = alice_dat)
-pbad2way(resemblance ~ gene*picture, data = alice_dat, nboot = 1000)
-mcp2a(resemblance ~ gene*picture, data = alice_dat, nboot = 1000)
+WRS2::t2way(resemblance ~ gene*picture, data = alice_tib)
+WRS2::mcp2atm(resemblance ~ gene*picture, data = alice_tib)
+WRS2::pbad2way(resemblance ~ gene*picture, data = alice_tib, nboot = 1000)
+WRS2::mcp2a(resemblance ~ gene*picture, data = alice_tib, nboot = 1000)
 ```
 
 Because our predictors are both made up of only two categories, there isn't really any need for *post hoc* tests (because the main effects can only reflect the difference between the two groups). Based on `t2way()` we'd conclude that there was a significant main effect of **gene**, *Q* = 451.36, *p* = 0.001, a significant main effect of **picture**, *Q* = 65.50, *p* = 0.001, and a significant interaction between the two, *Q* = 61.47, *p* = 0.001. `pbad2way()` returns only *p*-values for each effect, and these are all 0, which would again suggest all effects in the model are significant.
@@ -463,9 +497,12 @@ We're going to build three models: (1) **gene** as the only predictor; (2) a mod
 For our data (using the default prior) we could execute the following to create our three models:
 
 ```{r echo = T, eval = F}
-gene_bf <- lmBF(formula = resemblance ~ gene, data = data.frame(alice_dat))
-pic_bf <- lmBF(formula = resemblance ~ gene + picture, data = data.frame(alice_dat))
-int_bf <- lmBF(formula = resemblance ~ gene + picture + gene:picture, data = data.frame(alice_dat))
+gene_bf <- alice_tib %>% 
+  BayesFactor::lmBF(formula = resemblance ~ gene, data = .)
+pic_bf <- alice_tib %>% 
+  BayesFactor::lmBF(formula = resemblance ~ gene + picture, data = .)
+int_bf <- alice_tib %>% 
+  BayesFactor::lmBF(formula = resemblance ~ gene + picture + gene:picture, data = .)
 ```
 
 The first line creates model 1 and stores it in the object `gene_bf`, the second line creates model 2 and stores it in the object `pic_bf` and the third line creates model 3 and stores it in the object `int_bf`. having created them we can compare them with the following commands:
@@ -485,9 +522,13 @@ Try these commands in the code box:
 ```
 
 ```{r gene_bf-solution}
-gene_bf <- lmBF(formula = resemblance ~ gene, data = data.frame(alice_dat))
-pic_bf <- lmBF(formula = resemblance ~ gene + picture, data = data.frame(alice_dat))
-int_bf <- lmBF(formula = resemblance ~ gene + picture + gene:picture, data = data.frame(alice_dat))
+gene_bf <- alice_tib %>% 
+  BayesFactor::lmBF(formula = resemblance ~ gene, data = .)
+pic_bf <- alice_tib %>% 
+  BayesFactor::lmBF(formula = resemblance ~ gene + picture, data = .)
+int_bf <- alice_tib %>% 
+  BayesFactor::lmBF(formula = resemblance ~ gene + picture + gene:picture, data = .)
+
 gene_bf
 pic_bf/gene_bf
 int_bf/pic_bf
@@ -502,7 +543,7 @@ Because the results are based on sampling (and so will vary each time you genera
 
 In the lecture (but not the book) we also looked at models including categorical and continuous predictors. In these models, the categorical predictors no longer compare the means of the categories, but compare the means *adjusted for other variables in the model*. This is the basic 'analysis of covariance (ANCOVA)' model. In the lecture we imagined an experiment similar to the one we encountered in the previous tutorial, but with an added covariate. Just to recap:
 
-During Zach's visit to the JIG:SAW complex he visits several research buildings. In the second, he discovers experiments being conducted related to memory. In one experiment thirty-six participants with ID chips were tested. All participants met a stranger who had a 5-minute scripted conversation with them containing 10 critical pieces of information. A week later, the participants were asked to recall the encounter for 5 minutes, and then after a 10-minute break wrote everything that they could remember about the original encounter. During the 5-minute initial recall, one of three things happened: the control group (*N* = 12) received no intervention; the erase group (*N* = 12) had a pulse of electricity sent to their brain via their ID chip; and the replace group (*N* = 12) had conflicting verbal descriptions sent to their ID chip. The outcome was how many of the 10 critical pieces of information the participants wrote down after the recall phase. The prediction was that recall will be worse (i.e. lower scores) for participants who had an electrical pulse, or conflicting information sent to their ID chips during recall than those, in the control group, who experienced no interference. Imagine that (unlike in the book) they had also measured working memory in each participant (as their digit span). The data are in the tibble `mem_cov_dat`, which has these variables:
+During Zach's visit to the JIG:SAW complex he visits several research buildings. In the second, he discovers experiments being conducted related to memory. In one experiment thirty-six participants with ID chips were tested. All participants met a stranger who had a 5-minute scripted conversation with them containing 10 critical pieces of information. A week later, the participants were asked to recall the encounter for 5 minutes, and then after a 10-minute break wrote everything that they could remember about the original encounter. During the 5-minute initial recall, one of three things happened: the control group (*N* = 12) received no intervention; the erase group (*N* = 12) had a pulse of electricity sent to their brain via their ID chip; and the replace group (*N* = 12) had conflicting verbal descriptions sent to their ID chip. The outcome was how many of the 10 critical pieces of information the participants wrote down after the recall phase. The prediction was that recall will be worse (i.e. lower scores) for participants who had an electrical pulse, or conflicting information sent to their ID chips during recall than those, in the control group, who experienced no interference. Imagine that (unlike in the book) they had also measured working memory in each participant (as their digit span). The data are in the tibble `mem_cov_tib`, which has these variables:
 
 * **id**: Participant ID
 * **group**: To which of the no intervention, memory erase or memory replace conditions the participant was assigned
@@ -516,7 +557,7 @@ Use the code box to inspect the tibble.
 ```
 
 ```{r dat_view2-solution}
-mem_cov_dat   
+mem_cov_tib   
 ```
 
 The model we're fitting is described by the following equation:
@@ -536,7 +577,7 @@ We can fit this model in the same way as described for a factorial design. Remem
 ```{r echo = T, eval = F}
 interference_vs_none <- c(-2, 1, 1)
 erase_vs_replace <- c(0, -1, 1)
-contrasts(mem_cov_dat$group) <- cbind(interference_vs_none, erase_vs_replace)
+contrasts(mem_cov_tib$group) <- cbind(interference_vs_none, erase_vs_replace)
 ```
 
 Having done that we can follow the same process as the previous example for fitting the model (using `lm()`), getting *F*-statistics (using `Anova()`), fitting robust models (using `lmRob()` or `robust()`) and getting Bayes factors (using `lmBF()`). Either in a separate **RStudio** session or in the box below generate a script to do the following:
@@ -557,18 +598,21 @@ If you want help, click on ![](./images/solution.png).
 ```{r ancova-solution}
 interference_vs_none <- c(-2, 1, 1)
 erase_vs_replace <- c(0, -1, 1)
-contrasts(mem_cov_dat$group) <- cbind(interference_vs_none, erase_vs_replace)
+contrasts(mem_cov_tib$group) <- cbind(interference_vs_none, erase_vs_replace)
 
-mem_cov_mod <- lm(recall ~ working_mem + group, data = mem_cov_dat)
+mem_cov_mod <- lm(recall ~ working_mem + group, data = mem_cov_tib)
 summary(mem_cov_mod)
 
-Anova(mem_cov_mod, type = 3)
-robust(mem_cov_mod)
-mem_cov_rob <- lmRob(recall ~ working_mem + group, data = mem_cov_dat)
+car::Anova(mem_cov_mod, type = 3)
+sjstats::robust(mem_cov_mod)
+mem_cov_rob <- robust::lmRob(recall ~ working_mem + group, data = mem_cov_tib)
 summary(mem_cov_rob)
 
-wm_bf <- lmBF(formula = recall ~ working_mem, data = data.frame(mem_cov_dat))
-grp_bf <- lmBF(formula = recall ~ working_mem + group, data = data.frame(mem_cov_dat))
+wm_bf <- mem_cov_tib %>% 
+  BayesFactor::lmBF(formula = recall ~ working_mem, data = .)
+grp_bf <- mem_cov_tib %>% 
+  BayesFactor::lmBF(formula = recall ~ working_mem + group, data = .)
+
 wm_bf
 grp_bf/wm_bf
 ```

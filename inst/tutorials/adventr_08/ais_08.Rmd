@@ -15,13 +15,13 @@ library(tidyverse)
 library(gmodels)
 library(boot)
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 tutorial_options(exercise.cap = "Exercise")
 
 
 #Read dat files needed for the tutorial
 
-jig_dat <- adventr::jig_dat
+jig_tib <- adventr::jig_dat
 
 #setup objects for code blocks
 
@@ -32,10 +32,10 @@ jig_dat <- adventr::jig_dat
 
 ## Overview
 
-This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] and [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] by [me](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
+This tutorial is one of a series that accompanies [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) [@RN10163] by me, [Andy Field](https://en.wikipedia.org/wiki/Andy_Field_(academic)). These tutorials contain abridged sections from the book so there are some copyright considerations but I offer them under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/), ^[Basically you can use this tutorial for teaching and non-profit activities but do not meddle with it or claim it as your own work.]
 
 * Who is the tutorial aimed at?
-    - Primarily students enrolled on my *Linear models in statistics* module at the University of Sussex, but anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/) or [Discovering Statistics Using R](https://www.discoveringstatistics.com/books/discovering-statistics-using-r/) [@RN4832] may find them useful.
+    - Anyone teaching from or reading [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/)  may find them useful.
 * What is covered?
     - This tutorial looks at how to get (and plot) inferential statistics such as confidence intervals for the mean. We also look at robust confidence intervals.  It would be a useful tutorial to run alongside teaching based on Chapters 8 and 9 of [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/).
     - This tutorial *does not* teach the background theory: it is assumed you have either attended my lecture or read the relevant chapter in the aforementioned books (or someone else's)
@@ -118,12 +118,12 @@ This tutorial has the data files pre-loaded so you shouldn't need to do anything
 You can load the file in several ways:
 
 * Assuming that you save this file into the working directory, you can load it by executing:
-    - `jig_dat <- read_csv("ais_c05_jigsaw.csv")`
+    - `jig_tib <- read_csv("ais_c05_jigsaw.csv")`
     - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
 * To load the file using a standard dialogue box to navigate your file system, execute:
-    - `jig_dat <- read_csv(file.choose())`
+    - `jig_tib <- read_csv(file.choose())`
 * You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
-    - `jig_dat <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_c05_jigsaw.csv")`
+    - `jig_tib <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_c05_jigsaw.csv")`
     - This method relies on an internet connection (and my server having not exploded!)
 
 
@@ -148,7 +148,7 @@ quiz(
 )
 ```
 
-In a previous tutorial we looked at how to summarize data to get summary statistics such as the mean, median, variance and so on. It is often useful to get the confidence interval too. This section looks at how to do that. We're going to use the data in the tibble called `jig_dat` again, which contains data about the strength, speed, and visual acuity of JIG:SAW employees and non-employees. Remember that this tibble contains 7 variables:
+In a previous tutorial we looked at how to summarize data to get summary statistics such as the mean, median, variance and so on. It is often useful to get the confidence interval too. This section looks at how to do that. We're going to use the data in the tibble called `jig_tib` again, which contains data about the strength, speed, and visual acuity of JIG:SAW employees and non-employees. Remember that this tibble contains 7 variables:
 
 * **id **: employee ID
 * **employee**: whether or not the employee works for JIG:SAW
@@ -159,13 +159,13 @@ In a previous tutorial we looked at how to summarize data to get summary statist
 * **sex**: Biological sex of the individual
 
 
-In the previous tutorial we looked at combining `group_by()` and `summarize()` in a pipe command to create a tibble containing summary statistics (split by group). For example, we used the following command to create a tibble called `speed_sum` that contained the mean of the variable **footspeed** grouped by combinations of the variables **employee** and **sex** from the tibble called `jig_dat`.
+In the previous tutorial we looked at combining `group_by()` and `summarize()` in a pipe command to create a tibble containing summary statistics (split by group). For example, we used the following command to create a tibble called `speed_sum` that contained the mean of the variable **footspeed** grouped by combinations of the variables **employee** and **sex** from the tibble called `jig_tib`.
 
 ```{r echo = T, eval = F}
 speed_sum <-
-  jig_dat %>%
-  group_by(employee, sex) %>%
-  summarize(
+  jig_tib %>%
+  dplyr::group_by(employee, sex) %>%
+  dplyr::summarize(
     mean_speed = mean(footspeed)
     )
 ```   
@@ -173,7 +173,7 @@ speed_sum <-
 
 ```{r quiz_pipe_ex1}
 quiz(
-  question("In the above command, what does **group_by(employee, sex)** do?",
+  question("In the above command, what does **dplyr::group_by(employee, sex)** do?",
     answer("Groups the output by all combinations of the variables **employee** and **sex** (I.e. employee-male, employee-female, non-employee-male, non-employee-female.", correct = TRUE),
     answer("Creates one output grouped by **employee** (i.e. employee, non-employee), and a separate output grouped by sex (male, female)."),
     correct = "Correct - well done!",
@@ -198,29 +198,29 @@ To incorporate confidence intervals into this command isn't entirely straightfor
 
 To keep things simple, imagine the 'object' we put into this function is a variable, like **footspeed**. We'd execute:
 
-`ci(jig_dat$footspeed, confidence = 0.95, na.rm = F)`
+`gmodels::ci(jig_tib$footspeed, confidence = 0.95, na.rm = F)`
 
-If we just place `jig_dat$footspeed` into the function we'll get a 95% confidence interval and missing values will *not* be removed. To get a different confidence interval specify a proportion in `confidence = `. For example, `ci(jig_dat$footspeed, confidence = 0.9)` will give us a 90% confidence interval around the mean of **footspeed**. Similarly if we want to remove missing values we would set `na.rm = T`. When you put a variable into the function it returns an object containing the mean (labelled *Estimate* in the object), the lower boundary of the confidence interval (labelled *CI Lower*), the upper boundary of the confidence interval (labelled *CI Upper*), and the standard error (labelled *Std. Error*). To access these values simultaneously we execute the function (or create an object from it and execute that), but if we want to access them individually we can do that by appending their name in square brackets. For example:
+If we just place `jig_tib$footspeed` into the function we'll get a 95% confidence interval and missing values will *not* be removed. To get a different confidence interval specify a proportion in `confidence = `. For example, `gmodels::ci(jig_tib$footspeed, confidence = 0.9)` will give us a 90% confidence interval around the mean of **footspeed**. Similarly if we want to remove missing values we would set `na.rm = T`. When you put a variable into the function it returns an object containing the mean (labelled *Estimate* in the object), the lower boundary of the confidence interval (labelled *CI Lower*), the upper boundary of the confidence interval (labelled *CI Upper*), and the standard error (labelled *Std. Error*). To access these values simultaneously we execute the function (or create an object from it and execute that), but if we want to access them individually we can do that by appending their name in square brackets. For example:
 
-`ci(jig_dat$footspeed)["CI lower"]` returns the value of the item labelled "CI lower" in the object created by the `ci()` function. In other words, it will give us the value of the lower boundary of the (by default 95%) confidence interval. If we add this command within the `summarize()` statement in our pipe, we'll get the lower boundaries for the confidence intervals around the mean when the data are grouped by **employee** and **sex**. One final point is that we wouldn't include this line exactly as I've written it because we have specified the `jig_dat` tibble earlier in the pipe, which means it will be carried forward into the summarize statement. This means that we can specify the variable of interest as simply `footspeed` rather than `jig_dat$footspeed` because the function will already know to look for **footspeed** within the `jig_dat` tibble.
+`gmodels::ci(jig_tib$footspeed)["CI lower"]` returns the value of the item labelled "CI lower" in the object created by the `ci()` function. In other words, it will give us the value of the lower boundary of the (by default 95%) confidence interval. If we add this command within the `summarize()` statement in our pipe, we'll get the lower boundaries for the confidence intervals around the mean when the data are grouped by **employee** and **sex**. One final point is that we wouldn't include this line exactly as I've written it because we have specified the `jig_tib` tibble earlier in the pipe, which means it will be carried forward into the summarize statement. This means that we can specify the variable of interest as simply `footspeed` rather than `jig_tib$footspeed` because the function will already know to look for **footspeed** within the `jig_tib` tibble.
 
 Therefore, to create a tibble with means and confidence intervals grouped by **employee** and **sex** we can adapt the code that we've already used in previous tutorials to include the `ci()` function:
 
 ```{r echo = T, eval = F}
 speed_sum <-
-  jig_dat %>%
-  group_by(employee, sex) %>%
-  summarize(
+  jig_tib %>%
+  dplyr::group_by(employee, sex) %>%
+  dplyr::summarize(
     mean_speed = mean(footspeed),
-    ci_low = ci(footspeed)["CI lower"],
-    ci_upp = ci(footspeed)["CI upper"]
+    ci_low = gmodels::ci(footspeed)["CI lower"],
+    ci_upp = gmodels::ci(footspeed)["CI upper"]
     )
 ``` 
 
 Note that the code is the same as we used before except that we have added two lines (which should make sense based on the explanation above):
 
-* `ci_low = ci(footspeed)["CI lower"]` creates a variable called **ci_low** by applying the function `ci()` to the variable **footspeed** and extracting the value labelled "CI lower", which is the value of the lower boundary of the 95% confidence interval.  
-* `ci_upp = ci(footspeed)["CI upper"]` creates a variable called **ci_upp** by applying the function `ci()` to the variable **footspeed** and extracting the value labelled "CI upper", which is the value of the upper boundary of the 95% confidence interval.
+* `ci_low = gmodels::ci(footspeed)["CI lower"]` creates a variable called **ci_low** by applying the function `ci()` to the variable **footspeed** and extracting the value labelled "CI lower", which is the value of the lower boundary of the 95% confidence interval.  
+* `ci_upp = gmodels::ci(footspeed)["CI upper"]` creates a variable called **ci_upp** by applying the function `ci()` to the variable **footspeed** and extracting the value labelled "CI upper", which is the value of the upper boundary of the 95% confidence interval.
 
 Copy the command into the code box and run it. Also, run the name of the `speed_sum` tibble that you create to see what it contains. Hopefully you'll see a tibble with the mean and 95% confidence interval boundaries split by **employee** and **sex**. Try to create tibbles called `strength_sum` and `vis_sum` that tabulate the mean and confidence intervals for the variables **strength** and **vision** respectively.
 
@@ -230,12 +230,12 @@ Copy the command into the code box and run it. Also, run the name of the `speed_
 
 ```{r gb_ci-solution}
 speed_sum <-
-  jig_dat %>%
-  group_by(employee, sex) %>%
-  summarize(
+  jig_tib %>%
+  dplyr::group_by(employee, sex) %>%
+  dplyr::summarize(
     mean_speed = mean(footspeed),
-    ci_low = ci(footspeed)["CI lower"],
-    ci_upp = ci(footspeed)["CI upper"]
+    ci_low = gmodels::ci(footspeed)["CI lower"],
+    ci_upp = gmodels::ci(footspeed)["CI upper"]
     )
 speed_sum
 ```
@@ -245,7 +245,7 @@ speed_sum
 We've seen in previous tutorials how to plot means. For example we created a plot of the strength data split by JIG:SAW employees and non-employees. We used this code:
 
 ```{r echo = TRUE, eval = FALSE}
-strength_plot <- ggplot(jig_dat, aes(employee, strength))
+strength_plot <- ggplot(jig_tib, aes(employee, strength))
 strength_plot +
   stat_summary(fun.y = "mean", geom = "point", size = 4) +
   labs(x = "Employee status", y = "Maximal push force (n)") +
@@ -256,7 +256,7 @@ strength_plot +
 
 Let's remind ourselves of what each part of this command is doing:
 
-* `strength_plot <- ggplot(jig_dat, aes(employee, strength))` creates an object called `strength_plot` that contains the plot. The `ggplot()` function is then used to specify that the plot uses the `jig_dat` tibble and plots the variable **employee** on the *x*-axis and the variable **strength** on the *y*-axis.
+* `strength_plot <- ggplot(jig_tib, aes(employee, strength))` creates an object called `strength_plot` that contains the plot. The `ggplot()` function is then used to specify that the plot uses the `jig_tib` tibble and plots the variable **employee** on the *x*-axis and the variable **strength** on the *y*-axis.
 * `strength_plot + stat_summary(fun.y = "mean", geom = "point", size = 4)` takes the object `strength_plot` and adds a statistics summary to it. The `stat_summary()` uses `fun.y = "mean"` to plot the mean using a dot (`geom = "point"`) of size 4 (`size = 4`).
 * `labs(x = "Employee status", y = "Maximal push force (n)")` applies descriptive labels to the *x* and *y* axes.
 * `coord_cartesian(ylim = c(1000, 1800))` sets the limits of the *y*-axis
@@ -272,7 +272,7 @@ If we want to plot confidence intervals around the means all we need to do is to
 The code box contains the code above and shows the resulting plot (that we created in previous tutorials). Change the two things listed above and run the code to see how the plot changes.
 
 ```{r stg_plot_ci, exercise = TRUE, exercise.lines = 7, exercise.eval = TRUE}
-strength_plot <- ggplot(jig_dat, aes(employee, strength))
+strength_plot <- ggplot(jig_tib, aes(employee, strength))
 strength_plot +
   stat_summary(fun.y = "mean", geom = "point", size = 4) +
   labs(x = "Employee status", y = "Maximal push force (n)") +
@@ -282,7 +282,7 @@ strength_plot +
 ```
 
 ```{r stg_plot_ci-solution}
-strength_plot <- ggplot(jig_dat, aes(employee, strength))
+strength_plot <- ggplot(jig_tib, aes(employee, strength))
 strength_plot +
   stat_summary(fun.data = "mean_cl_normal", geom = "pointrange") +
   labs(x = "Employee status", y = "Maximal push force (n)") +
@@ -302,7 +302,7 @@ What about more complex plots? In a previous tutorial we also created a similar 
 Make these changes and run the code. You should see the same plot but with confidence intervals as well as means.
 
 ```{r stgth_col1, exercise = TRUE, exercise.eval = TRUE}
-strength_plot <- ggplot(jig_dat, aes(employee, strength, colour = sex))
+strength_plot <- ggplot(jig_tib, aes(employee, strength, colour = sex))
 strength_plot +
   stat_summary(fun.y = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9)) +
   labs(x = "Employee status", y = "Maximal push force (n)", colour = "Biological sex") +
@@ -313,7 +313,7 @@ strength_plot +
 ```
 
 ```{r stgth_col1-solution}
-strength_plot <- ggplot(jig_dat, aes(employee, strength, colour = sex))
+strength_plot <- ggplot(jig_tib, aes(employee, strength, colour = sex))
 strength_plot +
   stat_summary(fun.data = "mean_cl_normal", geom = "pointrange", position = position_dodge(width = 0.9)) +
   labs(x = "Employee status", y = "Maximal push force (n)", colour = "Biological sex") +
@@ -330,7 +330,7 @@ In the box below can you create a similar plot of the vision scores split by **j
 ```
 
 ```{r stgth_col2-solution}
-vis_plot <- ggplot(jig_dat, aes(job_type, vision, colour = employee))
+vis_plot <- ggplot(jig_tib, aes(job_type, vision, colour = employee))
 vis_plot +
   stat_summary(fun.data = "mean_cl_normal", geom = "pointrange", position = position_dodge(width = 0.9)) +
   labs(x = "Type of job", y = "Visual acuity", colour = "Employee status") +
@@ -352,9 +352,9 @@ Try adding this line to the `summarize()` function in the code box so that we st
 
 ```{r trim_mean, exercise = TRUE}
 speed_sum <-
-  jig_dat %>%
-  group_by(employee, sex) %>%
-  summarize(
+  jig_tib %>%
+  dplyr::group_by(employee, sex) %>%
+  dplyr::summarize(
     mean_speed = mean(footspeed)
     )
 speed_sum
@@ -362,9 +362,9 @@ speed_sum
 
 ```{r trim_mean-solution}
 speed_sum <-
-  jig_dat %>%
-  group_by(employee, sex) %>%
-  summarize(
+  jig_tib %>%
+  dplyr::group_by(employee, sex) %>%
+  dplyr::summarize(
     mean_speed = mean(footspeed),
     tr_mean_speed = mean(footspeed, trim = 0.2)
     )
@@ -380,9 +380,9 @@ Try this for **strength** as well:
 
 ```{r trim_mean2-solution}
 strength_sum <-
-  jig_dat %>%
-  group_by(employee, sex) %>%
-  summarize(
+  jig_tib %>%
+  dplyr::group_by(employee, sex) %>%
+  dplyr::summarize(
     mean_strength = mean(strength),
     tr_mean_strength = mean(strength, trim = 0.2)
     )
@@ -421,19 +421,19 @@ We can get bootstrap confidence intervals in **R** by using the `boot` package, 
 
 The `boot()` function works in the following way: it takes a bootstrap sample from the data you specify, sends it out to a function (that the user defines) that returns the statistic of interest (in this case the mean), it stores this information and the repeats the process lots of times. The general format of the `boot()` function is:
 
-`boot(data, statistic, R)`
+`boot::boot(data, statistic, R)`
 
 It has other options too, but the three key ones are `data` which specifies the data from which to take bootstrap samples, `statistic` which specifies a function that computes the information you want (e.g., the mean), and `R` which is the number of times you want to repeat the process. So, to get bootstrap samples of the strength data we could specify something like this:
 
-`boot(jig_dat$strength, statistic, R = 1000)`
+`boot::boot(jig_tib$strength, statistic, R = 1000)`
 
-This specifies that the data from which to take bootstrap samples is `jig_dat$strength` and that we want to repeat the process 1000 times (i.e. use 1000 bootstrap samples). The question is what do we replace `statstic` with. Given we're interested in the mean, you might reasonably think we can replace `statistic` with `mean()` or something. However, we can't do this because the function `mean()` will not return information about *which* bootstrap sample was used. Instead we need to write out own function that will include information about the particular bootstrap sample that is being used to compute the mean. We do this by executing:
+This specifies that the data from which to take bootstrap samples is `jig_tib$strength` and that we want to repeat the process 1000 times (i.e. use 1000 bootstrap samples). The question is what do we replace `statistic` with. Given we're interested in the mean, you might reasonably think we can replace `statistic` with `mean()` or something. However, we can't do this because the function `mean()` will not return information about *which* bootstrap sample was used. Instead we need to write out own function that will include information about the particular bootstrap sample that is being used to compute the mean. We do this by executing:
 
 `mean_boot <- function(data, index) mean(data[index], na.rm = TRUE)`
 
 This creates a new function called `mean_boot()`. This function takes data and an index value as input `function(data, index)` and it returns the mean of the data with a particular index value after removing missing values `mean(data[index], na.rm = TRUE)`. In the main `boot()` function we would replace `statistic` with this function that we have created:
 
-`boot(jig_dat$strength, mean_boot, R = 1000)`
+`boot::boot(jig_tib$strength, mean_boot, R = 1000)`
 
 To sum up, the `boot()` function is going to send data (the bootstrap samples) with an associated index value (from 1 to 1000) to the function called `mean_boot`. For each data set with each index value `mean_boot` will return the mean.
 
@@ -441,13 +441,13 @@ The code box contains these commands. Run the code.
 
 ```{r boot_eg, exercise = TRUE}
 mean_boot <- function(data, index) mean(data[index], na.rm = TRUE)
-boot(jig_dat$strength, mean_boot, R = 1000)
+boot::boot(jig_tib$strength, mean_boot, R = 1000)
 
 ```
 
 The output doesn't give us the confidence intervals. Instead we're told the original mean and an estimate of bias. To get the confidence intervals there is one more step, which is to use the `boot.ci()` function, which takes the general form:
 
-`boot.ci(boot.object, conf = 0.95, type = "all")`
+`boot::boot.ci(boot.object, conf = 0.95, type = "all")`
 
 There are other options but these ones are the main ones. First you input an object created with the `boot()` function, then specify the width of confidence interval that you want (the default is 0.95 so can leave this option out if that's what you want), and the type that you want. By default it will compute 5 different types of interval. For most purposes you don't need five different intervals so it would be best to change this option to specify a particular type. There's much to recommend Bias Corrected and Accelerated intervals (`type = "bca"`) or if those fail then a percentile interval (`type  = "perc"`).
 
@@ -455,30 +455,30 @@ The code box below combines what we have learnt. First it creates the function t
 
 ```{r boot_ci, exercise = TRUE, exercise.lines = 6}
 mean_boot <- function(data, index) mean(data[index], na.rm = TRUE)
-boot.ci(boot(jig_dat$strength, mean_boot, R = 1000), type = "bca")
+boot::boot.ci(boot(jig_tib$strength, mean_boot, R = 1000), type = "bca")
 ```
 
 There is too much output to embed into a summarize function. We want to discard everything except for the numeric values that represent the lower and upper bound of the confidence interval. These values are stored in a variable called *bca* within the `boot.ci()` object. (Obviously if you chose a type of interval other than bca, the variable name will be different; for example, if you opted for `type = "Perc"` then the variable will be called **perc**). Like any variable, we can access it using `$`. For example, to see the information relating to the BCa confidence intervals we could execute:
 
-`boot.ci(boot(jig_dat$strength, mean_boot, R = 1000), type = "bca")$bca`
+`boot::boot.ci(boot(jig_tib$strength, mean_boot, R = 1000), type = "bca")$bca`
 
 Try it in the code box above and you'll see 5 values appear.Values 4 and 5 are the lower and upper limits of the interval. We can access these specific values using:
 
-`boot.ci(boot(jig_dat$strength, mean_boot, R = 1000), type = "bca")$bca[4]`
-`boot.ci(boot(jig_dat$strength, mean_boot, R = 1000), type = "bca")$bca[5]`
+`boot::boot.ci(boot(jig_tib$strength, mean_boot, R = 1000), type = "bca")$bca[4]`
+`boot::boot.ci(boot(jig_tib$strength, mean_boot, R = 1000), type = "bca")$bca[5]`
 
-Try these commands in the code box above. We can include these lines in the summarize function of the pipe that we used at the start of the tutorial. Remember that we can drop the `jig_dat$` from the command because that tibble is specified earlier in the pipe. The code box below shows the commands.
+Try these commands in the code box above. We can include these lines in the summarize function of the pipe that we used at the start of the tutorial. Remember that we can drop the `jig_tib$` from the command because that tibble is specified earlier in the pipe. The code box below shows the commands.
 
 
 ```{r boot_ci_sum, exercise = TRUE}
 mean_boot <- function(data, index) mean(data[index], na.rm = TRUE)
 strength_mean <-
-  jig_dat %>%
-  group_by(employee, sex) %>%
-  summarize(
+  jig_tib %>%
+  dplyr::group_by(employee, sex) %>%
+  dplyr::summarize(
     mean_strength = mean(strength),
-    ci_low_boot = boot.ci(boot(strength, mean_boot, R = 1000), type = "bca")$bca[4],
-    ci_upp_boot = boot.ci(boot(strength, mean_boot, R = 1000), type = "bca")$bca[5]
+    ci_low_boot = boot::boot.ci(boot(strength, mean_boot, R = 1000), type = "bca")$bca[4],
+    ci_upp_boot = boot::boot.ci(boot(strength, mean_boot, R = 1000), type = "bca")$bca[5]
     )
 strength_mean
 ```
@@ -490,7 +490,7 @@ Run this code and you should see that it creates a tibble with the means, the lo
 The last section was, I imagine, not the most fun that you have ever had. I expect you are dreading the added complexity of plotting these bootstrap intervals. Well, fear not. Earlier on we plotted this graph:
 
 ```{r plot_boot, exercise = TRUE, eval = TRUE}
-strength_plot <- ggplot(jig_dat, aes(employee, strength, colour = sex))
+strength_plot <- ggplot(jig_tib, aes(employee, strength, colour = sex))
 strength_plot +
   stat_summary(fun.data = "mean_cl_normal", geom = "pointrange", position = position_dodge(width = 0.9)) +
   labs(x = "Employee status", y = "Maximal push force (n)", colour = "Biological sex") +

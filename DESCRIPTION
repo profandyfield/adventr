@@ -19,6 +19,7 @@ Imports:
   GGally,
   gmodels,
   Hmisc,
+  learnr,
   lm.beta,
   robust,
   sandwich,
@@ -27,7 +28,6 @@ Imports:
   WRS2
 RoxygenNote: 6.1.1
 Suggests: 
-  learnr,
   knitr,
   rmarkdown
 VignetteBuilder: knitr

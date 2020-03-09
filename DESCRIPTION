@@ -9,8 +9,8 @@ Description: This package contains a series of tutorials written using the learn
 License: GPL-3
 Depends:
   R (>= 3.6.0),
-  learnr,
-  tidyverse
+  tidyverse,
+  learnr
 LazyData: true
 Imports:
   BayesFactor,

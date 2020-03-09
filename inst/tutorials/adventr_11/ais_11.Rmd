@@ -3,7 +3,7 @@ title: "adventr: hypothesis testing"
 author: "Andy Field"
 output:
   learnr::tutorial:
-    progressive: true
+    progressive: false
 runtime: shiny_prerendered
 bibliography: adventr_bib.bib
 ---
@@ -120,20 +120,18 @@ These packages are automatically loaded within this tutorial. If you are working
 
 This tutorial has the data files pre-loaded so you shouldn't need to do anything to access the data from within the tutorial. However, if you want to play around with what you have learnt in this tutorial outside of the tutorial environment (i.e. in a stand-alone **RStudio** session) you will need to download the data files and then read them into your **R** session. This tutorial uses the following file:
 
-* [ais_c10_teddy_therapy.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_c10_teddy_therapy.csv).
+* [ais_10_teddy_therapy.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_10_teddy_therapy.csv).
 * [ais_15_puzz_zhang_female.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_15_puzz_zhang_female.csv).
 
 You can load the files in several way (using the first file as an example):
 
-* Assuming that you save this file into the working directory, you can load it by executing:
-    - `teddy_tib <- read_csv("ais_c10_teddy_therapy.csv")`
-    - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
-* To load the file using a standard dialogue box to navigate your file system, execute:
-    - `teddy_tib <- read_csv(file.choose())`
-* You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
-    - `teddy_tib <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_c10_teddy_therapy.csv")`
-    - This method relies on an internet connection (and my server having not exploded!)
+* Assuming that you follow the workflow recommended in the tutorial **adventr_02** (see also this [online tutorial](http://milton-the-cat.rocks/learnr/r/r_getting_started/#section-working-in-rstudio)), you can load the data into an object called `teddy_tib` by executing:
+    - `teddy_tib <- readr::read_csv("../data/ais_10_teddy_therapy.csv")`
+    - If you don't follow my suggested workflow, you will adjust the file location in the above command.
+* Alternatively, if you have an internet connection (and my server has not exploded!) load the file direct from the URL by executing:
+    - `teddy_tib <- readr::read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_10_teddy_therapy.csv")`
 
+Adapt the above instructions to load the second data file into a tibble called `zhang_female_tib`.
 
 ## A cuddly example
 

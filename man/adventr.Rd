@@ -3,7 +3,6 @@
 \docType{package}
 \name{adventr}
 \alias{adventr}
-\alias{adventr-package}
 \title{adventr: tutorials in R for An Adventure in Statistics (Field, 2016).}
 \description{
 The adventr package contains a series of tutorials that accompany my books \href{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}{An Adventure in Statistics}

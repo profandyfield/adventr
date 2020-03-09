@@ -147,7 +147,7 @@ in which *package_name* is replaced by the name of the package that you’d like
 
 `library(tidyverse)`
 
-`r hint_text("Tip: Near the top of my scripts I have a section marked *# load packages* fiollowed by a list of commands that load all of the packages I use in the script. (I also list them alphabetically because I'm anally retentive.) This makes it easy for me to see which packages the script relies on") `
+`r hint_text("Tip: Near the top of my scripts I have a section marked *# load packages* followed by a list of commands that load all of the packages I use in the script. (I also list them alphabetically because I'm anally retentive.) This makes it easy for me to see which packages the script relies on") `
 
 In these tutorials the packages you need are pre-installed and pre-loaded so you don't need to worry about it. However, when working in **RStudio** on your own assignments/data you will need to install and load the packages that you use.
 
@@ -194,20 +194,20 @@ Once you have created a project file you can create script files, markdown files
 
 One of the great things about RStudio project files is that you can use relative file paths rather than absolute file paths. An absolute file path is one that specifies in full the location of a file or folder. For example, to open my_funky_data.csv using an absolute path I’d execute something like:
 
-`funky_tib <- read_csv("C:/Users/andyfield/Documents/my_new_project/data/my_funky_data.csv")`
+`funky_tib <- readr::read_csv("C:/Users/andyfield/Documents/my_new_project/data/my_funky_data.csv")`
 
 The file path is the exact location of `my_funky_data.csv` on my hard drive. We can see from the path that the file we’re after (`my_funky_data.csv`) is stored in a folder called ‘data’, which is within the main project folder (‘my_new_project’), which itself is stored within my ‘Documents’ folder, which is stored under my username, in the folder ‘Users’ on my main drive (C:).  
 
 Absolute paths are a pain because they are machine dependent (or more generally environment dependent). The absolute path above won’t work for me on a different computer unless I have that computer set up identically. It also won’t work for collaborators unless their user name is also andyfield and the structure of folders on their hard drive exactly matches mine. They also take a really long time to type. Absolute paths suck.
 Relative paths, on the other hand, allow you to specify files relative to a fixed point. Within an RStudio project the fixed point is the project folder. Therefore, to load the same data file using a relative path we need only specify:
 
-`funky_tib <- read_csv("../data/my_funky_data.csv")`
+`funky_tib <- readr::read_csv("../data/my_funky_data.csv")`
 
 Compare this with the absolute path and note that I’ve replaced
 
 `C:/Users/andyfield/Documents/my_new_project/` with `../data/`. The two dots take us up a level from the r_docs folder (where the notebook file that contains the command is saved). In other words, it takes us into the main project folder. From there, /data/ takes us into the folder called data. If my_markdown.Rmd were stored in the project folder (rather than being in a subfolder) we would need only a single dot:
 
-`funky_tib <- read_csv("./data/my_funky_data.csv")`
+`funky_tib <- readr::read_csv("./data/my_funky_data.csv")`
 
 ###	The `here()` package
 
@@ -230,15 +230,15 @@ If you type the location of a file within the project folder into the function, 
 [1] C:/Users/andyfield/Documents/my_new_project/data/my_funky_data.csv"
 ```
 
-The here() function generates the filepath for the project directory each time it is called, so if you move your project folder to another machine or a different location on the same machine your code will still work. For example, previously we looked at loading some data using a relative path:
+The `here()` function generates the filepath for the project directory each time it is called, so if you move your project folder to another machine or a different location on the same machine your code will still work. For example, previously we looked at loading some data using a relative path:
 
-`funky_tib <- read_csv("../data/my_funky_data.csv")`
+`funky_tib <- readr::read_csv("../data/my_funky_data.csv")`
 
 We can avoid the relative path by using:
 
-`funky_tib <- read_csv(here::here("data/my_funky_data.csv"))`
+`funky_tib <- readr::read_csv(here::here("data/my_funky_data.csv"))`
 
-To sum up, we use `here()` to create a filepath to the file we want to read into R, and use `read_csv()` to open that file.
+To sum up, we use `here()` to create a filepath to the file we want to read into R, and use `readr::read_csv()` to open that file.
 
 ## Objects and functions
 ### Overview

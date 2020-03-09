@@ -3,7 +3,7 @@ title: "adventr: growth models"
 author: "Andy Field"
 output:
   learnr::tutorial:
-    progressive: true
+    progressive: false
 runtime: shiny_prerendered
 bibliography: adventr_bib.bib
 ---
@@ -129,15 +129,11 @@ This tutorial has the data files pre-loaded so you shouldn't need to do anything
 
 You can load the file in several ways:
 
-* Assuming that you save this file into the working directory, you can load it by executing:
-    - `rehab_growth_tib <- read_csv("ais_rehab_growth_model.csv")`
-    - If you save the file somewhere other than the working directory, you will need to specify the file location (see the tutorial called *adventr_02*)
-* To load the file using a standard dialogue box to navigate your file system, execute:
-    - `rehab_growth_tib <- read_csv(file.choose())`
-* You can load the file direct from the URL (i.e., you don't need to download it first) by executing:
-    - `rehab_growth_tib <- read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_growth_model.csv")`
-    - This method relies on an internet connection (and my server having not exploded!)
-
+* Assuming that you follow the workflow recommended in the tutorial **adventr_02** (see also this [online tutorial](http://milton-the-cat.rocks/learnr/r/r_getting_started/#section-working-in-rstudio)), you can load the data into an object called `rehab_growth_tib` by executing:
+    - `rehab_growth_tib <- readr::read_csv("../data/ais_rehab_growth_model.csv")`
+    - If you don't follow my suggested workflow, you will adjust the file location in the above command.
+* Alternatively, if you have an internet connection (and my server has not exploded!) load the file direct from the URL by executing:
+    - `rehab_growth_tib <- readr::read_csv("http://www.discoveringstatistics.com/repository/ais_data/ais_rehab_growth_model.csv")`
 
 ## The model
 

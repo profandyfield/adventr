@@ -1,4 +1,7 @@
+<div style="float: right"><img style="float: left;" src="./data-raw/images/adventr_hex.png" width="150"></div>
+
 # adventr: R tutorials for An Adventure in Statistics (Field, 2016)
+
 The `adventr` package contains a series of interactive tutorials that teach **R** alongside chapters of my 2016 textbook [An Adventure in Statistics: the reality enigma](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/). The tutorials are written using a package called [learnr](https://rstudio.github.io/learnr/). Once a tutorial is running it's a bit like reading a book but with places where you can practice the R code that you have just been taught. The `adventr` package is free (as are all things **R**-related) and offered to support tutors and students using my textbook who want to learn R.
  
 # Contents of `adventr`

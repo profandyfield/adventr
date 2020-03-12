@@ -1,7 +1,14 @@
+# Ignore these hidden folders
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
-inst/doc
+
+# Ignore these file types
+*.DS_Store
 Rplots.pdf
-.DS_Store
+
+# Ignore these folders
+
+data-raw/images/adventr_hex_unused/
+inst/doc/

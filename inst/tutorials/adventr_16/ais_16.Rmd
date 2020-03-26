@@ -14,7 +14,6 @@ library(learnr)
 library(tidyverse)
 
 library(BayesFactor)
-library(gmodels)
 library(lm.beta)
 library(robust)
 library(sjstats)
@@ -113,7 +112,7 @@ This tutorial uses the following packages:
 
 * `BayesFactor` [@RN9444] to compute Bayes factors
 * `boot` [@RN11409] to compute bootstrap confidence intervals
-* `gmodels` [@RN11408] to get confidence intervals
+* `Hmisc` [@RN11417] to get confidence intervals
 * `lm.beta` [@RN11412] to compute standardized *b*-values
 * `robust` [@RN11411] to compute robust estimates
 * `sjstats` [@RN11413] to produce robust parameter estimates and confidence intervals
@@ -189,7 +188,7 @@ The dummy variables are made up of 0s and 1s that code the three groups across t
 
 Using what you've learnt in previous tutorials, create a tibble called `mem_summary` containing the group means and their confidence intervals.
 
-`r hint_text("Tip: if you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels")`
+`r hint_text("Tip: if you're doing this outside of the tutorial remember to load the packages tidyverse and Hmisc")`
 
 ```{r desc, exercise = TRUE, exercise.lines = 6}
              
@@ -200,8 +199,8 @@ mem_summary <-  memory_tib %>%
   dplyr::group_by(group) %>%
   dplyr::summarize(
     mean = mean(recall),
-    ci_low = gmodels::ci(recall)["CI lower"],
-    ci_upp = gmodels::ci(recall)["CI upper"]
+    ci_low = ggplot2::mean_cl_normal(recall)$ymin,
+    ci_upp = ggplot2::mean_cl_normal(recall)$ymax
 )
 mem_summary              
 ```

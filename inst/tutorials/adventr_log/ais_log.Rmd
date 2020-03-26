@@ -127,7 +127,7 @@ This tutorial uses the following packages:
 
 * `effects` [@RN11414] to get plots for logistic regression models
 * `forcats` [@RN11418] for processing categorical variables
-* `gmodels` [@RN11408] to compute confidence intervals
+* `Hmisc` [@RN11417] to compute confidence intervals
 * `tidyverse` [@RN11407] for general data processing
 
 

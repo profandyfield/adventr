@@ -14,7 +14,6 @@ library(learnr)
 library(tidyverse)
 
 library(BayesFactor)
-library(gmodels)
 library(nlme)
 library(WRS2)
 
@@ -113,7 +112,7 @@ Zach doesn’t want to believe that Alice has simply just left him. Rather, that
 This tutorial uses the following packages:
 
 * `BayesFactor` [@RN9444] to compute Bayes factors
-* `gmodels` [@RN11408] to compute confidence intervals
+* `Hmisc` [@RN11408] to compute confidence intervals
 * `nlme` [@RN5102] to estimate the multilevel models
 * `tidyverse` [@RN11407] for general data processing
 * `WRS2` [@RN10205] to do various robust tests
@@ -237,7 +236,7 @@ Note that levels have been assigned in the order that they they occur in the dat
 
 Using what you've learnt in previous tutorials, create a tibble called `implant_summary` containing the mean recall ( and their confidence intervals) within each interference condition.
 
-`r hint_text("Tip: if you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels")`
+`r hint_text("Tip: if you're doing this outside of the tutorial remember to load the packages tidyverse and Hmisc")`
 
 ```{r desc, exercise = TRUE, exercise.lines = 6}
              
@@ -248,8 +247,8 @@ implant_summary <-  implant_tidy %>%
   dplyr::group_by(interference) %>%
   dplyr::summarize(
     mean = mean(recall),
-    ci_low = gmodels::ci(recall)["CI lower"],
-    ci_upp = gmodels::ci(recall)["CI upper"]
+    ci_low = ggplot2::mean_cl_normal(recall)$ymin,
+    ci_upp = ggplot2::mean_cl_normal(recall)$ymax
 )
 implant_summary              
 ```

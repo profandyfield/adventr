@@ -14,7 +14,6 @@ library(learnr)
 library(tidyverse)
 
 library(nlme)
-library(gmodels)
 
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 tutorial_options(exercise.cap = "Exercise")
@@ -108,7 +107,7 @@ This tutorial uses the following packages:
 
 * `nlme` [@RN5102] to estimate the multilevel models
 * `forcats` [@RN11418] for processing categorical variables
-* `gmodels` [@RN11408] to compute confidence intervals
+* `Hmisc` [@RN11417] to compute confidence intervals
 * `tidyverse` [@RN11407] for general data processing
 
 These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in **RStudio**) then you need to make sure that the package has been installed by executing `install.packages("package_name")`, where *package_name* is the name of the package. If the package is already installed, then you need to reference it in your current session by executing `library(package_name)`, where *package_name* is the name of the package.
@@ -329,7 +328,7 @@ That was just a little detour to show you how to check the levels of any categor
 
 Using what you've learnt in previous tutorials, create a tibble called `rehab_summary` containing the group means of the variables **resemblance** and **tse_months** and their confidence intervals split by **id_clin** and **intervention** (in that order).
 
-`r hint_text("Tip: to group means by three variables you can use group_by(x, y, z). If you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels")`
+`r hint_text("Tip: to group means by three variables you can use group_by(x, y, z). If you're doing this outside of the tutorial remember to load the packages tidyverse and Hmisc")`
 
 ```{r desc, exercise = TRUE, exercise.lines = 6}
              
@@ -340,11 +339,11 @@ rehab_summary <- rehab_tib %>%
   dplyr::group_by(id_clin, intervention) %>%
   dplyr::summarize(
     mean_resemblance = mean(resemblance),
-    ci_low_resemblance = gmodels::ci(resemblance)["CI lower"],
-    ci_upp_resemblance = gmodels::ci(resemblance)["CI upper"],
+    ci_low_resemblance = ggplot2::mean_cl_normal(resemblance)$ymin,
+    ci_upp_resemblance = ggplot2::mean_cl_normal(resemblance)$ymax,
     mean_tse = mean(tse_months),
-    ci_low_tse = gmodels::ci(tse_months)["CI lower"],
-    ci_upp_tse = gmodels::ci(tse_months)["CI upper"]
+    ci_low_tse = ggplot2::mean_cl_normal(tse_months)$ymin,
+    ci_upp_tse = ggplot2::mean_cl_normal(tse_months)$ymax
 )
 rehab_summary              
 ```
@@ -360,16 +359,16 @@ intervention_main <- rehab_tib %>%
   dplyr::group_by(intervention) %>%
   dplyr::summarize(
     mean = mean(resemblance),
-    ci_low = gmodels::ci(resemblance)["CI lower"],
-    ci_upp = gmodels::ci(resemblance)["CI upper"]
+    ci_low = ggplot2::mean_cl_normal(resemblance)$ymin,
+    ci_upp = ggplot2::mean_cl_normal(resemblance)$ymax
 )
 
 gep_main <- rehab_tib %>%
   dplyr::group_by(gep_level) %>%
   dplyr::summarize(
     mean = mean(resemblance),
-    ci_low = gmodels::ci(resemblance)["CI lower"],
-    ci_upp = gmodels::ci(resemblance)["CI upper"]
+    ci_low = ggplot2::mean_cl_normal(resemblance)$ymin,
+    ci_upp = ggplot2::mean_cl_normal(resemblance)$ymax
 )
 
 intervention_main  
@@ -387,7 +386,7 @@ The code is:
 rehab_plot <- ggplot2::ggplot(rehab_tib, aes(intervention, resemblance, colour = id_clin))
 rehab_plot +
   geom_point(size = 1, position = position_dodge(width = 0.1), alpha = 0.6) + 
-  stat_summary(fun.y = mean, geom="line", aes(group = id_clin)) +
+  stat_summary(fun = mean, geom="line", aes(group = id_clin)) +
   scale_y_continuous(breaks = seq(0, 100, 10)) +
   labs(x = "Intervention", y = "Resemblance (%)", colour = "Clinic") +
   theme_bw()
@@ -409,7 +408,7 @@ rehab_plot +
 rehab_plot <- ggplot2::ggplot(rehab_tib, aes(intervention, resemblance, colour = id_clin))
 rehab_plot +
   geom_point(size = 1, position = position_dodge(width = 0.1), alpha = 0.6) + 
-  stat_summary(fun.y = mean, geom="line", aes(group = id_clin)) +
+  stat_summary(fun = mean, geom="line", aes(group = id_clin)) +
   scale_y_continuous(breaks = seq(0, 100, 10)) +
   labs(x = "Intervention", y = "Resemblance (%)", colour = "Clinic") +
   theme_bw()

@@ -369,10 +369,10 @@ Plotting means is slightly more tricky. If you want to plot from the raw data (r
 ```{r echo = T, eval = F}
 strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength))
 strength_plot +
-  stat_summary(fun.y = "mean", geom = "point", size = 4)
+  stat_summary(fun = "mean", geom = "point", size = 4)
 ```
 
-All we're doing here is setting up the plot as normal and then adding `stat_summary()` to it and within that function asking it to calculate the means and their confidence intervals (`fun.y = "mean"`) and displaying them using geom_point (`geom = "point"`). `size = 4` simply makes the points that display the means bigger than the default (you can omit this option if you like). Copy the code into the code box and run it to see the resulting plot. Bar charts are generally a massive waste of ink, but try replacing `geom = "point"` with `geom = "bar"` and re-running the code. Congratulations, you have just displayed the same information as the graph with points but using a tonne more ink!
+All we're doing here is setting up the plot as normal and then adding `stat_summary()` to it and within that function asking it to calculate the means and their confidence intervals (`fun = "mean"`) and displaying them using geom_point (`geom = "point"`). `size = 4` simply makes the points that display the means bigger than the default (you can omit this option if you like). Copy the code into the code box and run it to see the resulting plot. Bar charts are generally a massive waste of ink, but try replacing `geom = "point"` with `geom = "bar"` and re-running the code. Congratulations, you have just displayed the same information as the graph with points but using a tonne more ink!
 
 ```{r stgth_box, exercise = TRUE, exercise.lines = 7}
 
@@ -381,7 +381,7 @@ All we're doing here is setting up the plot as normal and then adding `stat_summ
 ```{r stgth_box-solution}
 strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength))
 strength_plot +
-  stat_summary(fun.y = "mean", geom = "point", size = 4) +
+  stat_summary(fun = "mean", geom = "point", size = 4) +
   labs(x = "Employee status", y = "Maximal push force (n)") +
   coord_cartesian(ylim = c(1000, 1800)) +
   scale_y_continuous(breaks = seq(1000, 1800, 100)) +
@@ -413,7 +413,7 @@ The code box below displays the code that you used above to generate the previou
 ```{r stgth_facet, exercise = TRUE, exercise.lines = 8}
 strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength))
 strength_plot +
-  stat_summary(fun.y = "mean", geom = "point", size = 4) +
+  stat_summary(fun = "mean", geom = "point", size = 4) +
   labs(x = "Employee status", y = "Maximal push force (n)") +
   coord_cartesian(ylim = c(1000, 1800)) +
   scale_y_continuous(breaks = seq(1000, 1800, 100)) +
@@ -423,7 +423,7 @@ strength_plot +
 ```{r stgth_facet-solution}
 strength_plot <- ggplot(jig_tib, aes(employee, strength))
 strength_plot +
-  stat_summary(fun.y = "mean", geom = "point", size = 4) +
+  stat_summary(fun = "mean", geom = "point", size = 4) +
   labs(x = "Employee status", y = "Maximal push force (n)") +
   coord_cartesian(ylim = c(1000, 1800)) +
   scale_y_continuous(breaks = seq(1000, 1800, 100)) +
@@ -444,7 +444,7 @@ You should find that the male and female means and CIs appear in different colou
 ```{r stgth_col1, exercise = TRUE, exercise.lines = 8}
 strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength))
 strength_plot +
-  stat_summary(fun.y = "mean", geom = "point", size = 4) +
+  stat_summary(fun = "mean", geom = "point", size = 4) +
   labs(x = "Employee status", y = "Maximal push force (n)") +
   coord_cartesian(ylim = c(1000, 1800)) +
   scale_y_continuous(breaks = seq(1000, 1800, 100)) +
@@ -453,7 +453,7 @@ strength_plot +
 
 We can avoid this potential problem by adjusting the horizontal position using `position_dodge()`. This command plots geoms so that they 'dodge' each other on the horizontal plane. You have to include a value for the 'dodge', 0.9 works well for this plot, for others play around with values until it looks good. In the code box above add `position = position_dodge(width = 0.9)` into the `stat_summary()`. It should look like this:
 
-`stat_summary(fun.y = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9))`
+`stat_summary(fun = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9))`
 
 Run the code and you should see that the male and female points are set at different locations along the horizontal axis.
 
@@ -474,7 +474,7 @@ Add this function to the command in the box below (place it *before* the `stat-s
 ```{r stgth_raw, exercise = TRUE, exercise.lines = 9}
 strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength, colour = sex))
 strength_plot +
-  stat_summary(fun.y = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9)) +
+  stat_summary(fun = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9)) +
   labs(x = "Employee status", y = "Maximal push force (n)", colour = "Biological sex") +
   coord_cartesian(ylim = c(1000, 1800)) +
   scale_y_continuous(breaks = seq(1000, 1800, 100)) +
@@ -485,7 +485,7 @@ strength_plot +
 strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength, colour = sex))
 strength_plot +
   geom_point(position = position_dodge(width = 0.9), alpha = 0.3) +
-  stat_summary(fun.y = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9)) +
+  stat_summary(fun = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9)) +
   labs(x = "Employee status", y = "Maximal push force (n)", colour = "Biological sex") +
   coord_cartesian(ylim = c(900, 2500)) +
   scale_y_continuous(breaks = seq(900, 2500, 100)) +
@@ -499,11 +499,11 @@ Because we changed the size of the points displaying the mean to make them bigge
 
 The code box includes the command that we have just used. First, add `shape = 0` to the `stat_summary()` function. In other words change:
 
-`stat_summary(fun.y = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9))`
+`stat_summary(fun = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9))`
 
 to be:
 
-`stat_summary(fun.y = "mean", geom = "point", size = 4, shape = 0, position = position_dodge(width = 0.9))`
+`stat_summary(fun = "mean", geom = "point", size = 4, shape = 0, position = position_dodge(width = 0.9))`
 
 Run the code, and note that the means are now displayed as hollow squares. Feel free to try other shapes!
 
@@ -521,7 +521,7 @@ Run the code and you should see that the raw data points are crosses.
 strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength, colour = sex))
 strength_plot +
   geom_point(position = position_dodge(width = 0.9), alpha = 0.3) +
-  stat_summary(fun.y = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9)) +
+  stat_summary(fun = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9)) +
   labs(x = "Employee status", y = "Maximal push force (n)", colour = "Biological sex") +
   coord_cartesian(ylim = c(900, 2500)) +
   scale_y_continuous(breaks = seq(900, 2500, 100)) +

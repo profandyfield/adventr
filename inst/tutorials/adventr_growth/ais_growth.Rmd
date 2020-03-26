@@ -13,7 +13,6 @@ library(forcats)
 library(learnr)
 library(tidyverse)
 
-library(gmodels)
 library(nlme)
 
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
@@ -115,7 +114,7 @@ Zach doesn’t want to believe that Alice has simply just left him. Rather, that
 
 This tutorial uses the following packages:
 
-* `gmodels` [@RN11408] to compute confidence intervals
+* `Hmisc` [@RN11417] to compute confidence intervals
 * `nlme` [@RN5102] to estimate the multilevel models
 * `tidyverse` [@RN11407] for general data processing
 
@@ -221,7 +220,7 @@ Note that levels have been assigned as they occur in the data So, for **interven
 
 Using what you've learnt in previous tutorials, create a tibble called `growth_summary` containing the mean resemblance scores (and their confidence intervals) at each time point and within each treatment condition.
 
-`r hint_text("Tip: Use the variable called time, for time, and if you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels")`
+`r hint_text("Tip: Use the variable called time, for time, and if you're doing this outside of the tutorial remember to load the packages tidyverse and Hmisc")`
 
 ```{r desc, exercise = TRUE, exercise.lines = 6, exercise.setup = "prepare-data"}
              
@@ -232,8 +231,8 @@ growth_summary <-  rehab_growth_tib %>%
   dplyr::group_by(intervention, time) %>%
   dplyr::summarize(
     mean = mean(resemblance),
-    ci_low = gmodels::ci(resemblance)["CI lower"],
-    ci_upp = gmodels::ci(resemblance)["CI upper"]
+    ci_low = ggplot2::mean_cl_normal(resemblance)$ymin,
+    ci_upp = ggplot2::mean_cl_normal(resemblance)$ymax
 )
 growth_summary              
 ```

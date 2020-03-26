@@ -12,7 +12,6 @@ bibliography: adventr_bib.bib
 library(forcats)
 library(learnr)
 library(tidyverse)
-library(gmodels)
 library(boot)
 
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
@@ -102,7 +101,7 @@ Zach doesn’t want to believe that Alice has simply just left him. Rather, that
 This tutorial uses the following packages:
 
 * `boot` to conduct bootstrapping [@RN11409]
-* `gmodels` to obtain confidence intervals[@RN11408]
+* `Hmisc` to obtain confidence intervals [@RN11417]
 * `tidyverse` for general data processing [@RN11407]
 
 These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in **RStudio**) then you need to make sure that the package has been installed by executing `install.packages("package_name")`, where *package_name* is the name of the package. If the package is already installed, then you need to reference it in your current session by executing `library(package_name)`, where *package_name* is the name of the package.
@@ -189,19 +188,21 @@ quiz(
 )
 ```
 
-To incorporate confidence intervals into this command isn't entirely straightforward. One way is to use the `ci()` function from the `gmodels` package. (Remember that if you're doing this outside of this tutorial then you'll need to install this package and then load it whenever you want to use the `ci()` function in a session.) This function takes any model as its input and returns an object that contains estimates from the model and their confidence intervals. If you input a single variable then it returns the mean of that variable and the associated confidence interval (but you can input more complex objects than a variable). In general it takes the following form:
+To incorporate confidence intervals into this command isn't entirely straightforward. One way is to use the `mean_cl_normal()` function from the `ggplot2` package. (Under the hood this function is using the package `Hmisc` so if you're working outside of this tutorial then you'll need to install and load this package.) This function takes any model as its input and returns an object that contains estimates from the model and their confidence intervals. In general it takes the following form:
 
-`ci(object, confidence = 0.95, na.rm = F)`
+`ggplot2::mean_cl_normal(object, conf.int = 0.95, na.rm = TRUE)`
 
 To keep things simple, imagine the 'object' we put into this function is a variable, like **footspeed**. We'd execute:
 
-`gmodels::ci(jig_tib$footspeed, confidence = 0.95, na.rm = F)`
+`ggplot2::mean_cl_normal(jig_tib$footspeed, conf.int = 0.95, na.rm = TRUE)`
 
-If we just place `jig_tib$footspeed` into the function we'll get a 95% confidence interval and missing values will *not* be removed. To get a different confidence interval specify a proportion in `confidence = `. For example, `gmodels::ci(jig_tib$footspeed, confidence = 0.9)` will give us a 90% confidence interval around the mean of **footspeed**. Similarly if we want to remove missing values we would set `na.rm = T`. When you put a variable into the function it returns an object containing the mean (labelled *Estimate* in the object), the lower boundary of the confidence interval (labelled *CI Lower*), the upper boundary of the confidence interval (labelled *CI Upper*), and the standard error (labelled *Std. Error*). To access these values simultaneously we execute the function (or create an object from it and execute that), but if we want to access them individually we can do that by appending their name in square brackets. For example:
+If we place only `jig_tib$footspeed` into the function we'll get a 95% confidence interval and missing values will be removed, which is usually what we want. To get a different confidence interval specify a proportion in `conf.int = `. For example, `ggplot2::mean_cl_normal(jig_tib$footspeed, conf.int = 0.9)` will give us a 90% confidence interval around the mean of **footspeed**. When you put a variable into the function it returns an object containing the mean (labelled *y* in the object), the lower boundary of the confidence interval (labelled *ymin*), and the upper boundary of the confidence interval (labelled *ymax*). To access these values simultaneously we execute the function (or create an object from it and execute that), but if we want to access them individually we can do that by appending their name after the `$` symbol. For example:
 
-`gmodels::ci(jig_tib$footspeed)["CI lower"]` returns the value of the item labelled "CI lower" in the object created by the `ci()` function. In other words, it will give us the value of the lower boundary of the (by default 95%) confidence interval. If we add this command within the `summarize()` statement in our pipe, we'll get the lower boundaries for the confidence intervals around the mean when the data are grouped by **employee** and **sex**. One final point is that we wouldn't include this line exactly as I've written it because we have specified the `jig_tib` tibble earlier in the pipe, which means it will be carried forward into the summarize statement. This means that we can specify the variable of interest as simply `footspeed` rather than `jig_tib$footspeed` because the function will already know to look for **footspeed** within the `jig_tib` tibble.
+`ggplot2::mean_cl_normal(jig_tib$footspeed)$ymin`
 
-Therefore, to create a tibble with means and confidence intervals grouped by **employee** and **sex** we can adapt the code that we've already used in previous tutorials to include the `ci()` function:
+returns the value of the lower boundary of the (by default 95%) confidence interval. If we add this command within the `summarize()` statement in our pipe, we'll get the lower boundaries for the confidence intervals around the mean when the data are grouped by **employee** and **sex**. One final point is that we wouldn't include this line exactly as I've written it because we have specified the `jig_tib` tibble earlier in the pipe, which means it will be carried forward into the summarize statement. This means that we can specify the variable of interest as simply `footspeed` rather than `jig_tib$footspeed` because the function will already know to look for **footspeed** within the `jig_tib` tibble.
+
+Therefore, to create a tibble with means and confidence intervals grouped by **employee** and **sex** we can adapt the code that we've already used in previous tutorials to include the `mean_cl_normal()` function:
 
 ```{r echo = T, eval = F}
 speed_sum <-
@@ -209,15 +210,15 @@ speed_sum <-
   dplyr::group_by(employee, sex) %>%
   dplyr::summarize(
     mean_speed = mean(footspeed),
-    ci_low = gmodels::ci(footspeed)["CI lower"],
-    ci_upp = gmodels::ci(footspeed)["CI upper"]
+    ci_low = ggplot2::mean_cl_normal(footspeed)$ymin,
+    ci_upp = ggplot2::mean_cl_normal(footspeed)$ymax
     )
 ``` 
 
 Note that the code is the same as we used before except that we have added two lines (which should make sense based on the explanation above):
 
-* `ci_low = gmodels::ci(footspeed)["CI lower"]` creates a variable called **ci_low** by applying the function `ci()` to the variable **footspeed** and extracting the value labelled "CI lower", which is the value of the lower boundary of the 95% confidence interval.  
-* `ci_upp = gmodels::ci(footspeed)["CI upper"]` creates a variable called **ci_upp** by applying the function `ci()` to the variable **footspeed** and extracting the value labelled "CI upper", which is the value of the upper boundary of the 95% confidence interval.
+* `ci_low = ggplot2::mean_cl_normal(footspeed)$ymin` creates a variable called **ci_low** by applying the function `mean_cl_normal()` to the variable **footspeed** and extracting the value labelled "CI lower", which is the value of the lower boundary of the 95% confidence interval.  
+* `ci_upp = ggplot2::mean_cl_normal(footspeed)$ymax` creates a variable called **ci_upp** by applying the function `mean_cl_normal()` to the variable **footspeed** and extracting the value labelled "CI upper", which is the value of the upper boundary of the 95% confidence interval.
 
 Copy the command into the code box and run it. Also, run the name of the `speed_sum` tibble that you create to see what it contains. Hopefully you'll see a tibble with the mean and 95% confidence interval boundaries split by **employee** and **sex**. Try to create tibbles called `strength_sum` and `vis_sum` that tabulate the mean and confidence intervals for the variables **strength** and **vision** respectively.
 
@@ -231,8 +232,8 @@ speed_sum <-
   dplyr::group_by(employee, sex) %>%
   dplyr::summarize(
     mean_speed = mean(footspeed),
-    ci_low = gmodels::ci(footspeed)["CI lower"],
-    ci_upp = gmodels::ci(footspeed)["CI upper"]
+    ci_low = ggplot2::mean_cl_normal(footspeed)$ymin,
+    ci_upp = ggplot2::mean_cl_normal(footspeed)$ymax
     )
 speed_sum
 ```
@@ -242,9 +243,9 @@ speed_sum
 We've seen in previous tutorials how to plot means. For example we created a plot of the strength data split by JIG:SAW employees and non-employees. We used this code:
 
 ```{r echo = TRUE, eval = FALSE}
-strength_plot <- ggplot(jig_tib, aes(employee, strength))
+strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength))
 strength_plot +
-  stat_summary(fun.y = "mean", geom = "point", size = 4) +
+  stat_summary(fun = "mean", geom = "point", size = 4) +
   labs(x = "Employee status", y = "Maximal push force (n)") +
   coord_cartesian(ylim = c(1000, 1800)) +
   scale_y_continuous(breaks = seq(1000, 1800, 100)) +
@@ -254,7 +255,7 @@ strength_plot +
 Let's remind ourselves of what each part of this command is doing:
 
 * `strength_plot <- ggplot(jig_tib, aes(employee, strength))` creates an object called `strength_plot` that contains the plot. The `ggplot()` function is then used to specify that the plot uses the `jig_tib` tibble and plots the variable **employee** on the *x*-axis and the variable **strength** on the *y*-axis.
-* `strength_plot + stat_summary(fun.y = "mean", geom = "point", size = 4)` takes the object `strength_plot` and adds a statistics summary to it. The `stat_summary()` uses `fun.y = "mean"` to plot the mean using a dot (`geom = "point"`) of size 4 (`size = 4`).
+* `strength_plot + stat_summary(fun = "mean", geom = "point", size = 4)` takes the object `strength_plot` and adds a statistics summary to it. The `stat_summary()` uses `fun = "mean"` to plot the mean using a dot (`geom = "point"`) of size 4 (`size = 4`).
 * `labs(x = "Employee status", y = "Maximal push force (n)")` applies descriptive labels to the *x* and *y* axes.
 * `coord_cartesian(ylim = c(1000, 1800))` sets the limits of the *y*-axis
 * `scale_y_continuous(breaks = seq(1000, 1800, 100))` sets the breaks along the *y*-axis
@@ -262,7 +263,7 @@ Let's remind ourselves of what each part of this command is doing:
 
 If we want to plot confidence intervals around the means all we need to do is to edit the details of `stat_summary()`. Specifically there are three changes that we need to make:
 
-1. Change `fun.y = "mean"` to `fun.data = "mean_cl_normal"`. This creates the data to be plotted for the mean and confidence intervals.
+1. Change `fun = "mean"` to `fun.data = "mean_cl_normal"`. This creates the data to be plotted for the mean and confidence intervals.
 2. Change `geom = "point"` to `geom = "pointrange"`. This changes the geom to one that can display a confidence interval.
 3. Delete `size = 4` because the default size for the 'pointrange' geom will look better than size 4.
 
@@ -271,7 +272,7 @@ The code box contains the code above and shows the resulting plot (that we creat
 ```{r stg_plot_ci, exercise = TRUE, exercise.lines = 7, exercise.eval = TRUE}
 strength_plot <- ggplot(jig_tib, aes(employee, strength))
 strength_plot +
-  stat_summary(fun.y = "mean", geom = "point", size = 4) +
+  stat_summary(fun = "mean", geom = "point", size = 4) +
   labs(x = "Employee status", y = "Maximal push force (n)") +
   coord_cartesian(ylim = c(1000, 1800)) +
   scale_y_continuous(breaks = seq(1000, 1800, 100)) +
@@ -288,11 +289,11 @@ strength_plot +
   theme_bw()
 ```
 
-Hopefully your plot how looks like dots showing the means with vertical lines showing the confidence intervals. (Incidentally, you could layer a `stat_summary()` function underneath the confidence intervals that uses a bar geom to plot the mean. Something like `stat_summary(fun.y = "mean", geom = "bar", alpha = 0.6) +` placed on the line above the existing stat_summary() function would work. The result would be a bar graph of means with error bars layered on top. However, adding the bars does not add any new information, but does add a lot of unnecessary ink, so I wouldn't bother.)
+Hopefully your plot how looks like dots showing the means with vertical lines showing the confidence intervals. (Incidentally, you could layer a `stat_summary()` function underneath the confidence intervals that uses a bar geom to plot the mean. Something like `stat_summary(fun = "mean", geom = "bar", alpha = 0.6) +` placed on the line above the existing stat_summary() function would work. The result would be a bar graph of means with error bars layered on top. However, adding the bars does not add any new information, but does add a lot of unnecessary ink, so I wouldn't bother.)
 
 What about more complex plots? In a previous tutorial we also created a similar plot but differentiated males and females by colours. The code box below replicates this code and shows the plot to remind you of how it looks. To add error bars we make exactly the same changes to `stat_summary()` as we did above:
 
-1. Change `fun.y = "mean"` to `fun.data = "mean_cl_normal"`.
+1. Change `fun = "mean"` to `fun.data = "mean_cl_normal"`.
 2. Change `geom = "point"` to `geom = "pointrange"`. 
 3. Delete `size = 4`.
 
@@ -301,7 +302,7 @@ Make these changes and run the code. You should see the same plot but with confi
 ```{r stgth_col1, exercise = TRUE, exercise.eval = TRUE}
 strength_plot <- ggplot(jig_tib, aes(employee, strength, colour = sex))
 strength_plot +
-  stat_summary(fun.y = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9)) +
+  stat_summary(fun = "mean", geom = "point", size = 4, position = position_dodge(width = 0.9)) +
   labs(x = "Employee status", y = "Maximal push force (n)", colour = "Biological sex") +
   coord_cartesian(ylim = c(1000, 1800)) +
   scale_y_continuous(breaks = seq(1000, 1800, 100)) +
@@ -442,20 +443,20 @@ boot::boot(jig_tib$strength, mean_boot, R = 1000)
 
 ```
 
-The output doesn't give us the confidence intervals. Instead we're told the original mean and an estimate of bias. To get the confidence intervals there is one more step, which is to use the `boot.ci()` function, which takes the general form:
+The output doesn't give us the confidence intervals. Instead we're told the original mean and an estimate of bias. To get the confidence intervals there is one more step, which is to use the `boot.mean_cl_normal()` function, which takes the general form:
 
 `boot::boot.ci(boot.object, conf = 0.95, type = "all")`
 
 There are other options but these ones are the main ones. First you input an object created with the `boot()` function, then specify the width of confidence interval that you want (the default is 0.95 so can leave this option out if that's what you want), and the type that you want. By default it will compute 5 different types of interval. For most purposes you don't need five different intervals so it would be best to change this option to specify a particular type. There's much to recommend Bias Corrected and Accelerated intervals (`type = "bca"`) or if those fail then a percentile interval (`type  = "perc"`).
 
-The code box below combines what we have learnt. First it creates the function to get the mean. The second line inserts our `boot()` function into the `boot.ci()` function and asked for BCa confidence intervals. Run the code.
+The code box below combines what we have learnt. First it creates the function to get the mean. The second line inserts our `boot()` function into the `boot.mean_cl_normal()` function and asked for BCa confidence intervals. Run the code.
 
 ```{r boot_ci, exercise = TRUE, exercise.lines = 6}
 mean_boot <- function(data, index) mean(data[index], na.rm = TRUE)
 boot::boot.ci(boot(jig_tib$strength, mean_boot, R = 1000), type = "bca")
 ```
 
-There is too much output to embed into a summarize function. We want to discard everything except for the numeric values that represent the lower and upper bound of the confidence interval. These values are stored in a variable called *bca* within the `boot.ci()` object. (Obviously if you chose a type of interval other than bca, the variable name will be different; for example, if you opted for `type = "Perc"` then the variable will be called **perc**). Like any variable, we can access it using `$`. For example, to see the information relating to the BCa confidence intervals we could execute:
+There is too much output to embed into a summarize function. We want to discard everything except for the numeric values that represent the lower and upper bound of the confidence interval. These values are stored in a variable called *bca* within the `boot.mean_cl_normal()` object. (Obviously if you chose a type of interval other than bca, the variable name will be different; for example, if you opted for `type = "Perc"` then the variable will be called **perc**). Like any variable, we can access it using `$`. For example, to see the information relating to the BCa confidence intervals we could execute:
 
 `boot::boot.ci(boot(jig_tib$strength, mean_boot, R = 1000), type = "bca")$bca`
 

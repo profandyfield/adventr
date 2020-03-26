@@ -16,7 +16,6 @@ library(tidyverse)
 library(BayesFactor)
 library(car)
 library(effects)
-library(gmodels)
 library(lm.beta)
 library(robust)
 library(sjstats)
@@ -118,7 +117,7 @@ This tutorial uses the following packages:
 * `BayesFactor` [@RN9444] to compute Bayes factors
 * `boot` [@RN11409] to compute bootstrap confidence intervals.
 * `car` [@RN11416] to compute type III sums of squares
-* `gmodels` [@RN11408] to get confidence intervals
+* `Hmisc` [@RN11417] to get confidence intervals
 * `robust` [@RN11411] to compute robust estimates
 * `sjstats` [@RN11413] to produce robust parameter estimates and confidence intervals
 * `tidyverse` [@RN11407] for general data processing
@@ -209,7 +208,7 @@ The variables **gene** and **picture** are made up of 0s and 1s that code the th
 
 Using what you've learnt in previous tutorials, create a tibble called `alice_summary` containing the group means and their confidence intervals split by **gene** and **picture**.
 
-`r hint_text("Tip: to group means by more than one variable you can use group_by(x, y). If you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels")`
+`r hint_text("Tip: to group means by more than one variable you can use group_by(x, y). If you're doing this outside of the tutorial remember to load the packages tidyverse and Hmisc")`
 
 ```{r desc, exercise = TRUE, exercise.lines = 6}
              
@@ -220,8 +219,8 @@ alice_summary <- alice_tib %>%
   dplyr::group_by(gene, picture) %>%
   dplyr::summarize(
     mean = mean(resemblance),
-    ci_low = gmodels::ci(resemblance)["CI lower"],
-    ci_upp = gmodels::ci(resemblance)["CI upper"]
+    ci_low = ggplot2::mean_cl_normal(resemblance)$ymin,
+    ci_upp = ggplot2::mean_cl_normal(resemblance)$ymax
 )
 alice_summary              
 ```
@@ -237,16 +236,16 @@ gene_main <- alice_tib %>%
   dplyr::group_by(gene) %>%
   dplyr::summarize(
     mean = mean(resemblance),
-    ci_low = gmodels::ci(resemblance)["CI lower"],
-    ci_upp = gmodels::ci(resemblance)["CI upper"]
+    ci_low = ggplot2::mean_cl_normal(resemblance)$ymin,
+    ci_upp = ggplot2::mean_cl_normal(resemblance)$ymax
 )
 
 pic_main <- alice_tib %>%
   dplyr::group_by(picture) %>%
   dplyr::summarize(
     mean = mean(resemblance),
-    ci_low = gmodels::ci(resemblance)["CI lower"],
-    ci_upp = gmodels::ci(resemblance)["CI upper"]
+    ci_low = ggplot2::mean_cl_normal(resemblance)$ymin,
+    ci_upp = ggplot2::mean_cl_normal(resemblance)$ymax
 )
 
 gene_main  

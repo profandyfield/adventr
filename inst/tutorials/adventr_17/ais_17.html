@@ -198,7 +198,7 @@ $(document).ready(function () {
 <li><code>BayesFactor</code> <span class="citation">(Morey and Rouder 2014)</span> to compute Bayes factors</li>
 <li><code>boot</code> <span class="citation">(Canty and Ripley 2017)</span> to compute bootstrap confidence intervals.</li>
 <li><code>car</code> <span class="citation">(Fox and Weisberg 2011)</span> to compute type III sums of squares</li>
-<li><code>gmodels</code> <span class="citation">(Warnes et al. 2015)</span> to get confidence intervals</li>
+<li><code>Hmisc</code> <span class="citation">(Harrell 2017)</span> to get confidence intervals</li>
 <li><code>robust</code> <span class="citation">(Wang et al. 2017)</span> to compute robust estimates</li>
 <li><code>sjstats</code> <span class="citation">(Lüdecke 2017)</span> to produce robust parameter estimates and confidence intervals</li>
 <li><code>tidyverse</code> <span class="citation">(Wickham 2017)</span> for general data processing</li>
@@ -278,7 +278,7 @@ Y_i &amp; = b_0 + b_1X_i+ ε_i\\
 <div id="section-descriptive-statistics" class="section level3">
 <h3>Descriptive statistics</h3>
 <p>Using what you’ve learnt in previous tutorials, create a tibble called <code>alice_summary</code> containing the group means and their confidence intervals split by <strong>gene</strong> and <strong>picture</strong>.</p>
-<p><font color='#E69F00'>Tip: to group means by more than one variable you can use group_by(x, y). If you’re doing this outside of the tutorial remember to load the packages tidyverse and gmodels</font></p>
+<p><font color='#E69F00'>Tip: to group means by more than one variable you can use group_by(x, y). If you’re doing this outside of the tutorial remember to load the packages tidyverse and Hmisc</font></p>
 <div class="tutorial-exercise" data-label="desc" data-caption="Exercise" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="6">
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":false,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
@@ -287,8 +287,8 @@ Y_i &amp; = b_0 + b_1X_i+ ε_i\\
   dplyr::group_by(gene, picture) %&gt;%
   dplyr::summarize(
     mean = mean(resemblance),
-    ci_low = gmodels::ci(resemblance)[&quot;CI lower&quot;],
-    ci_upp = gmodels::ci(resemblance)[&quot;CI upper&quot;]
+    ci_low = ggplot2::mean_cl_normal(resemblance)$ymin,
+    ci_upp = ggplot2::mean_cl_normal(resemblance)$ymax
 )
 alice_summary              </code></pre>
 </div>
@@ -301,16 +301,16 @@ alice_summary              </code></pre>
   dplyr::group_by(gene) %&gt;%
   dplyr::summarize(
     mean = mean(resemblance),
-    ci_low = gmodels::ci(resemblance)[&quot;CI lower&quot;],
-    ci_upp = gmodels::ci(resemblance)[&quot;CI upper&quot;]
+    ci_low = ggplot2::mean_cl_normal(resemblance)$ymin,
+    ci_upp = ggplot2::mean_cl_normal(resemblance)$ymax
 )
 
 pic_main &lt;- alice_tib %&gt;%
   dplyr::group_by(picture) %&gt;%
   dplyr::summarize(
     mean = mean(resemblance),
-    ci_low = gmodels::ci(resemblance)[&quot;CI lower&quot;],
-    ci_upp = gmodels::ci(resemblance)[&quot;CI upper&quot;]
+    ci_low = ggplot2::mean_cl_normal(resemblance)$ymin,
+    ci_upp = ggplot2::mean_cl_normal(resemblance)$ymax
 )
 
 gene_main  
@@ -714,7 +714,6 @@ library(tidyverse)
 library(BayesFactor)
 library(car)
 library(effects)
-library(gmodels)
 library(lm.beta)
 library(robust)
 library(sjstats)
@@ -840,7 +839,7 @@ output$`tutorial-exercise-ancova-output` <- renderUI({
 <!--/html_preserve-->
 <!--html_preserve-->
 <script type="application/shiny-prerendered" data-context="execution_dependencies">
-{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["packages"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["packages","version"]},"class":{"type":"character","attributes":{},"value":["data.frame"]},"row.names":{"type":"integer","attributes":{},"value":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131]}},"value":[{"type":"character","attributes":{},"value":["abind","adventr","assertthat","backports","base","BayesFactor","bayestestR","boot","broom","car","carData","cellranger","cli","coda","colorspace","compiler","crayon","curl","data.table","datasets","DBI","dbplyr","DEoptimR","digest","dplyr","effects","effectsize","emmeans","estimability","evaluate","fansi","fastmap","fit.models","forcats","foreign","fs","gdata","generics","ggplot2","glue","gmodels","graphics","grDevices","grid","gtable","gtools","haven","highr","hms","htmltools","htmlwidgets","httpuv","httr","insight","jsonlite","knitr","later","lattice","learnr","lifecycle","lm.beta","lme4","lubridate","magrittr","markdown","MASS","Matrix","MatrixModels","mc2d","methods","mime","minqa","mitools","modelr","munsell","mvtnorm","nlme","nloptr","nnet","openxlsx","parallel","parameters","pbapply","pcaPP","performance","pillar","pkgconfig","plyr","promises","purrr","R6","Rcpp","readr","readxl","reprex","reshape","rio","rlang","rmarkdown","robust","robustbase","rprojroot","rrcov","rstudioapi","rvest","scales","shiny","sjlabelled","sjmisc","sjstats","splines","stats","stats4","stringi","stringr","survey","survival","tibble","tidyr","tidyselect","tidyverse","tools","utils","vctrs","withr","WRS2","xfun","xml2","xtable","yaml","zip"]},{"type":"character","attributes":{},"value":["1.4-5","0.1.4","0.2.1","1.1.5","3.6.3","0.9.12-4.2","0.5.2","1.3-24","0.5.5","3.0-6","3.0-3","1.1.0","2.0.2","0.19-3","1.4-1","3.6.3","1.3.4","4.3","1.12.8","3.6.3","1.1.0","1.4.2","1.0-8","0.6.25","0.8.5","4.1-4","0.2.0","1.4.5","1.3","0.14","0.4.1","1.0.1","0.5-14","0.5.0","0.8-76","1.3.2","2.18.0","0.0.2","3.3.0","1.3.1.9000","2.18.1","3.6.3","3.6.3","3.6.3","0.3.0","3.8.1","2.2.0","0.8","0.5.3","0.4.0","1.5.1","1.5.2","1.4.1","0.8.2","1.6.1","1.28","1.0.0","0.20-40","0.10.1","0.2.0","1.5-1","1.1-21","1.7.4","1.5","1.1","7.3-51.5","1.2-18","0.4-1","0.1-18","3.6.3","0.9","1.2.4","2.4","0.1.6","0.5.0","1.1-0","3.1-145","1.2.1","7.3-13","4.1.4","3.6.3","0.5.0","1.4-2","1.9-73","0.4.4","1.4.3","2.0.3","1.8.6","1.1.0","0.3.3","2.4.1","1.0.3","1.3.1","1.3.1","0.3.0","0.8.8","0.5.16","0.4.5","2.1","0.5-0.0","0.93-5","1.3-2","1.5-2","0.11","0.3.5","1.1.0","1.4.0","1.1.3","2.8.3","0.17.9","3.6.3","3.6.3","3.6.3","1.4.6","1.4.0","3.37","3.1-11","2.1.3","1.0.2","1.0.0","1.3.0","3.6.3","3.6.3","0.2.3","2.1.2","1.0-0","0.12","1.2.2","1.8-4","2.2.1","2.0.4"]}]}]}
+{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["packages"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["packages","version"]},"class":{"type":"character","attributes":{},"value":["data.frame"]},"row.names":{"type":"integer","attributes":{},"value":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129]}},"value":[{"type":"character","attributes":{},"value":["abind","adventr","assertthat","backports","base","BayesFactor","bayestestR","boot","broom","car","carData","cellranger","cli","coda","colorspace","compiler","crayon","curl","data.table","datasets","DBI","dbplyr","DEoptimR","digest","dplyr","effects","effectsize","emmeans","estimability","evaluate","fansi","fastmap","fit.models","forcats","foreign","fs","generics","ggplot2","glue","graphics","grDevices","grid","gtable","gtools","haven","highr","hms","htmltools","htmlwidgets","httpuv","httr","insight","jsonlite","knitr","later","lattice","learnr","lifecycle","lm.beta","lme4","lubridate","magrittr","markdown","MASS","Matrix","MatrixModels","mc2d","methods","mime","minqa","mitools","modelr","munsell","mvtnorm","nlme","nloptr","nnet","openxlsx","parallel","parameters","pbapply","pcaPP","performance","pillar","pkgconfig","plyr","promises","purrr","R6","Rcpp","readr","readxl","reprex","reshape","rio","rlang","rmarkdown","robust","robustbase","rprojroot","rrcov","rstudioapi","rvest","scales","shiny","sjlabelled","sjmisc","sjstats","splines","stats","stats4","stringi","stringr","survey","survival","tibble","tidyr","tidyselect","tidyverse","tools","utils","vctrs","withr","WRS2","xfun","xml2","xtable","yaml","zip"]},{"type":"character","attributes":{},"value":["1.4-5","0.1.5","0.2.1","1.1.5","3.6.3","0.9.12-4.2","0.5.2","1.3-24","0.5.5","3.0-6","3.0-3","1.1.0","2.0.2","0.19-3","1.4-1","3.6.3","1.3.4","4.3","1.12.8","3.6.3","1.1.0","1.4.2","1.0-8","0.6.25","0.8.5","4.1-4","0.2.0","1.4.5","1.3","0.14","0.4.1","1.0.1","0.5-14","0.5.0","0.8-76","1.3.2","0.0.2","3.3.0","1.3.1.9000","3.6.3","3.6.3","3.6.3","0.3.0","3.8.1","2.2.0","0.8","0.5.3","0.4.0","1.5.1","1.5.2","1.4.1","0.8.2","1.6.1","1.28","1.0.0","0.20-40","0.10.1","0.2.0","1.5-1","1.1-21","1.7.4","1.5","1.1","7.3-51.5","1.2-18","0.4-1","0.1-18","3.6.3","0.9","1.2.4","2.4","0.1.6","0.5.0","1.1-0","3.1-145","1.2.1","7.3-13","4.1.4","3.6.3","0.5.0","1.4-2","1.9-73","0.4.4","1.4.3","2.0.3","1.8.6","1.1.0","0.3.3","2.4.1","1.0.3","1.3.1","1.3.1","0.3.0","0.8.8","0.5.16","0.4.5","2.1","0.5-0.0","0.93-5","1.3-2","1.5-2","0.11","0.3.5","1.1.0","1.4.0","1.1.3","2.8.3","0.17.9","3.6.3","3.6.3","3.6.3","1.4.6","1.4.0","3.37","3.1-11","2.1.3","1.0.2","1.0.0","1.3.0","3.6.3","3.6.3","0.2.3","2.1.2","1.0-0","0.12","1.2.2","1.8-4","2.2.1","2.0.4"]}]}]}
 </script>
 <!--/html_preserve-->
 <div id="section-refs" class="references">
@@ -856,6 +855,9 @@ output$`tutorial-exercise-ancova-output` <- renderUI({
 <div id="section-ref-RN11416">
 <p>Fox, John, and Sanford Weisberg. 2011. <em>An R Companion to Applied Regression</em>. Book. Second. Thousand Oaks, CA: Sage. <a href="http://socserv.socsci.mcmaster.ca/jfox/Books/Companion">http://socserv.socsci.mcmaster.ca/jfox/Books/Companion</a>.</p>
 </div>
+<div id="section-ref-RN11417">
+<p>Harrell, F E. 2017. “Hmisc: A Package of Miscellaneous R Functions.” Journal Article. <em>R Package Version 4.0-3</em>. <a href="https://CRAN.R-project.org/package=Hmisc">https://CRAN.R-project.org/package=Hmisc</a>.</p>
+</div>
 <div id="section-ref-RN11413">
 <p>Lüdecke, Daniel. 2017. “Sjstats: Statistical Functions for Regression Models.” Journal Article. <em>R Package Version 0.11.1</em>. <a href="https://CRAN.R-project.org/package=sjstats">https://CRAN.R-project.org/package=sjstats</a>.</p>
 </div>
@@ -870,9 +872,6 @@ output$`tutorial-exercise-ancova-output` <- renderUI({
 </div>
 <div id="section-ref-RN11411">
 <p>Wang, Jiahui, Ruben Zamar, Alfio Marazzi, Victor Yohai, Matias Salibian-Barrera, Ricardo Maronna, Eric Zivot, et al. 2017. “Robust: Port of the S+ &quot;Robust Library&quot;.” Journal Article. <em>R Package Version 0.4-18.</em> <a href="https://CRAN.R-project.org/package=robust">https://CRAN.R-project.org/package=robust</a>.</p>
-</div>
-<div id="section-ref-RN11408">
-<p>Warnes, Gregory R., Ben Bolker, Thomas Lumley, and Randall C Johnson. 2015. “Gmodels: Various R Programming Tools for Model Fitting.” Journal Article. <em>R Package Version 2.16.2.</em> <a href="  https://CRAN.R-project.org/package=gmodels">https://CRAN.R-project.org/package=gmodels</a>.</p>
 </div>
 <div id="section-ref-RN11407">
 <p>Wickham, Hadley. 2017. “Tidyverse: Easily Install and Load ’Tidyverse’ Packages.” Journal Article. <em>R Package Version 1.1.1.</em> <a href="https://CRAN.R-project.org/package=tidyverse">https://CRAN.R-project.org/package=tidyverse</a>.</p>

@@ -13,7 +13,6 @@ library(forcats)
 library(learnr)
 library(tidyverse)
 library(BayesFactor)
-library(gmodels)
 library(nlme)
 library(WRS2)
 
@@ -109,7 +108,7 @@ Zach doesn’t want to believe that Alice has simply just left him. Rather, that
 This tutorial uses the following packages:
 
 * `BayesFactor` [@RN9444] to compute Bayes factors
-* `gmodels` [@RN11408] to compute confidence intervals
+* `Hmisc` [@RN11417] to compute confidence intervals
 * `nlme` [@RN5102] to estimate the multilevel models
 * `tidyverse` [@RN11407] for general data processing
 * `WRS2` [@RN10205] to do various robust tests
@@ -218,7 +217,7 @@ calcite_tidy
 
 Use what you've learnt in previous tutorials to create a tibble called `calcite_summary` containing the mean recognition scores (and their confidence intervals) in the two experimental conditions.
 
-`r hint_text("Tip: Remember to use the tidy tibble that we've just created. If you're doing this outside of the tutorial remember to load the packages tidyverse and gmodels")`
+`r hint_text("Tip: Remember to use the tidy tibble that we've just created. If you're doing this outside of the tutorial remember to load the packages tidyverse and Hmisc")`
 
 ```{r desc, exercise = TRUE, exercise.lines = 6}
              
@@ -229,8 +228,8 @@ calcite_summary <- calcite_tidy %>%
   dplyr::group_by(face_type) %>%
   dplyr::summarize(
     mean_recognition = mean(recognition),
-    ci_low_recognition = gmodels::ci(recognition)["CI lower"],
-    ci_upp_recognition = gmodels::ci(recognition)["CI upper"]
+    ci_low_recognition = ggplot2::mean_cl_normal(recognition)$ymin,
+    ci_upp_recognition = ggplot2::mean_cl_normal(recognition)$ymax
 )
 calcite_summary              
 ```

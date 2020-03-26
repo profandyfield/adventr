@@ -13,7 +13,6 @@ library(learnr)
 library(tidyverse)
 library(BayesFactor)
 library(effsize)
-library(gmodels)
 
 
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
@@ -29,8 +28,8 @@ zhang_female_tib <- adventr::zhang_female_dat
 teddy_sum <- teddy_tib %>% dplyr::group_by(study_n, group) %>% dplyr::summarize(
   mean = mean(self_esteem),
   sd = sd(self_esteem),
-  ci_low = gmodels::ci(self_esteem)["CI lower"],
-  ci_upp = gmodels::ci(self_esteem)["CI upper"]
+  ci_low = ggplot2::mean_cl_normal(self_esteem)$ymin,
+  ci_upp = ggplot2::mean_cl_normal(self_esteem)$ymax
 )
 
 ```
@@ -110,8 +109,7 @@ This tutorial uses the following packages:
 
 * `BayesFactor` [@RN9444] to compute Bayes factors
 * `effsize` [@RN11406] to compute Cohen's *d*
-* `gmodels` [@RN11408] to compute confidence intervals
-* `Hmisc` to compute  confidence intervals within `ggplot2`
+* `Hmisc` [@RN11417] to compute confidence intervals
 * `tidyverse` [@RN11407] for general data processing
 
 These packages are automatically loaded within this tutorial. If you are working outside of this tutorial (i.e. in **RStudio**) then you need to make sure that the package has been installed by executing `install.packages("package_name")`, where *package_name* is the name of the package. If the package is already installed, then you need to reference it in your current session by executing `library(package_name)`, where *package_name* is the name of the package.
@@ -144,7 +142,7 @@ We're going to use the data in the tibble called `teddy_tib`, which contains dat
 * **study_n**: Factor that distinguishes the two studies in the data set. The first was based on a total *N* of 20 and the second was based on a total *N* of 200
 * **self_esteem**: Self-reported self-esteem scores
 
-Using what you have learnt to date, can you create a tibble called `teddy_sum` containing the means, standard deviations and confidence intervals for each group across the two studies. (If you're doing this outside of the tutorial remember to load *tidyverse* [@RN11407] and *gmodels* [@RN11408])
+Using what you have learnt to date, can you create a tibble called `teddy_sum` containing the means, standard deviations and confidence intervals for each group across the two studies. (If you're doing this outside of the tutorial remember to load *tidyverse* [@RN11407] and *Hmisc* [@RN11417]).
 
 ```{r teddy_means, exercise = TRUE, exercise.lines = 6}
 
@@ -156,8 +154,8 @@ teddy_sum <- teddy_tib %>%
   dplyr::summarize(
     mean = mean(self_esteem),
     sd = sd(self_esteem),
-    ci_low = gmodels::ci(self_esteem)["CI lower"],
-    ci_upp = gmodels::ci(self_esteem)["CI upper"]
+    ci_low = ggplot2::mean_cl_normal(self_esteem)$ymin,
+    ci_upp = ggplot2::mean_cl_normal(self_esteem)$ymax
     )
 ```
 

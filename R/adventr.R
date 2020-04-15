@@ -55,7 +55,7 @@
 #'        \item Field, A. P., Miles, J. N. V., & Field, Z. C. (2012). \emph{Discovering statistics using R: And sex and drugs and rock 'n' roll}. London: Sage.
 #' }
 #'
-#' @import tidyverse learnr
+#' @import learnr
 #' @docType package
 #' @name adventr
 #'

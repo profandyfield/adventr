@@ -4,12 +4,14 @@
 \name{mask_dat}
 \alias{mask_dat}
 \title{Invisibility paste data}
-\format{A tibble with 28 rows and 3 variables:
+\format{
+A tibble with 28 rows and 3 variables:
 \describe{
   \item{id}{Participant ID}
   \item{mask}{Whether the person was assigned to the calcite mask condition or the invisibility paste condition}
   \item{recognition}{How many of the 20 people they correctly identified}
-}}
+}
+}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

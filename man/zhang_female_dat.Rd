@@ -4,11 +4,13 @@
 \name{zhang_female_dat}
 \alias{zhang_female_dat}
 \title{Subset of Zhang data (female sample N = 20)}
-\format{A tibble with 20 rows and 2 variables:
+\format{
+A tibble with 20 rows and 2 variables:
 \describe{
   \item{name}{Specifies whether participants completed the test under their own name or a fake name}
   \item{accuracy}{Accuracy on a maths test, percent}
-}}
+}
+}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

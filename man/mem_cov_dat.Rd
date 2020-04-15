@@ -4,13 +4,15 @@
 \name{mem_cov_dat}
 \alias{mem_cov_dat}
 \title{Memory erasing data with covariate}
-\format{A tibble with 36 rows and 7 variables:
+\format{
+A tibble with 36 rows and 7 variables:
 \describe{
   \item{id}{Participant ID}
   \item{recall}{How many of the 10 critical pieces of information the participant identified}
   \item{group}{To which of the no intervention, memory erase or memory replace conditions the participant was assigned}
   \item{working_mem}{Variable that measures working memory capacity as the individual's digit span}
-}}
+}
+}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

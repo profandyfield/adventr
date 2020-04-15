@@ -4,12 +4,14 @@
 \name{calcite_dat}
 \alias{calcite_dat}
 \title{Calcite mask data}
-\format{A tibble with 20 rows and 3 variables:
+\format{
+A tibble with 20 rows and 3 variables:
 \describe{
   \item{id}{Participant ID}
   \item{actual}{How many of the 20 people the participant correctly identified when a picture of the 'actual' person was transmitted to the participant's ID chip}
   \item{different}{How many of the 20 people the participant correctly identified when a picture of a 'different' person was transmitted to the participant's ID chip}
-}}
+}
+}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

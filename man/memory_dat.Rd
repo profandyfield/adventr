@@ -4,7 +4,8 @@
 \name{memory_dat}
 \alias{memory_dat}
 \title{Memory erasing data}
-\format{A tibble with 36 rows and 7 variables:
+\format{
+A tibble with 36 rows and 7 variables:
 \describe{
   \item{id}{Participant ID}
   \item{group}{To which of the no intervention, memory erase or memory replace conditions the participant was assigned}
@@ -13,7 +14,8 @@
   \item{replace_dummy}{Dummy variable that compares the replace condition to no intervention}
   \item{contrast_1}{Variable that uses contrast codes to compare the memory conditions (combined) to no intervention}
   \item{contrast_2}{Variable that uses contrast codes to compare the erase condition to the replace condition}
-}}
+}
+}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

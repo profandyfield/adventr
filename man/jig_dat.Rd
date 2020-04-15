@@ -4,7 +4,8 @@
 \name{jig_dat}
 \alias{jig_dat}
 \title{JIG:SAW employee data.}
-\format{A tibble with 240 rows and 7 variables:
+\format{
+A tibble with 240 rows and 7 variables:
 \describe{
   \item{id}{employee ID}
   \item{employee}{whether or not the employee works for JIG:SAW}
@@ -13,7 +14,8 @@
   \item{strength}{Maximal push force of the individual, Newtons}
   \item{vision}{Visual accuity}
   \item{sex}{Biological sex of the individual}
-}}
+}
+}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

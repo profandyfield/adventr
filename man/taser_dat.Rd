@@ -4,13 +4,15 @@
 \name{taser_dat}
 \alias{taser_dat}
 \title{Zombie immobility data}
-\format{A tibble with 156 rows and 4 variables:
+\format{
+A tibble with 156 rows and 4 variables:
 \describe{
   \item{id}{Victim ID}
   \item{immobility}{The duration of the zombie's immobility, seconds}
   \item{r_tms}{The frequency of rTMS, Hz}
   \item{taser}{The output of the taser, kV}
-}}
+}
+}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

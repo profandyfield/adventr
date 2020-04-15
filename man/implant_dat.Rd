@@ -4,13 +4,15 @@
 \name{implant_dat}
 \alias{implant_dat}
 \title{Memory implanting data}
-\format{A tibble with 5 rows and 4 variables:
+\format{
+A tibble with 5 rows and 4 variables:
 \describe{
   \item{id}{Participant ID}
   \item{no_interference}{How many of the 10 unusual events were remembered when there was no interference}
   \item{verbal}{How many of the 10 unusual events were remembered when verbal information was used as interference}
   \item{visual}{How many of the 10 unusual events were remembered when visual images were used as interference}
-}}
+}
+}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

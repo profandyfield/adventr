@@ -36,8 +36,8 @@ recovery_tib <- adventr::recovery_dat
 recovery_tib <- recovery_tib %>% 
   mutate(
     id = forcats::as_factor(id),
-    treatment = as_factor(treatment) %>% fct_relevel("No toggle switch"),
-    recovered = as_factor(recovered) %>% fct_relevel("Not recovered")
+    treatment = forcats::as_factor(treatment) %>% forcats::fct_relevel("No toggle switch"),
+    recovered = forcats::as_factor(recovered) %>% forcats::fct_relevel("Not recovered")
     )
 
 recovery_freq <- recovery_tib %>%

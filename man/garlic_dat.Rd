@@ -4,12 +4,14 @@
 \name{garlic_dat}
 \alias{garlic_dat}
 \title{Zombie garlic data}
-\format{A tibble with 10 rows and 3 variables:
+\format{
+A tibble with 10 rows and 3 variables:
 \describe{
   \item{id}{Victim ID}
   \item{latency}{The time taken for a zombie to approach the victim in seconds}
   \item{garlic}{The number of bulbs of garlic worn by the victim}
-}}
+}
+}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

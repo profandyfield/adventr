@@ -4,7 +4,8 @@
 \name{ha_dat}
 \alias{ha_dat}
 \title{Subset of Ha et al. (2010) data}
-\format{A tibble with 20 rows and 13 variables:
+\format{
+A tibble with 20 rows and 13 variables:
 \describe{
   \item{id}{Participant ID}
   \item{age}{Age of the participant, years}
@@ -19,7 +20,8 @@
   \item{attractive}{Rating (out of 10) of the importance of a potential romantic partner being physically attractive}
   \item{creativity}{Rating (out of 10) of the importance of a potential romantic partner being creative}
   \item{honest}{Rating (out of 10) of the importance of a potential romantic partner being honest}
-}}
+}
+}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

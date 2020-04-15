@@ -15,7 +15,6 @@ library(tidyverse)
 
 library(BayesFactor)
 library(car)
-library(effects)
 library(lm.beta)
 library(robust)
 library(sjstats)

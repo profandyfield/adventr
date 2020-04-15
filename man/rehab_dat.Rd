@@ -4,7 +4,8 @@
 \name{rehab_dat}
 \alias{rehab_dat}
 \title{Zombie rehabilitation data}
-\format{A tibble with 190 rows and 6 variables:
+\format{
+A tibble with 190 rows and 6 variables:
 \describe{
   \item{id}{Participant ID}
   \item{id_clin}{Factor that codes which of 10 clinics the participant attended}
@@ -12,7 +13,8 @@
   \item{resemblance}{How closely their face resembled their pre-zombified state (100\% = the participants face is exactly like their original face, 0\% the person bears no resemblance to their pre-zombified face)}
   \item{gep_level}{Factor that codes whether the participant was originally exposed to the low- (0) or high-intensity (1) genetic enhancement program at JIG\:SAW}
   \item{tse_months}{How many months since the participant completed the genetic enhancement program that resulted in their zombification}
-}}
+}
+}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

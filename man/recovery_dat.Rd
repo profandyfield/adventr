@@ -4,13 +4,15 @@
 \name{recovery_dat}
 \alias{recovery_dat}
 \title{Zombie recovery data}
-\format{A tibble with 400 rows and 4 variables:
+\format{
+A tibble with 400 rows and 4 variables:
 \describe{
   \item{id}{Participant ID}
   \item{treatment}{character vector that codes which arm of the trial the participant was randomized to (no toggle switch or toggle switch)}
   \item{dose}{The dose of C-gene used during treatment (0 doses, 1, 2, 3, or 4 doses)}
   \item{recovered}{Character vector that expresses whether or not the participant had recovered following treatment (Recovered or Not Recovered)}
-}}
+}
+}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

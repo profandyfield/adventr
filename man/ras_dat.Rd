@@ -4,11 +4,13 @@
 \name{ras_dat}
 \alias{ras_dat}
 \title{Alice's RAS scores}
-\format{A tibble with 10 rows and 2 variables:
+\format{
+A tibble with 10 rows and 2 variables:
 \describe{
   \item{week}{The week in which the rating was given}
   \item{rating}{Alice's score on the relaationship assessment scale}
-}}
+}
+}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

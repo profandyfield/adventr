@@ -548,7 +548,7 @@ The first thing we could do is compare models using Bayes factors. We can do thi
 
 In the book, Milton explains to Zach that one approach is to add or remove predictors to the model and at each step compute a Bayes factor that compares the model to a baseline that includes only the intercept [@RN9309; @RN9310]. Milton then shows Zach output showing the Bayes factor when only rTMS is included as a predictor, when only taser voltage is included, and when both are included. The questions to ask are: (1) which model has the largest Bayes factor, and (2) is it big enough to provide evidence for the hypothesis that the model predicts the outcome better than the intercept alone. The Bayes factors in the book were obtained using the `regressionBF()` function, which takes this general form:
 
-`bf_mod <- regressionBF(formula, rscaleCont = "medium", data = data.frame(tibble))`
+`bf_mod <- regressionBF(formula, rscaleCont = "medium", data = tibble)`
 
 This creates an object called `bf_mod` based on the same type of formula that we put into the `lm()` function to specify the model (so this should be familiar). To set a prior include `rscaleCont = `. By default (i.e. if you exclude the option altogether) the prior is set at "medium" ($^\sqrt{2}/_4$), but you can specify `rscaleCont = "wide"` ($^1/_2$) or `rscaleCont = "ultrawide"` ($^\sqrt{2}/_2$). Finally, the data are specified. If you are using a pipe, specify the data with a dot. For our data (using the default prior) we could execute:
 

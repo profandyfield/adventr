@@ -4,13 +4,15 @@
 \name{teddy_dat}
 \alias{teddy_dat}
 \title{Teddy therapy data.}
-\format{A tibble with 220 rows and 4 variables:
+\format{
+A tibble with 220 rows and 4 variables:
 \describe{
   \item{id}{Participant ID}
   \item{group}{whether the participant cuddled a teddy bear or the cardboard box that contained the teddy bear}
   \item{study_n}{Factor that distinguishes the two studies in the data set. The first was based on a total N of 20 and the second was based on a total N of 200}
   \item{self_esteem}{Self-reported self-esteem scores}
-}}
+}
+}
 \source{
 \url{https://www.discoveringstatistics.com/books/an-adventure-in-statistics/}
 }

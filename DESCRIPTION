@@ -1,11 +1,11 @@
 Package: adventr
 Type: Package
-Title: Interactive R Tutorials to Accompany "An Adventure in Statistics" (Field, 2016)
-Version: 0.1.6
+Title: Interactive R Tutorials to Accompany Field (2016), "An Adventure in Statistics", <ISBN:9781446210451>
+Version: 0.1.7
 Authors@R: person("Andy", "Field", email = "andyf@sussex.ac.uk", role = c("aut", "cre"))
 Maintainer: Andy Field <andyf@sussex.ac.uk>
-Description: Interactive R tutorials written using 'learnr' for the textbook "An Adventure in Statistics". Data basics in R and RStudio.
-    Topics include general workflow, the R environment and tidyverse, summarizing data, model fitting, central tendency, 
+Description: Interactive 'R' tutorials written using 'learnr' for Field (2016), "An Adventure in Statistics", <ISBN:9781446210451>.
+    Topics include general workflow in 'R' and 'Rstudio', the 'R' environment and 'tidyverse', summarizing data, model fitting, central tendency, 
     visualising data using 'ggplot2', inferential statistics and robust estimation, hypothesis testing, the general linear model, comparing means,
     repeated measures designs, factorial designs, multilevel models, growth models, and generalized linear models (logistic regression).
 License: GPL-3

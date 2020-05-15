@@ -621,7 +621,7 @@ Most likely you will find it easier to input data into a spreadsheet software (e
 * `read_sav()` and `write_sav()`: read and write SPSS Statistics files. (You need to execute `library(haven)` to use these functions.)
 * `read_excel()`: read Microsoft Excel files (both .xls and .xlsx format). (You need to execute `library(readxl)` to use this function.)
 
-At a simple level you insert the file name into the function. For example, download the csv file [ais_ch03_ha.csv](./data/ais_ch03_ha.csv), which contains the data that Prof Pincus uses to help Zach explore what attributes women look for in men in Chapter 3 of the book. These data are a subset of data from a study by @RN9017. Assuming that you save this file into the working directory or your project folder, you could load it using:
+At a simple level you insert the file name into the function. For example, download the csv file [ais_ch03_ha.csv](http://www.discoveringstatistics.com/repository/ais_data/ais_03_ha.csv), which contains the data that Prof Pincus uses to help Zach explore what attributes women look for in men in Chapter 3 of the book. These data are a subset of data from a study by @RN9017. Assuming that you save this file into the working directory or your project folder, you could load it using:
 
 `ha_tib <- readr::read_csv("ais_ch03_ha.csv")`
 

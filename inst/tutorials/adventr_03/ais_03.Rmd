@@ -5,6 +5,7 @@ output:
   learnr::tutorial:
     progressive: false
 runtime: shiny_prerendered
+description: "Summarizing data: introducing ggplot2, histograms, editing plots, frequency polygons."
 bibliography: adventr_bib.bib
 ---
 

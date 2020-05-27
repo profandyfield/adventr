@@ -25,21 +25,21 @@ The package was written initially to support my own teaching on a module where I
 
 The tutorials are named to correspond (roughly) to the relevant chapter of the book. For example, *adventr_03* would be a good tutorial to run alongside teaching related to chapter 3, and so on.
 
-* **adventr_02**: Data basics in R and RStudio
-* **adventr_03**: Summarizing data (introducing ggplot2)
-* **adventr_04**: Fitting models (central tendency)
-* **adventr_05**: Presenting data (summarizing groups and more ggplot2)
-* **adventr_08**: Inferential statistics and robust estimation (covers Chapter 9 too)
-* **adventr_11**: Hypothesis testing
-* **adventr_14**: The general linear model
-* **adventr_15**: Comparing two means
-* **adventr_15_rm**: Comparing two means (repeated measures)
-* **adventr_16**: Comparing several means
-* **adventr_16_rm**: Comparing several means (repeated measures)
-* **adventr_17**: Factorial designs
-* **adventr_mlm**: Multilevel models (not covered in the book)
-* **adventr_growth**: Growth models (not covered in the book)
-* **adventr_log**: Logistic regression (not covered in the book)
+* **adventr_02**: R workflow. Project files, relative paths, objects and functions, creating variables, the pipe operator, dataframes and tibbles, reading and writing files.
+* **adventr_03**: Summarizing data, introducing ggplot2, histograms, editing plots, frequency polygons.
+* **adventr_04**: Fitting models. The mean, median, outliers, sums of squares and variance.
+* **adventr_05**: Visualizing data. Summarizing data by group, plotting grouped data, boxplots, plotting means, plotting raw data, scatterplots.
+* **adventr_08**: Inferential and robust statistics. Confidence intervals, plotting confidence intervals, robust means, robust confidence intervals, bootstrapping. (covers Chapter 9 too.)
+* **adventr_11**: Hypothesis testing, effect sizes and Bayes factors.
+* **adventr_14**: The general linear model (GLM). Fittinga nd interpreting models with one and two predictors, model diagnostics, robust models, Bayes factors.
+* **adventr_15**: Categorical predictors in the GLM (comparing two means). The t-test, linear models with a two-category predictor, robust estimates, Bayes factors, other robust approaches (trimmed means).
+* **adventr_15_rm**: Comparing two related/dependent means. The t-test, multilevel linear models with a two-category predictor, robust estimates, Bayes factors, other robust approaches (trimmed means).
+* **adventr_16**: Categorical predictors in the GLM (comparing several means). Linear models with a multi-category predictor, contrast coding, robust estimates, Bayes factors, other robust approaches (trimmed means).
+* **adventr_16_rm**: Comparing several related/dependent means. Multilevel linear models with a multi-category predictor, contrast coding, robust estimates, Bayes factors.
+* **adventr_17**: Factorial designs. Linear models with several categorical predictors, contrast coding, interactions, robust estimates, Bayes factors, other robust approaches (trimmed means).
+* **adventr_mlm**: Fitting multilevel models. Fixed vs random slopes, preparing categorical predictors, fitting and interpreting the models. (not covered in the book)
+* **adventr_growth**: Modelling change over time. Growth models using multilevel modelling. (not covered in the book)
+* **adventr_log**: Categorical outcomes. Crosstabulating frequency data, odds ratios, logistic regression, robust logistic regression. (not covered in the book)
 
 # Running tutorials
 

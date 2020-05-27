@@ -5,6 +5,7 @@ output:
   learnr::tutorial:
     progressive: false
 runtime: shiny_prerendered
+description: "Comparing several related/dependent means. Multilevel linear models with a multi-category predictor, contrast coding, robust estimates, Bayes factors."
 bibliography: adventr_bib.bib
 ---
 

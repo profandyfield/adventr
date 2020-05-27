@@ -5,6 +5,7 @@ output:
   learnr::tutorial:
     progressive: false
 runtime: shiny_prerendered
+description: "Data basics in R and RStudio"
 bibliography: adventr_bib.bib
 ---
 

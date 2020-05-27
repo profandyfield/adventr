@@ -5,6 +5,7 @@ output:
   learnr::tutorial:
     progressive: false
 runtime: shiny_prerendered
+description: "Modelling change over time. Growth models using multilevel modelling."
 bibliography: adventr_bib.bib
 ---
 

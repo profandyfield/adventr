@@ -5,6 +5,7 @@ output:
   learnr::tutorial:
     progressive: false
 runtime: shiny_prerendered
+description: "Fitting multilevel models. Fixed vs random slopes, preparing categorical predictors, fitting and interpreting the models."
 bibliography: adventr_bib.bib
 ---
 

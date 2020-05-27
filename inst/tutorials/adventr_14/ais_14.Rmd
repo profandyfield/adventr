@@ -5,6 +5,7 @@ output:
   learnr::tutorial:
     progressive: false
 runtime: shiny_prerendered
+description: "The general linear model (GLM). Fittinga nd interpreting models with one and two predictors, model diagnostics, robust models, Bayes factors."
 bibliography: adventr_bib.bib
 ---
 

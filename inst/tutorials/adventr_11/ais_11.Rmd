@@ -5,6 +5,7 @@ output:
   learnr::tutorial:
     progressive: false
 runtime: shiny_prerendered
+description: "Hypothesis testing, effect sizes and Bayes factors."
 bibliography: adventr_bib.bib
 ---
 

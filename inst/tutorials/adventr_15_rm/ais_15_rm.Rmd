@@ -5,6 +5,7 @@ output:
   learnr::tutorial:
     progressive: false
 runtime: shiny_prerendered
+description: "Comparing two related/dependent means. The t-test, multilevel linear models with a two-category predictor, robust estimates, Bayes factors, other robust approaches (trimmed means)."
 bibliography: adventr_bib.bib
 ---
 

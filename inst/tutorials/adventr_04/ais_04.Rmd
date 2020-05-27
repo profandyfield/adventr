@@ -5,6 +5,7 @@ output:
   learnr::tutorial:
     progressive: false
 runtime: shiny_prerendered
+description: "Fitting models. The mean, median, outliers, sums of squares and variance."
 bibliography: adventr_bib.bib
 ---
 

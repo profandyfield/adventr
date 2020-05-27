@@ -5,6 +5,7 @@ output:
   learnr::tutorial:
     progressive: false
 runtime: shiny_prerendered
+description: "Factorial designs. Linear models with several categorical predictors, contrast coding, interactions, robust estimates, Bayes factors, other robust approaches (trimmed means)."
 bibliography: adventr_bib.bib
 ---
 

@@ -5,6 +5,7 @@ output:
   learnr::tutorial:
     progressive: false
 runtime: shiny_prerendered
+description: "Visualizing data. Summarizing data by group, plotting grouped data, boxplots, plotting means, plotting raw data, scatterplots."
 bibliography: adventr_bib.bib
 ---
 

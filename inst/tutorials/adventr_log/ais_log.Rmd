@@ -5,6 +5,7 @@ output:
   learnr::tutorial:
     progressive: false
 runtime: shiny_prerendered
+description: "Categorical outcomes. Crosstabulating frequency data, odds ratios, logistic regression, robust logistic regression."
 bibliography: adventr_bib.bib
 ---
 

@@ -5,6 +5,7 @@ output:
   learnr::tutorial:
     progressive: false
 runtime: shiny_prerendered
+description: "Inferential and robust statistics. Confidence intervals, plotting confidence intervals, robust means, robust confidence intervals, bootstrapping."
 bibliography: adventr_bib.bib
 ---
 

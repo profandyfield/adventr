@@ -5,6 +5,7 @@ output:
   learnr::tutorial:
     progressive: false
 runtime: shiny_prerendered
+description: "Categorical predictors in the GLM (comparing several means). Linear models with a multi-category predictor, contrast coding, robust estimates, Bayes factors, other robust approaches (trimmed means)."
 bibliography: adventr_bib.bib
 ---
 

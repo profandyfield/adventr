@@ -8,16 +8,20 @@ The `adventr` package contains a series of interactive tutorials that teach **R*
 
 You can install the latest release of `adventr` from CRAN in the usual way:
 
-```{r, eval = FALSE}
-install.packages("adventr")
+```
+install.packages("adventr", dependencies = TRUE)
 ```
 or install the development version from GitHub using:
 
-```{r, eval = FALSE}
-install.packages("devtools") #if you don’t already have it installed
-library(devtools)
-devtools::install_github("profandyfield/adventr")
 ```
+if(!require(devtools)){
+  install.packages("devtools")
+}
+
+devtools::install_github("profandyfield/adventr", dependencies = TRUE)
+```
+
+Note the `dependencies = TRUE` ensures that the packages used in the tutorials are installed on your system of you don't have any.
  
 # Contents of `adventr`
 

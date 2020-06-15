@@ -6,12 +6,13 @@ The `adventr` package contains a series of interactive tutorials that teach **R*
 
 # Installation
 
-You can install the latest release of `adventr` from CRAN in the usual way:
+You can install the latest release of `adventr` from CRAN in the usual way. Note that you should include `dependencies = TRUE` to also install the packages used in the tutorials on your system. If you omit this argument, you will need to manually install these packages (which you won't want to do, trust me).
 
 ```
 install.packages("adventr", dependencies = TRUE)
 ```
-or install the development version from GitHub using:
+
+If you want the very latest development version, you can install it from GitHub by executing (in **RStudio**):
 
 ```
 if(!require(devtools)){
@@ -21,8 +22,6 @@ if(!require(devtools)){
 devtools::install_github("profandyfield/adventr", dependencies = TRUE)
 ```
 
-Note the `dependencies = TRUE` ensures that the packages used in the tutorials are installed on your system of you don't have any.
- 
 # Contents of `adventr`
 
 The package was written initially to support my own teaching on a module where I base the content around [An Adventure in Statistics](https://www.discoveringstatistics.com/books/an-adventure-in-statistics/). One quirk of this is that there are some advanced tutorials on topics not covered in the book (but continue the themes of the book ...). Another quirk is that - at present - there are some chapters that don't have associated tutorials (for example, the Chapter on probability).

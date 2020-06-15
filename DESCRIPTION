@@ -32,6 +32,8 @@ Imports:
   sjstats,
   tidyr,
   WRS2
+URL: http://milton-the-cat.rocks/home/adventr.html, https://github.com/profandyfield/adventr
+BugReports: https://github.com/profandyfield/adventr/issues
 RoxygenNote: 7.1.0
 Suggests: knitr,
     rmarkdown

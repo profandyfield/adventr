@@ -1,7 +1,7 @@
 Package: adventr
 Type: Package
 Title: Interactive R Tutorials to Accompany Field (2016), "An Adventure in Statistics"
-Version: 0.1.9
+Version: 0.1.10
 Authors@R: person("Andy", "Field", email = "andyf@sussex.ac.uk", role = c("aut", "cre"))
 Maintainer: Andy Field <andyf@sussex.ac.uk>
 Description: Interactive 'R' tutorials written using 'learnr' for Field (2016), "An Adventure in Statistics", <ISBN:9781446210451>.
@@ -34,7 +34,7 @@ Imports:
   WRS2
 URL: http://milton-the-cat.rocks/home/adventr.html, https://github.com/profandyfield/adventr
 BugReports: https://github.com/profandyfield/adventr/issues
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr

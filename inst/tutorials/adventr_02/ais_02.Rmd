@@ -3,7 +3,7 @@ title: "adventr: data basics"
 author: "Andy Field"
 output:
   learnr::tutorial:
-    progressive: true
+    progressive: false
 runtime: shiny_prerendered
 description: "R workflow. Project files, relative paths, objects and functions, creating variables, the pipe operator, dataframes and tibbles, reading and writing files."
 bibliography: adventr_bib.bib

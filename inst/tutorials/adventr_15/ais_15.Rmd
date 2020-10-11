@@ -13,7 +13,9 @@ bibliography: adventr_bib.bib
 library(forcats)
 library(learnr)
 library(tidyverse)
+
 library(BayesFactor)
+library(Hmisc)
 library(lm.beta)
 library(robust)
 library(sjstats)

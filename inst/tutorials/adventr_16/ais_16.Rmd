@@ -15,6 +15,7 @@ library(learnr)
 library(tidyverse)
 
 library(BayesFactor)
+library(Hmisc)
 library(lm.beta)
 library(robust)
 library(sjstats)

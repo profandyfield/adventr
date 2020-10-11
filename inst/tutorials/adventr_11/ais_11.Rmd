@@ -14,6 +14,7 @@ library(learnr)
 library(tidyverse)
 library(BayesFactor)
 library(effsize)
+library(Hmisc)
 
 
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE)

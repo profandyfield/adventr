@@ -16,6 +16,7 @@ library(tidyverse)
 
 library(BayesFactor)
 library(car)
+library(Hmisc)
 library(lm.beta)
 library(robust)
 library(sjstats)

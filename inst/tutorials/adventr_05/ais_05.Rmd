@@ -373,7 +373,7 @@ strength_plot +
   stat_summary(fun = "mean", geom = "point", size = 4)
 ```
 
-All we're doing here is setting up the plot as normal and then adding `stat_summary()` to it and within that function asking it to calculate the means and their confidence intervals (`fun = "mean"`) and displaying them using geom_point (`geom = "point"`). `size = 4` simply makes the points that display the means bigger than the default (you can omit this option if you like). Copy the code into the code box and run it to see the resulting plot. Bar charts are generally a massive waste of ink, but try replacing `geom = "point"` with `geom = "bar"` and re-running the code. Congratulations, you have just displayed the same information as the graph with points but using a tonne more ink!
+All we're doing here is setting up the plot as normal and then adding `stat_summary()` to it and within that function asking it to calculate the means (`fun = "mean"`) and displaying them using geom_point (`geom = "point"`). `size = 4` simply makes the points that display the means bigger than the default (you can omit this option if you like). Copy the code into the code box and run it to see the resulting plot. Bar charts are generally a massive waste of ink, but try replacing `geom = "point"` with `geom = "bar"` and re-running the code. Congratulations, you have just displayed the same information as the graph with points but using a tonne more ink!
 
 ```{r stgth_box, exercise = TRUE, exercise.lines = 7}
 
@@ -440,7 +440,7 @@ Another approach is to plot **sex** not in different panels, but in different co
 
 Compare this with the first line of code in the box below (which replicates the plot split solely by **employee**). Add `colour = sex` into the first line and run the code. What happens?
 
-You should find that the male and female means and CIs appear in different colours, but they appear at the same horizontal location (that is, the male points are directly above the female ones). For these data that doesn't particularly matter because the error bars don't overlap. However, if they did overlap it would be difficult to interpret the plot.
+You should find that the male and female means appear in different colours, but they appear at the same horizontal location (that is, the male points are directly above the female ones). For these data that doesn't particularly matter because the error bars don't overlap. However, if they did overlap it would be difficult to interpret the plot.
 
 ```{r stgth_col1, exercise = TRUE, exercise.lines = 8}
 strength_plot <- ggplot2::ggplot(jig_tib, aes(employee, strength))

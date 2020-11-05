@@ -252,8 +252,8 @@ Using these hints, see whether you can fit the model in the code box below. (Ano
 
 ```{r lm1-solution}
 mem_mod <- lm(recall ~ group, data = memory_tib)
-mem_mod <- lm.beta(mem_mod)
-summary(mem_mod)
+mem_modz <- lm.beta(mem_mod)
+summary(mem_modz)
 confint(mem_mod)
 plot(mem_mod)
 ```

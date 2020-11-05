@@ -213,8 +213,8 @@ Using these hints, see whether you can fit the model in the code box below
 
 ```{r lm1-solution}
 mask_mod <- lm(recognition ~ mask, data = mask_tib)
-mask_mod <- lm.beta(mask_mod)
-summary(mask_mod)
+mask_modz <- lm.beta(mask_mod)
+summary(mask_modz)
 confint(mask_mod)
 plot(mask_mod)
 ```

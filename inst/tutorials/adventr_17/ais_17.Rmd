@@ -368,7 +368,7 @@ knitr::kable(tibble(Group, gene_codes, picture_codes, codes_multiplied), caption
 
 So, to get Type III sums of squares we do the following:
 
-* Set orthogonal contrasts using the `contrasts` function that we have met before. The first two lines below set contrasts for **gene** and **picture** using the codes in Table 2 (it doesn';t matter which way around you specify the 1 and -1)
+* Set orthogonal contrasts using the `contrasts` function that we have met before. The first two lines below set contrasts for **gene** and **picture** using the codes in Table 2 (it doesn't matter which way around you specify the 1 and -1)
 * Re-create the model so that these new contrast codes take effect. Line 3 below does this by creating a new model `gen_mod2` that is specified in the same way as the original model, but will include information about the contrasts we have just set.
 * use the `Anova()` function to generate the Type III sums of squares for this new model. Line 4 displays the Type III sums of squares (note that we specify `type = 3`) for the model we created in the line above. 
 * We can display robust versions of *F* by including the argument `white.adjust = "hc3"`. The options here are similar to what we've seen with other functions (i.e. "hc0", "hc1", "hc2", "hc3", "hc4") and as we have seen "hc3" or "hc4" are good choices. Including this argument will adjust for heteroscedasticity in the data.
